@@ -1,0 +1,11 @@
+*.o
+*.a
+.qmake.stash
+.vscode
+build
+data
+docs
+zlsnes
+moc_*.h
+moc_*.cpp
+ui_*.h
