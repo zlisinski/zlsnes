@@ -1,0 +1,343 @@
+#include <sstream>
+
+#include "Cpu.h"
+#include "Memory.h"
+
+
+Cpu::Cpu(Memory *memory) :
+    reg(),
+    memory(memory)
+{
+
+}
+
+
+uint8_t Cpu::ReadPC8Bit()
+{
+    uint8_t byte = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    //timer->AddCycle();
+
+    reg.pc++;
+
+    return byte;
+}
+
+
+uint16_t Cpu::ReadPC16Bit()
+{
+    uint8_t low = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    reg.pc++;
+    //timer->AddCycle();
+
+    uint8_t high = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    reg.pc++;
+    //timer->AddCycle();
+
+    uint16_t word = (high << 8) | low;
+
+    return word;
+}
+
+
+uint32_t Cpu::ReadPC24Bit()
+{
+    uint8_t low = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    reg.pc++;
+    //timer->AddCycle();
+
+    uint8_t mid = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    reg.pc++;
+    //timer->AddCycle();
+
+    uint8_t high = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    reg.pc++;
+    //timer->AddCycle();
+
+    uint32_t word = (high << 16) | (mid << 8) | low;
+
+    return word;
+}
+
+
+void Cpu::ProcessOpCode()
+{
+    uint8_t opcode = ReadPC8Bit();
+
+    switch (opcode)
+    {
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Register to register transfer opcodes                                                                             //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x00: NotYetImplemented(0x00); break;
+        case 0x01: NotYetImplemented(0x01); break;
+        case 0x02: NotYetImplemented(0x02); break;
+        case 0x03: NotYetImplemented(0x03); break;
+        case 0x04: NotYetImplemented(0x04); break;
+        case 0x05: NotYetImplemented(0x05); break;
+        case 0x06: NotYetImplemented(0x06); break;
+        case 0x07: NotYetImplemented(0x07); break;
+        case 0x08: NotYetImplemented(0x08); break;
+        case 0x09: NotYetImplemented(0x09); break;
+        case 0x0A: NotYetImplemented(0x0A); break;
+        case 0x0B: NotYetImplemented(0x0B); break;
+        case 0x0C: NotYetImplemented(0x0C); break;
+        case 0x0D: NotYetImplemented(0x0D); break;
+        case 0x0E: NotYetImplemented(0x0E); break;
+        case 0x0F: NotYetImplemented(0x0F); break;
+        case 0x10: NotYetImplemented(0x10); break;
+        case 0x11: NotYetImplemented(0x11); break;
+        case 0x12: NotYetImplemented(0x12); break;
+        case 0x13: NotYetImplemented(0x13); break;
+        case 0x14: NotYetImplemented(0x14); break;
+        case 0x15: NotYetImplemented(0x15); break;
+        case 0x16: NotYetImplemented(0x16); break;
+        case 0x17: NotYetImplemented(0x17); break;
+        case 0x18: NotYetImplemented(0x18); break;
+        case 0x19: NotYetImplemented(0x19); break;
+        case 0x1A: NotYetImplemented(0x1A); break;
+        case 0x1B: NotYetImplemented(0x1B); break;
+        case 0x1C: NotYetImplemented(0x1C); break;
+        case 0x1D: NotYetImplemented(0x1D); break;
+        case 0x1E: NotYetImplemented(0x1E); break;
+        case 0x1F: NotYetImplemented(0x1F); break;
+        case 0x20: NotYetImplemented(0x20); break;
+        case 0x21: NotYetImplemented(0x21); break;
+        case 0x22: NotYetImplemented(0x22); break;
+        case 0x23: NotYetImplemented(0x23); break;
+        case 0x24: NotYetImplemented(0x24); break;
+        case 0x25: NotYetImplemented(0x25); break;
+        case 0x26: NotYetImplemented(0x26); break;
+        case 0x27: NotYetImplemented(0x27); break;
+        case 0x28: NotYetImplemented(0x28); break;
+        case 0x29: NotYetImplemented(0x29); break;
+        case 0x2A: NotYetImplemented(0x2A); break;
+        case 0x2B: NotYetImplemented(0x2B); break;
+        case 0x2C: NotYetImplemented(0x2C); break;
+        case 0x2D: NotYetImplemented(0x2D); break;
+        case 0x2E: NotYetImplemented(0x2E); break;
+        case 0x2F: NotYetImplemented(0x2F); break;
+        case 0x30: NotYetImplemented(0x30); break;
+        case 0x31: NotYetImplemented(0x31); break;
+        case 0x32: NotYetImplemented(0x32); break;
+        case 0x33: NotYetImplemented(0x33); break;
+        case 0x34: NotYetImplemented(0x34); break;
+        case 0x35: NotYetImplemented(0x35); break;
+        case 0x36: NotYetImplemented(0x36); break;
+        case 0x37: NotYetImplemented(0x37); break;
+        case 0x38: NotYetImplemented(0x38); break;
+        case 0x39: NotYetImplemented(0x39); break;
+        case 0x3A: NotYetImplemented(0x3A); break;
+        case 0x3B: NotYetImplemented(0x3B); break;
+        case 0x3C: NotYetImplemented(0x3C); break;
+        case 0x3D: NotYetImplemented(0x3D); break;
+        case 0x3E: NotYetImplemented(0x3E); break;
+        case 0x3F: NotYetImplemented(0x3F); break;
+        case 0x40: NotYetImplemented(0x40); break;
+        case 0x41: NotYetImplemented(0x41); break;
+        case 0x42: NotYetImplemented(0x42); break;
+        case 0x43: NotYetImplemented(0x43); break;
+        case 0x44: NotYetImplemented(0x44); break;
+        case 0x45: NotYetImplemented(0x45); break;
+        case 0x46: NotYetImplemented(0x46); break;
+        case 0x47: NotYetImplemented(0x47); break;
+        case 0x48: NotYetImplemented(0x48); break;
+        case 0x49: NotYetImplemented(0x49); break;
+        case 0x4A: NotYetImplemented(0x4A); break;
+        case 0x4B: NotYetImplemented(0x4B); break;
+        case 0x4C: NotYetImplemented(0x4C); break;
+        case 0x4D: NotYetImplemented(0x4D); break;
+        case 0x4E: NotYetImplemented(0x4E); break;
+        case 0x4F: NotYetImplemented(0x4F); break;
+        case 0x50: NotYetImplemented(0x50); break;
+        case 0x51: NotYetImplemented(0x51); break;
+        case 0x52: NotYetImplemented(0x52); break;
+        case 0x53: NotYetImplemented(0x53); break;
+        case 0x54: NotYetImplemented(0x54); break;
+        case 0x55: NotYetImplemented(0x55); break;
+        case 0x56: NotYetImplemented(0x56); break;
+        case 0x57: NotYetImplemented(0x57); break;
+        case 0x58: NotYetImplemented(0x58); break;
+        case 0x59: NotYetImplemented(0x59); break;
+        case 0x5A: NotYetImplemented(0x5A); break;
+        case 0x5B: NotYetImplemented(0x5B); break;
+        case 0x5C: NotYetImplemented(0x5C); break;
+        case 0x5D: NotYetImplemented(0x5D); break;
+        case 0x5E: NotYetImplemented(0x5E); break;
+        case 0x5F: NotYetImplemented(0x5F); break;
+        case 0x60: NotYetImplemented(0x60); break;
+        case 0x61: NotYetImplemented(0x61); break;
+        case 0x62: NotYetImplemented(0x62); break;
+        case 0x63: NotYetImplemented(0x63); break;
+        case 0x64: NotYetImplemented(0x64); break;
+        case 0x65: NotYetImplemented(0x65); break;
+        case 0x66: NotYetImplemented(0x66); break;
+        case 0x67: NotYetImplemented(0x67); break;
+        case 0x68: NotYetImplemented(0x68); break;
+        case 0x69: NotYetImplemented(0x69); break;
+        case 0x6A: NotYetImplemented(0x6A); break;
+        case 0x6B: NotYetImplemented(0x6B); break;
+        case 0x6C: NotYetImplemented(0x6C); break;
+        case 0x6D: NotYetImplemented(0x6D); break;
+        case 0x6E: NotYetImplemented(0x6E); break;
+        case 0x6F: NotYetImplemented(0x6F); break;
+        case 0x70: NotYetImplemented(0x70); break;
+        case 0x71: NotYetImplemented(0x71); break;
+        case 0x72: NotYetImplemented(0x72); break;
+        case 0x73: NotYetImplemented(0x73); break;
+        case 0x74: NotYetImplemented(0x74); break;
+        case 0x75: NotYetImplemented(0x75); break;
+        case 0x76: NotYetImplemented(0x76); break;
+        case 0x77: NotYetImplemented(0x77); break;
+        case 0x78: NotYetImplemented(0x78); break;
+        case 0x79: NotYetImplemented(0x79); break;
+        case 0x7A: NotYetImplemented(0x7A); break;
+        case 0x7B: NotYetImplemented(0x7B); break;
+        case 0x7C: NotYetImplemented(0x7C); break;
+        case 0x7D: NotYetImplemented(0x7D); break;
+        case 0x7E: NotYetImplemented(0x7E); break;
+        case 0x7F: NotYetImplemented(0x7F); break;
+        case 0x80: NotYetImplemented(0x80); break;
+        case 0x81: NotYetImplemented(0x81); break;
+        case 0x82: NotYetImplemented(0x82); break;
+        case 0x83: NotYetImplemented(0x83); break;
+        case 0x84: NotYetImplemented(0x84); break;
+        case 0x85: NotYetImplemented(0x85); break;
+        case 0x86: NotYetImplemented(0x86); break;
+        case 0x87: NotYetImplemented(0x87); break;
+        case 0x88: NotYetImplemented(0x88); break;
+        case 0x89: NotYetImplemented(0x89); break;
+        case 0x8A: NotYetImplemented(0x8A); break;
+        case 0x8B: NotYetImplemented(0x8B); break;
+        case 0x8C: NotYetImplemented(0x8C); break;
+        case 0x8D: NotYetImplemented(0x8D); break;
+        case 0x8E: NotYetImplemented(0x8E); break;
+        case 0x8F: NotYetImplemented(0x8F); break;
+        case 0x90: NotYetImplemented(0x90); break;
+        case 0x91: NotYetImplemented(0x91); break;
+        case 0x92: NotYetImplemented(0x92); break;
+        case 0x93: NotYetImplemented(0x93); break;
+        case 0x94: NotYetImplemented(0x94); break;
+        case 0x95: NotYetImplemented(0x95); break;
+        case 0x96: NotYetImplemented(0x96); break;
+        case 0x97: NotYetImplemented(0x97); break;
+        case 0x98: NotYetImplemented(0x98); break;
+        case 0x99: NotYetImplemented(0x99); break;
+        case 0x9A: NotYetImplemented(0x9A); break;
+        case 0x9B: NotYetImplemented(0x9B); break;
+        case 0x9C: NotYetImplemented(0x9C); break;
+        case 0x9D: NotYetImplemented(0x9D); break;
+        case 0x9E: NotYetImplemented(0x9E); break;
+        case 0x9F: NotYetImplemented(0x9F); break;
+        case 0xA0: NotYetImplemented(0xA0); break;
+        case 0xA1: NotYetImplemented(0xA1); break;
+        case 0xA2: NotYetImplemented(0xA2); break;
+        case 0xA3: NotYetImplemented(0xA3); break;
+        case 0xA4: NotYetImplemented(0xA4); break;
+        case 0xA5: NotYetImplemented(0xA5); break;
+        case 0xA6: NotYetImplemented(0xA6); break;
+        case 0xA7: NotYetImplemented(0xA7); break;
+        case 0xA8: NotYetImplemented(0xA8); break;
+        case 0xA9: NotYetImplemented(0xA9); break;
+        case 0xAA: NotYetImplemented(0xAA); break;
+        case 0xAB: NotYetImplemented(0xAB); break;
+        case 0xAC: NotYetImplemented(0xAC); break;
+        case 0xAD: NotYetImplemented(0xAD); break;
+        case 0xAE: NotYetImplemented(0xAE); break;
+        case 0xAF: NotYetImplemented(0xAF); break;
+        case 0xB0: NotYetImplemented(0xB0); break;
+        case 0xB1: NotYetImplemented(0xB1); break;
+        case 0xB2: NotYetImplemented(0xB2); break;
+        case 0xB3: NotYetImplemented(0xB3); break;
+        case 0xB4: NotYetImplemented(0xB4); break;
+        case 0xB5: NotYetImplemented(0xB5); break;
+        case 0xB6: NotYetImplemented(0xB6); break;
+        case 0xB7: NotYetImplemented(0xB7); break;
+        case 0xB8: NotYetImplemented(0xB8); break;
+        case 0xB9: NotYetImplemented(0xB9); break;
+        case 0xBA: NotYetImplemented(0xBA); break;
+        case 0xBB: NotYetImplemented(0xBB); break;
+        case 0xBC: NotYetImplemented(0xBC); break;
+        case 0xBD: NotYetImplemented(0xBD); break;
+        case 0xBE: NotYetImplemented(0xBE); break;
+        case 0xBF: NotYetImplemented(0xBF); break;
+        case 0xC0: NotYetImplemented(0xC0); break;
+        case 0xC1: NotYetImplemented(0xC1); break;
+        case 0xC2: NotYetImplemented(0xC2); break;
+        case 0xC3: NotYetImplemented(0xC3); break;
+        case 0xC4: NotYetImplemented(0xC4); break;
+        case 0xC5: NotYetImplemented(0xC5); break;
+        case 0xC6: NotYetImplemented(0xC6); break;
+        case 0xC7: NotYetImplemented(0xC7); break;
+        case 0xC8: NotYetImplemented(0xC8); break;
+        case 0xC9: NotYetImplemented(0xC9); break;
+        case 0xCA: NotYetImplemented(0xCA); break;
+        case 0xCB: NotYetImplemented(0xCB); break;
+        case 0xCC: NotYetImplemented(0xCC); break;
+        case 0xCD: NotYetImplemented(0xCD); break;
+        case 0xCE: NotYetImplemented(0xCE); break;
+        case 0xCF: NotYetImplemented(0xCF); break;
+        case 0xD0: NotYetImplemented(0xD0); break;
+        case 0xD1: NotYetImplemented(0xD1); break;
+        case 0xD2: NotYetImplemented(0xD2); break;
+        case 0xD3: NotYetImplemented(0xD3); break;
+        case 0xD4: NotYetImplemented(0xD4); break;
+        case 0xD5: NotYetImplemented(0xD5); break;
+        case 0xD6: NotYetImplemented(0xD6); break;
+        case 0xD7: NotYetImplemented(0xD7); break;
+        case 0xD8: NotYetImplemented(0xD8); break;
+        case 0xD9: NotYetImplemented(0xD9); break;
+        case 0xDA: NotYetImplemented(0xDA); break;
+        case 0xDB: NotYetImplemented(0xDB); break;
+        case 0xDC: NotYetImplemented(0xDC); break;
+        case 0xDD: NotYetImplemented(0xDD); break;
+        case 0xDE: NotYetImplemented(0xDE); break;
+        case 0xDF: NotYetImplemented(0xDF); break;
+        case 0xE0: NotYetImplemented(0xE0); break;
+        case 0xE1: NotYetImplemented(0xE1); break;
+        case 0xE2: NotYetImplemented(0xE2); break;
+        case 0xE3: NotYetImplemented(0xE3); break;
+        case 0xE4: NotYetImplemented(0xE4); break;
+        case 0xE5: NotYetImplemented(0xE5); break;
+        case 0xE6: NotYetImplemented(0xE6); break;
+        case 0xE7: NotYetImplemented(0xE7); break;
+        case 0xE8: NotYetImplemented(0xE8); break;
+        case 0xE9: NotYetImplemented(0xE9); break;
+        case 0xEA: NotYetImplemented(0xEA); break;
+        case 0xEB: NotYetImplemented(0xEB); break;
+        case 0xEC: NotYetImplemented(0xEC); break;
+        case 0xED: NotYetImplemented(0xED); break;
+        case 0xEE: NotYetImplemented(0xEE); break;
+        case 0xEF: NotYetImplemented(0xEF); break;
+        case 0xF0: NotYetImplemented(0xF0); break;
+        case 0xF1: NotYetImplemented(0xF1); break;
+        case 0xF2: NotYetImplemented(0xF2); break;
+        case 0xF3: NotYetImplemented(0xF3); break;
+        case 0xF4: NotYetImplemented(0xF4); break;
+        case 0xF5: NotYetImplemented(0xF5); break;
+        case 0xF6: NotYetImplemented(0xF6); break;
+        case 0xF7: NotYetImplemented(0xF7); break;
+        case 0xF8: NotYetImplemented(0xF8); break;
+        case 0xF9: NotYetImplemented(0xF9); break;
+        case 0xFA: NotYetImplemented(0xFA); break;
+        case 0xFB: NotYetImplemented(0xFB); break;
+        case 0xFC: NotYetImplemented(0xFC); break;
+        case 0xFD: NotYetImplemented(0xFD); break;
+        case 0xFE: NotYetImplemented(0xFE); break;
+        case 0xFF: NotYetImplemented(0xFF); break;
+    }
+}
+
+
+void Cpu::NotYetImplemented(uint8_t opcode)
+{
+    // reg.pc is advanced in ReadPC8Bit, so subtract 1 to get the real address of the error.
+    uint32_t addr = GetFullPC(reg.pc - 1);
+
+    std::stringstream ss;
+    ss << "NYI opcode 0x" << std::hex << std::uppercase << (int)memory->Read8Bit(addr) << " at 0x" << (int)addr;
+    throw NotYetImplementedException(ss.str());
+}
