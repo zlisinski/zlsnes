@@ -14,11 +14,6 @@ const uint8_t DB_VALUE = 0x12;
 const uint8_t PB_VALUE = 0x34;
 const uint16_t SP_VALUE = 0xFFFF;
 
-void PrintTo(uint32_t, std::ostream *os)
-{
-    *os << "blarg";
-}
-
 
 CpuTest::CpuTest()
 {
@@ -271,5 +266,32 @@ TEST_F(CpuTest, TEST_GetOpAbsoluteLongIndexedX) // al,x - Long,X
     memory[0x130008] = 0x34;
     memory[0x130009] = 0x12;
     result = cpu->GetOpAbsoluteLongIndexedX();
+    ASSERT_EQ(result, 0x1234);
+}
+
+TEST_F(CpuTest, TEST_GetOpStackRelative) // d,s - Stack,S
+{
+    uint16_t result;
+
+    cpu->reg.sp = 0xFF10;
+    memory[Make24Bit(cpu->reg.pb, cpu->reg.pc)] = 0xFA;
+    memory[0x00000A] = 0x34;
+    memory[0x00000B] = 0x12;
+    result = cpu->GetOpStackRelative();
+    ASSERT_EQ(result, 0x1234);
+}
+
+TEST_F(CpuTest, TEST_GetOpStackRelativeIndirectIndexed) // (d,s),y - (Stack,S),Y
+{
+    uint16_t result;
+
+    cpu->reg.sp = 0xFF10;
+    cpu->reg.y = 0x0050;
+    memory[Make24Bit(cpu->reg.pb, cpu->reg.pc)] = 0xFA;
+    memory[0x00000A] = 0xF0;
+    memory[0x00000B] = 0xFF;
+    memory[0x130040] = 0x34;
+    memory[0x130041] = 0x12;
+    result = cpu->GetOpStackRelativeIndirectIndexed();
     ASSERT_EQ(result, 0x1234);
 }

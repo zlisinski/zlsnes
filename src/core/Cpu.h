@@ -203,8 +203,17 @@ public:
     // ProgramCounterRelative // r - Relative8
     // ProgramCounterRelativeLong // rl - Relative16
     // Stack // s
-    // StackRelative // d,s - Stack,S
-    // StackRelativeIndirectIndexed // (d,s),y - (Stack,S),Y
+
+    inline uint16_t GetOpStackRelative() // d,s - Stack,S
+    {
+        return memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.sp);
+    }
+
+    inline uint16_t GetOpStackRelativeIndirectIndexed() // (d,s),y - (Stack,S),Y
+    {
+        uint32_t addr = memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.sp);
+        return memory->Read16Bit(Make24Bit(reg.db, addr) + reg.y);
+    }
 
     Registers reg;
 

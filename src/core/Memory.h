@@ -19,7 +19,7 @@ public:
     // Bypasses special read code. Only use for Debugger.
     uint8_t ReadRaw8Bit(uint32_t addr) const {return memory[addr];}
 
-    // Read that don't wrap at bank boundaries. E.G. Read16Bit(0x12FFFF) will read from 0x12FFFF and 0x130000.
+    // Reads that don't wrap at bank boundaries. E.G. Read16Bit(0x12FFFF) will read from 0x12FFFF and 0x130000.
     uint16_t Read16Bit(uint32_t addr) const {return Make16Bit(Read8Bit(addr + 1), Read8Bit(addr));}
     uint32_t Read24Bit(uint32_t addr) const {return Make24Bit(Read8Bit(addr + 2), Read8Bit(addr + 1), Read8Bit(addr));}
 
