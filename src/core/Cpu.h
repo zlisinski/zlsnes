@@ -68,6 +68,10 @@ public:
                reg.flags.c, reg.flags.z, reg.flags.i, reg.flags.d, reg.flags.x, reg.flags.m, reg.flags.v, reg.flags.n);
     }
 
+    Registers reg;
+
+private:
+
     inline bool IsAccumulator8Bit()
     {
         return reg.emulationMode == true || reg.flags.m == 1;
@@ -95,90 +99,104 @@ public:
 
     // Addressing modes ///////////////////////////////////////////////////////
 
-    inline uint16_t GetOpAbsolute() // a - Absolute
+    // a - Absolute
+    inline uint16_t GetOpAbsolute()
     {
         uint32_t addr = Make24Bit(reg.db, ReadPC16Bit());
         return memory->Read16Bit(addr);
     }
 
-    inline uint16_t GetOpAbsoluteIndexedX() // a,x - Absolute,X
+    // a,x - Absolute,X
+    inline uint16_t GetOpAbsoluteIndexedX()
     {
         uint32_t addr = Make24Bit(reg.db, ReadPC16Bit()) + reg.x;
         return memory->Read16Bit(addr);
     }
 
-    inline uint16_t GetOpAbsoluteIndexedY() // a,y - Absolute,Y
+    // a,y - Absolute,Y
+    inline uint16_t GetOpAbsoluteIndexedY()
     {
         uint32_t addr = Make24Bit(reg.db, ReadPC16Bit()) + reg.y;
         return memory->Read16Bit(addr);
     }
 
-    inline uint32_t GetOpAbsoluteIndirect() // (a) - (Absolute)
+    // (a) - (Absolute)
+    inline uint32_t GetOpAbsoluteIndirect()
     {
         uint16_t addr = memory->Read16BitWrapBank(0, ReadPC16Bit());
         return Make24Bit(reg.pb, addr);
     }
 
-    inline uint32_t GetOpAbsoluteIndexedIndirect() // (a,x) - (Absolute,X)
+    // (a,x) - (Absolute,X)
+    inline uint32_t GetOpAbsoluteIndexedIndirect()
     {
         uint16_t addr = memory->Read16BitWrapBank(reg.pb, ReadPC16Bit() + reg.x);
         return Make24Bit(reg.pb, addr);
     }
 
-    inline uint16_t GetOpAccumulator() // A - Accumulator
+    // A - Accumulator
+    inline uint16_t GetOpAccumulator()
     {
         return reg.a;
     }
 
-    inline uint16_t GetOpDirect() // d - Direct
+    // d - Direct
+    inline uint16_t GetOpDirect()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = ReadPC8Bit() + reg.d;
         return memory->Read16BitWrapBank(0, addr);
     }
 
-    inline uint16_t GetOpDirectIndexedX() // d,x - Direct,X
+    // d,x - Direct,X
+    inline uint16_t GetOpDirectIndexedX()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = ReadPC8Bit() + reg.d + reg.x;
         return memory->Read16BitWrapBank(0, addr);
     }
 
-    inline uint16_t GetOpDirectIndexedY() // d,y - Direct,Y
+    // d,y - Direct,Y
+    inline uint16_t GetOpDirectIndexedY()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = ReadPC8Bit() + reg.d + reg.y;
         return memory->Read16BitWrapBank(0, addr);
     }
 
-    inline uint16_t GetOpDirectIndirect() // (d) - (Direct)
+    // (d) - (Direct)
+    inline uint16_t GetOpDirectIndirect()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.d);
         return memory->Read16Bit(Make24Bit(reg.db, addr));
     }
 
-    inline uint16_t GetOpDirectIndirectLong() // [d] - [Direct]
+    // [d] - [Direct]
+    inline uint16_t GetOpDirectIndirectLong()
     {
         uint32_t addr = memory->Read24BitWrapBank(0, ReadPC8Bit() + reg.d);
         return memory->Read16Bit(addr);
     }
 
-    inline uint16_t GetOpDirectIndexedIndirect() // (d,x) - (Direct,X)
+    // (d,x) - (Direct,X)
+    inline uint16_t GetOpDirectIndexedIndirect()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.d + reg.x);
         return memory->Read16Bit(Make24Bit(reg.db, addr));
     }
 
-    inline uint16_t GetOpDirectIndirectIndexed() // (d),y - (Direct),Y
+    // (d),y - (Direct),Y
+    inline uint16_t GetOpDirectIndirectIndexed()
     {
         // TODO: Handle emulation mode special case.
         uint16_t addr = memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.d);
         return memory->Read16Bit(Make24Bit(reg.db, addr) + reg.y);
     }
 
-    inline uint16_t GetOpDirectIndirectLongIndexed() // [d],y - [Direct],Y
+    // [d],y - [Direct],Y
+    inline uint16_t GetOpDirectIndirectLongIndexed()
     {
         uint32_t addr = memory->Read24BitWrapBank(0, ReadPC8Bit() + reg.d);
         return memory->Read16Bit(Make24Bit(reg.db, addr) + reg.y);
@@ -190,12 +208,14 @@ public:
         return ReadPC16Bit();
     }*/
 
-    inline uint16_t GetOpAbsoluteLong() // al - Long
+    // al - Long
+    inline uint16_t GetOpAbsoluteLong()
     {
         return memory->Read16Bit(ReadPC24Bit());
     }
 
-    inline uint16_t GetOpAbsoluteLongIndexedX() // al,x - Long,X
+    // al,x - Long,X
+    inline uint16_t GetOpAbsoluteLongIndexedX()
     {
         return memory->Read16Bit(ReadPC24Bit() + reg.x);
     }
@@ -204,22 +224,40 @@ public:
     // ProgramCounterRelativeLong // rl - Relative16
     // Stack // s
 
-    inline uint16_t GetOpStackRelative() // d,s - Stack,S
+    // d,s - Stack,S
+    inline uint16_t GetOpStackRelative()
     {
         return memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.sp);
     }
 
-    inline uint16_t GetOpStackRelativeIndirectIndexed() // (d,s),y - (Stack,S),Y
+    // (d,s),y - (Stack,S),Y
+    inline uint16_t GetOpStackRelativeIndirectIndexed()
     {
         uint32_t addr = memory->Read16BitWrapBank(0, ReadPC8Bit() + reg.sp);
         return memory->Read16Bit(Make24Bit(reg.db, addr) + reg.y);
     }
 
-    Registers reg;
+    ///////////////////////////////////////////////////////////////////////////
 
-private:
+    inline void LoadRegister(uint16_t *dest, uint16_t value, bool is16Bit)
+    {
+        if (is16Bit)
+        {
+            *dest = value;
+            reg.flags.n = (*dest >> 15) & 0x01;
+            reg.flags.z = *dest == 0;
+        }
+        else
+        {
+            *dest = (*dest & 0xFF00) | (value & 0x00FF);
+            reg.flags.n = (*dest >> 7) & 0x01;
+            reg.flags.z = (*dest & 0x00FF) == 0;
+        }
+    }
+
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;
 
+    friend class CpuTest;
 };
