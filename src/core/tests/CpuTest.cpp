@@ -55,278 +55,13 @@ void CpuTest::ResetState()
 
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST_F(CpuTest, TEST_GetOpAbsolute) // a - Absolute
-{
-    uint16_t result;
-
-    cpu->reg.db = 0x12;
-    memory[GetPC()] = 0xFF;
-    memory[GetPC() + 1] = 0xFF;
-    memory[0x12FFFF] = 0x34;
-    memory[0x130000] = 0x12;
-    result = GetOpAbsolute();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteIndexedX) // a,x - Absolute,X
-{
-    uint16_t result;
-
-    cpu->reg.db = 0x12;
-    cpu->reg.x = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[GetPC() + 1] = 0xFF;
-    memory[0x130008] = 0x34;
-    memory[0x130009] = 0x12;
-    result = GetOpAbsoluteIndexedX();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteIndexedY) // a,y - Absolute,Y
-{
-    uint16_t result;
-
-    cpu->reg.db = 0x12;
-    cpu->reg.y = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[GetPC() + 1] = 0xFF;
-    memory[0x130008] = 0x34;
-    memory[0x130009] = 0x12;
-    result = GetOpAbsoluteIndexedY();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteIndirect) // (a) - (Absolute)
-{
-    uint32_t result;
-
-    memory[GetPC()] = 0xFF;
-    memory[GetPC() + 1] = 0xFF;
-    memory[0x000000] = 0x56;
-    memory[0x00FFFF] = 0x78;
-    result = GetOpAbsoluteIndirect();
-    ASSERT_EQ(result, 0x345678);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteIndexedIndirect) // (a,x) - (Absolute,X)
-{
-    uint32_t result;
-
-    cpu->reg.x = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[GetPC() + 1] = 0xFF;
-    memory[0x340008] = 0x78;
-    memory[0x340009] = 0x56;
-    result = GetOpAbsoluteIndexedIndirect();
-    ASSERT_EQ(result, 0x345678);
-}
-
-TEST_F(CpuTest, TEST_GetOpAccumulator) // A - Accumulator
-{
-    uint16_t result;
-
-    result = GetOpAccumulator();
-    ASSERT_EQ(result, A_VALUE);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirect) // d - Direct
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    memory[GetPC()] = 0xFF;
-    memory[0x00FFFF] = 0x34;
-    memory[0x000000] = 0x12;
-    result = GetOpDirect();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndexedX) // d,x - Direct,X
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    cpu->reg.x = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[0x000008] = 0x34;
-    memory[0x000009] = 0x12;
-    result = GetOpDirectIndexedX();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndexedY) // d,y - Direct,Y
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    cpu->reg.y = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[0x000008] = 0x34;
-    memory[0x000009] = 0x12;
-    result = GetOpDirectIndexedY();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndirect) // (d) - (Direct)
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    memory[GetPC()] = 0xFF;
-    memory[0x00FFFF] = 0xFF;
-    memory[0x000000] = 0xFF;
-    memory[0x12FFFF] = 0x34;
-    memory[0x130000] = 0x12;
-    result = GetOpDirectIndirect();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndirectLong) // [d] - [Direct]
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    memory[GetPC()] = 0xFE;
-    memory[0x00FFFE] = 0xFF;
-    memory[0x00FFFF] = 0xFF;
-    memory[0x000000] = 0x12;
-    memory[0x12FFFF] = 0x34;
-    memory[0x130000] = 0x12;
-    result = GetOpDirectIndirectLong();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndexedIndirect) // (d,x) - (Direct,X)
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    cpu->reg.x = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[0x000008] = 0xFF;
-    memory[0x000009] = 0xFF;
-    memory[0x12FFFF] = 0x34;
-    memory[0x130000] = 0x12;
-    result = GetOpDirectIndexedIndirect();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndirectIndexed) // (d),y - (Direct),Y
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    cpu->reg.y = 0x000A;
-    memory[GetPC()] = 0xFF;
-    memory[0x000000] = 0xFF;
-    memory[0x00FFFF] = 0xFE;
-    memory[0x130008] = 0x34;
-    memory[0x130009] = 0x12;
-    result = GetOpDirectIndirectIndexed();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpDirectIndirectLongIndexed) // [d],y - [Direct],Y
-{
-    uint16_t result;
-
-    cpu->reg.d = 0xFF00;
-    cpu->reg.y = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[0x000000] = 0x12;
-    memory[0x00FFFE] = 0xFC;
-    memory[0x00FFFF] = 0xFF;
-    memory[0x130006] = 0x34;
-    memory[0x130007] = 0x12;
-    result = GetOpDirectIndirectLongIndexed();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteLong) // al - Long
-{
-    uint16_t result;
-
-    memory[GetPC()] = 0xFF;
-    memory[GetPC() + 1] = 0xFF;
-    memory[GetPC() + 2] = 0x12;
-    memory[0x12FFFF] = 0x34;
-    memory[0x130000] = 0x12;
-    result = GetOpAbsoluteLong();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpAbsoluteLongIndexedX) // al,x - Long,X
-{
-    uint16_t result;
-
-    cpu->reg.x = 0x000A;
-    memory[GetPC()] = 0xFE;
-    memory[GetPC() + 1] = 0xFF;
-    memory[GetPC() + 2] = 0x12;
-    memory[0x130008] = 0x34;
-    memory[0x130009] = 0x12;
-    result = GetOpAbsoluteLongIndexedX();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpStackRelative) // d,s - Stack,S
-{
-    uint16_t result;
-
-    cpu->reg.sp = 0xFF10;
-    memory[GetPC()] = 0xFA;
-    memory[0x00000A] = 0x34;
-    memory[0x00000B] = 0x12;
-    result = GetOpStackRelative();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_GetOpStackRelativeIndirectIndexed) // (d,s),y - (Stack,S),Y
-{
-    uint16_t result;
-
-    cpu->reg.sp = 0xFF10;
-    cpu->reg.y = 0x0050;
-    memory[GetPC()] = 0xFA;
-    memory[0x00000A] = 0xF0;
-    memory[0x00000B] = 0xFF;
-    memory[0x130040] = 0x34;
-    memory[0x130041] = 0x12;
-    result = GetOpStackRelativeIndirectIndexed();
-    ASSERT_EQ(result, 0x1234);
-}
-
-TEST_F(CpuTest, TEST_LoadRegister)
+TEST_F(CpuTest, TEST_LoadRegister8Bit)
 {
     uint16_t dest;
 
     ResetState();
-    dest = 0;
-    LoadRegister(&dest, 0x1234, true);
-    ASSERT_EQ(dest, 0x1234);
-    ASSERT_EQ(cpu->reg.flags.n, 0);
-    ASSERT_EQ(cpu->reg.flags.z, 0);
-    ASSERT_EQ(cpu->reg.p, 0x00);
-
-    ResetState();
-    dest = 0xFFFF;
-    LoadRegister(&dest, 0, true);
-    ASSERT_EQ(dest, 0);
-    ASSERT_EQ(cpu->reg.flags.n, 0);
-    ASSERT_EQ(cpu->reg.flags.z, 1);
-    ASSERT_EQ(cpu->reg.p, 0x02);
-
-    ResetState();
-    dest = 0;
-    LoadRegister(&dest, 0xFFFF, true);
-    ASSERT_EQ(dest, 0xFFFF);
-    ASSERT_EQ(cpu->reg.flags.n, 1);
-    ASSERT_EQ(cpu->reg.flags.z, 0);
-    ASSERT_EQ(cpu->reg.p, 0x80);
-
-    ResetState();
     dest = 0x1234;
-    LoadRegister(&dest, 0, false);
+    LoadRegister8Bit(&dest, 0);
     ASSERT_EQ(dest, 0x1200);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 1);
@@ -334,7 +69,7 @@ TEST_F(CpuTest, TEST_LoadRegister)
 
     ResetState();
     dest = 0x1234;
-    LoadRegister(&dest, 0x5678, false);
+    LoadRegister8Bit(&dest, 0x5678);
     ASSERT_EQ(dest, 0x1278);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 0);
@@ -342,8 +77,38 @@ TEST_F(CpuTest, TEST_LoadRegister)
 
     ResetState();
     dest = 0x1234;
-    LoadRegister(&dest, 0x80, false);
+    LoadRegister8Bit(&dest, 0x80);
     ASSERT_EQ(dest, 0x1280);
+    ASSERT_EQ(cpu->reg.flags.n, 1);
+    ASSERT_EQ(cpu->reg.flags.z, 0);
+    ASSERT_EQ(cpu->reg.p, 0x80);
+
+}
+
+TEST_F(CpuTest, TEST_LoadRegister16Bit)
+{
+    uint16_t dest;
+
+    ResetState();
+    dest = 0;
+    LoadRegister16Bit(&dest, 0x1234);
+    ASSERT_EQ(dest, 0x1234);
+    ASSERT_EQ(cpu->reg.flags.n, 0);
+    ASSERT_EQ(cpu->reg.flags.z, 0);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+
+    ResetState();
+    dest = 0xFFFF;
+    LoadRegister16Bit(&dest, 0);
+    ASSERT_EQ(dest, 0);
+    ASSERT_EQ(cpu->reg.flags.n, 0);
+    ASSERT_EQ(cpu->reg.flags.z, 1);
+    ASSERT_EQ(cpu->reg.p, 0x02);
+
+    ResetState();
+    dest = 0;
+    LoadRegister16Bit(&dest, 0xFFFF);
+    ASSERT_EQ(dest, 0xFFFF);
     ASSERT_EQ(cpu->reg.flags.n, 1);
     ASSERT_EQ(cpu->reg.flags.z, 0);
     ASSERT_EQ(cpu->reg.p, 0x80);
@@ -391,6 +156,8 @@ TEST_F(CpuTest, TEST_IsXYBit)
     ASSERT_FALSE(IsIndex16Bit());
     ASSERT_TRUE(IsIndex8Bit());
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 TEST_F(CpuTest, TEST_TAX)
 {
@@ -718,6 +485,8 @@ TEST_F(CpuTest, TEST_TSC)
     ASSERT_EQ(cpu->reg.flags.z, 1);
     ASSERT_EQ(cpu->reg.p, 0x02);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 TEST_F(CpuTest, TEST_LDA_DirectIndexedIndirect)
 {
@@ -1636,4 +1405,50 @@ TEST_F(CpuTest, TEST_LDY_AbsoluteIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x90);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
+{
+    cpu->reg.a = 0xFEDC;
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x81;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000008] = 0xFF;
+    memory[0x000009] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0xFEDC);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], 0xDC);
+    ASSERT_EQ(memory[0x130000], 0xFE);
+
+    ResetState();
+    cpu->reg.a = 0xFEDC;
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x81;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000008] = 0xFF;
+    memory[0x000009] = 0xFF;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0xFEDC);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], 0xDC);
+    ASSERT_EQ(memory[0x130000], 0x11);
 }

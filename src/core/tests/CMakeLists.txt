@@ -7,6 +7,7 @@ add_library(gtest ${GTEST_SRC}/src/gtest-all.cc)
 target_link_libraries(gtest Threads::Threads)
 
 set(TEST_SRC
+    AddressModeTest.cpp
     CpuTest.cpp
     main.cpp
 )

@@ -1,5 +1,6 @@
 #include <sstream>
 
+#include "AddressMode.h"
 #include "Cpu.h"
 #include "Memory.h"
 
@@ -75,28 +76,40 @@ void Cpu::ProcessOpCode()
         case 0xAA: // TAX - Transfer A to X.
             {
                 LogInstruction("%02X: TAX", opcode);
-                LoadRegister(&reg.x, reg.a, IsIndex16Bit());
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, reg.a);
+                else
+                    LoadRegister8Bit(&reg.x, reg.a);
             }
             break;
 
         case 0xA8: // TAY - Transfer A to Y.
             {
                 LogInstruction("%02X: TAY", opcode);
-                LoadRegister(&reg.y, reg.a, IsIndex16Bit());
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, reg.a);
+                else
+                    LoadRegister8Bit(&reg.y, reg.a);
             }
             break;
 
         case 0xBA: // TSX - Transfer SP to X.
             {
                 LogInstruction("%02X: TSX", opcode);
-                LoadRegister(&reg.x, reg.sp, IsIndex16Bit());
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, reg.sp);
+                else
+                    LoadRegister8Bit(&reg.x, reg.sp);
             }
             break;
 
         case 0x8A: // TXA - Transfer X to A.
             {
                 LogInstruction("%02X: TXA", opcode);
-                LoadRegister(&reg.a, reg.x, IsAccumulator16Bit());
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, reg.x);
+                else
+                    LoadRegister8Bit(&reg.a, reg.x);
             }
             break;
 
@@ -115,28 +128,37 @@ void Cpu::ProcessOpCode()
         case 0x9B: // TXY - Transfer X to Y.
             {
                 LogInstruction("%02X: TXY", opcode);
-                LoadRegister(&reg.y, reg.x, IsIndex16Bit());
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, reg.x);
+                else
+                    LoadRegister8Bit(&reg.y, reg.x);
             }
             break;
 
         case 0x98: // TYA - Transfer Y to A.
             {
                 LogInstruction("%02X: TYA", opcode);
-                LoadRegister(&reg.a, reg.y, IsAccumulator16Bit());
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, reg.y);
+                else
+                    LoadRegister8Bit(&reg.a, reg.y);
             }
             break;
 
         case 0xBB: // TYX - Transfer Y to X.
             {
                 LogInstruction("%02X: TYX", opcode);
-                LoadRegister(&reg.x, reg.y, IsIndex16Bit());
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, reg.y);
+                else
+                    LoadRegister8Bit(&reg.x, reg.y);
             }
             break;
 
         case 0x5B: // TCD/TAD - Transfer A to D.
             {
                 LogInstruction("%02X: TCD", opcode);
-                LoadRegister(&reg.d, reg.a, true);
+                LoadRegister16Bit(&reg.d, reg.a);
             }
             break;
 
@@ -155,14 +177,14 @@ void Cpu::ProcessOpCode()
         case 0x7B: // TDC/TDA - Transfer D to A.
             {
                 LogInstruction("%02X: TDC", opcode);
-                LoadRegister(&reg.a, reg.d, true);
+                LoadRegister16Bit(&reg.a, reg.d);
             }
             break;
 
         case 0x3B: // TSC/TSA - Transfer SP to A.
             {
                 LogInstruction("%02X: TSC", opcode);
-                LoadRegister(&reg.a, reg.sp, true);
+                LoadRegister16Bit(&reg.a, reg.sp);
             }
             break;
 
@@ -174,190 +196,267 @@ void Cpu::ProcessOpCode()
 
         case 0xA1: // LDA (Direct,X)
             {
-                uint16_t value = GetOpDirectIndexedIndirect();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndexedIndirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xA3: // LDA Stack,S
             {
-                uint16_t value = GetOpStackRelative();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeStackRelative mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xA5: // LDA Direct
             {
-                uint16_t value = GetOpDirect();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xA7: // LDA [Direct]
             {
-                uint16_t value = GetOpDirectIndirectLong();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndirectLong mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xA9: // LDA Immediate
             {
-                uint16_t value;
                 if (IsAccumulator16Bit())
-                    value = ReadPC16Bit();
+                    LoadRegister16Bit(&reg.a, ReadPC16Bit());
                 else
-                    value = ReadPC8Bit();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                    LoadRegister8Bit(&reg.a, ReadPC8Bit());
             }
             break;
 
         case 0xAD: // LDA Absolute
             {
-                uint16_t value = GetOpAbsolute();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeAbsolute mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xAF: // LDA Long
             {
-                uint16_t value = GetOpAbsoluteLong();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeAbsoluteLong mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB1: // LDA (Direct),Y
             {
-                uint16_t value = GetOpDirectIndirectIndexed();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndirectIndexed mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB2: // LDA (Direct)
             {
-                uint16_t value = GetOpDirectIndirect();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB3: // LDA (Stack,S),Y
             {
-                uint16_t value = GetOpStackRelativeIndirectIndexed();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeStackRelativeIndirectIndexed mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB5: // LDA Direct,X
             {
-                uint16_t value = GetOpDirectIndexedX();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB7: // LDA [Direct],Y
             {
-                uint16_t value = GetOpDirectIndirectLongIndexed();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeDirectIndirectLongIndexed mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xB9: // LDA Absolute,Y
             {
-                uint16_t value = GetOpAbsoluteIndexedY();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeAbsoluteIndexedY mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xBD: // LDA Absolute,X
             {
-                uint16_t value = GetOpAbsoluteIndexedX();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xBF: // LDA Long,X
             {
-                uint16_t value = GetOpAbsoluteLongIndexedX();
-                LoadRegister(&reg.a, value, IsAccumulator16Bit());
+                AddressModeAbsoluteLongIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
         case 0xA2: // LDX Immediate
             {
-                uint16_t value;
                 if (IsIndex16Bit())
-                    value = ReadPC16Bit();
+                    LoadRegister16Bit(&reg.x, ReadPC16Bit());
                 else
-                    value = ReadPC8Bit();
-                LoadRegister(&reg.x, value, IsIndex16Bit());
+                    LoadRegister8Bit(&reg.x, ReadPC8Bit());
             }
             break;
 
         case 0xA6: // LDX Direct
             {
-                uint16_t value = GetOpDirect();
-                LoadRegister(&reg.x, value, IsIndex16Bit());
+                AddressModeDirect mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
             }
             break;
 
         case 0xAE: // LDX Absolute
             {
-                uint16_t value = GetOpAbsolute();
-                LoadRegister(&reg.x, value, IsIndex16Bit());
+                AddressModeAbsolute mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
             }
             break;
 
         case 0xB6: // LDX Direct,Y
             {
-                uint16_t value = GetOpDirectIndexedY();
-                LoadRegister(&reg.x, value, IsIndex16Bit());
+                AddressModeDirectIndexedY mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
             }
             break;
 
         case 0xBE: // LDX Absolute,Y
             {
-                uint16_t value = GetOpAbsoluteIndexedY();
-                LoadRegister(&reg.x, value, IsIndex16Bit());
+                AddressModeAbsoluteIndexedY mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
             }
             break;
 
         case 0xA0: // LDY Immediate
             {
-                uint16_t value;
                 if (IsIndex16Bit())
-                    value = ReadPC16Bit();
+                    LoadRegister16Bit(&reg.y, ReadPC16Bit());
                 else
-                    value = ReadPC8Bit();
-                LoadRegister(&reg.y, value, IsIndex16Bit());
+                    LoadRegister8Bit(&reg.y, ReadPC8Bit());
             }
             break;
 
         case 0xA4: // LDY Direct
             {
-                uint16_t value = GetOpDirect();
-                LoadRegister(&reg.y, value, IsIndex16Bit());
+                AddressModeDirect mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
             }
             break;
 
         case 0xAC: // LDY Absolute
             {
-                uint16_t value = GetOpAbsolute();
-                LoadRegister(&reg.y, value, IsIndex16Bit());
+                AddressModeAbsolute mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
             }
             break;
 
         case 0xB4: // LDY Direct,X
             {
-                uint16_t value = GetOpDirectIndexedX();
-                LoadRegister(&reg.y, value, IsIndex16Bit());
+                AddressModeDirectIndexedX mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
             }
             break;
 
         case 0xBC: // LDY Absolute,X
             {
-                uint16_t value = GetOpAbsoluteIndexedX();
-                LoadRegister(&reg.y, value, IsIndex16Bit());
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                if (IsIndex16Bit())
+                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
+                else
+                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
             }
             break;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Store opcodes                                                                                                     //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x81: // STA (Direct,X)
+            {
+                AddressModeDirectIndexedIndirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
 
         case 0x00: NotYetImplemented(0x00); break;
         case 0x01: NotYetImplemented(0x01); break;
@@ -496,7 +595,7 @@ void Cpu::ProcessOpCode()
         case 0x7F: NotYetImplemented(0x7F); break;
 
         case 0x80: NotYetImplemented(0x80); break;
-        case 0x81: NotYetImplemented(0x81); break;
+        //case 0x81: NotYetImplemented(0x81); break;
         case 0x82: NotYetImplemented(0x82); break;
         case 0x83: NotYetImplemented(0x83); break;
         case 0x84: NotYetImplemented(0x84); break;

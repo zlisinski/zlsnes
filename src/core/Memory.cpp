@@ -32,7 +32,7 @@ uint8_t Memory::Read8Bit(uint32_t addr) const
 }
 
 
-void Memory::WriteByte(uint32_t addr, uint8_t byte)
+void Memory::Write8Bit(uint32_t addr, uint8_t value)
 {
-    memory[addr] = byte;
+    memory[addr] = value;
 }
