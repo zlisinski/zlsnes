@@ -1411,7 +1411,6 @@ TEST_F(CpuTest, TEST_LDY_AbsoluteIndexedX)
 
 TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
 {
-    cpu->reg.a = 0xFEDC;
     cpu->reg.d = 0xFF00;
     cpu->reg.x = 0x000A;
     memory[GetPC()] = 0x81;
@@ -1419,7 +1418,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     memory[0x000008] = 0xFF;
     memory[0x000009] = 0xFF;
     cpu->ProcessOpCode();
-    ASSERT_EQ(cpu->reg.a, 0xFEDC);
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
     ASSERT_EQ(cpu->reg.x, 0x000A);
     ASSERT_EQ(cpu->reg.y, Y_VALUE);
     ASSERT_EQ(cpu->reg.d, 0xFF00);
@@ -1427,11 +1426,10 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], 0xDC);
-    ASSERT_EQ(memory[0x130000], 0xFE);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
 
     ResetState();
-    cpu->reg.a = 0xFEDC;
     cpu->reg.d = 0xFF00;
     cpu->reg.x = 0x000A;
     cpu->reg.flags.m = 1;
@@ -1441,7 +1439,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     memory[0x000009] = 0xFF;
     memory[0x130000] = 0x11;
     cpu->ProcessOpCode();
-    ASSERT_EQ(cpu->reg.a, 0xFEDC);
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
     ASSERT_EQ(cpu->reg.x, 0x000A);
     ASSERT_EQ(cpu->reg.y, Y_VALUE);
     ASSERT_EQ(cpu->reg.d, 0xFF00);
@@ -1449,6 +1447,854 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], 0xDC);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_StackRelative)
+{
+    cpu->reg.sp = 0xFF10;
+    memory[GetPC()] = 0x83;
+    memory[GetPC() + 1] = 0xFA;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, 0xFF10);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x00000A], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x00000B], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.sp = 0xFF10;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x83;
+    memory[GetPC() + 1] = 0xFA;
+    memory[0x00000B] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, 0xFF10);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x00000A], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x00000B], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_Direct)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x85;
+    memory[GetPC() + 1] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000000], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x85;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x000000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_DirectIndirectLong)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x87;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x00FFFE] = 0xFF;
+    memory[0x00FFFF] = 0xFF;
+    memory[0x000000] = 0x12;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x87;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x00FFFE] = 0xFF;
+    memory[0x00FFFF] = 0xFF;
+    memory[0x000000] = 0x12;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_Absolute)
+{
+    memory[GetPC()] = 0x8D;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x8D;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_AbsoluteLong)
+{
+    memory[GetPC()] = 0x8F;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[GetPC() + 3] = 0x12;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x8F;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[GetPC() + 3] = 0x12;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_DirectIndirectIndexed)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    memory[GetPC()] = 0x91;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x000000] = 0xFF;
+    memory[0x00FFFF] = 0xFE;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x91;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x000000] = 0xFF;
+    memory[0x00FFFF] = 0xFE;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_DirectIndirect)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x92;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x00FFFF] = 0xFF;
+    memory[0x000000] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x92;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x00FFFF] = 0xFF;
+    memory[0x000000] = 0xFF;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_DirectIndexedX)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x95;
+    memory[GetPC() + 1] = 0xFE;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000009], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x95;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_DirectIndirectLongIndexed)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    memory[GetPC()] = 0x97;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000000] = 0x12;
+    memory[0x00FFFE] = 0xFC;
+    memory[0x00FFFF] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130006], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130007], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x97;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000000] = 0x12;
+    memory[0x00FFFE] = 0xFC;
+    memory[0x00FFFF] = 0xFF;
+    memory[0x130007] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130006], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130007], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_AbsoluteIndexedY)
+{
+    cpu->reg.y = 0x000A;
+    memory[GetPC()] = 0x99;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.y = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x99;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_AbsoluteIndexedX)
+{
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x9D;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x9D;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STA_AbsoluteLongIndexedX)
+{
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x9F;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[GetPC() + 3] = 0x12;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+
+    ResetState();
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x9F;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[GetPC() + 3] = 0x12;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STX_Direct)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x86;
+    memory[GetPC() + 1] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000000], GetByte<1>(X_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x86;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x000000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STX_Absolute)
+{
+    memory[GetPC()] = 0x8E;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(X_VALUE));
+
+    ResetState();
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x8E;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STX_DirectIndexedY)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    memory[GetPC()] = 0x96;
+    memory[GetPC() + 1] = 0xFE;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000009], GetByte<1>(X_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.y = 0x000A;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x96;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, 0x000A);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STY_Direct)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x84;
+    memory[GetPC() + 1] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000000], GetByte<1>(Y_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x84;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x000000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STY_Absolute)
+{
+    memory[GetPC()] = 0x8C;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x130000], GetByte<1>(Y_VALUE));
+
+    ResetState();
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x8C;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STY_DirectIndexedX)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x94;
+    memory[GetPC() + 1] = 0xFE;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000009], GetByte<1>(Y_VALUE));
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0x94;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x10);
+    ASSERT_EQ(memory[0x000008], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STZ_Direct)
+{
+    cpu->reg.d = 0xFF00;
+    memory[GetPC()] = 0x64;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x00FFFF] = 0x11;
+    memory[0x000000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x00FFFF], 0);
+    ASSERT_EQ(memory[0x000000], 0);
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x64;
+    memory[GetPC() + 1] = 0xFF;
+    memory[0x00FFFF] = 0x11;
+    memory[0x000000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x00FFFF], 0);
+    ASSERT_EQ(memory[0x000000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STZ_DirectIndexedX)
+{
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x74;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000008] = 0x11;
+    memory[0x000009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x000008], 0);
+    ASSERT_EQ(memory[0x000009], 0);
+
+    ResetState();
+    cpu->reg.d = 0xFF00;
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x74;
+    memory[GetPC() + 1] = 0xFE;
+    memory[0x000008] = 0x11;
+    memory[0x000009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, 0xFF00);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x000008], 0);
+    ASSERT_EQ(memory[0x000009], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STZ_Absolute)
+{
+    memory[GetPC()] = 0x9C;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x12FFFF] = 0x11;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x12FFFF], 0);
+    ASSERT_EQ(memory[0x130000], 0);
+
+    ResetState();
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x9C;
+    memory[GetPC() + 1] = 0xFF;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x12FFFF] = 0x11;
+    memory[0x130000] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x12FFFF], 0);
+    ASSERT_EQ(memory[0x130000], 0x11);
+}
+
+TEST_F(CpuTest, TEST_STZ_AbsoluteIndexedX)
+{
+    cpu->reg.x = 0x000A;
+    memory[GetPC()] = 0x9E;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130008] = 0x11;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x00);
+    ASSERT_EQ(memory[0x130008], 0);
+    ASSERT_EQ(memory[0x130009], 0);
+
+    ResetState();
+    cpu->reg.x = 0x000A;
+    cpu->reg.flags.m = 1;
+    memory[GetPC()] = 0x9E;
+    memory[GetPC() + 1] = 0xFE;
+    memory[GetPC() + 2] = 0xFF;
+    memory[0x130008] = 0x11;
+    memory[0x130009] = 0x11;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, 0x000A);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x20);
+    ASSERT_EQ(memory[0x130008], 0);
+    ASSERT_EQ(memory[0x130009], 0x11);
 }

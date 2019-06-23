@@ -457,6 +457,225 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        case 0x83: // STA Stack,S
+            {
+                AddressModeStackRelative mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x85: // STA Direct
+            {
+                AddressModeDirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x87: // STA [Direct]
+            {
+                AddressModeDirectIndirectLong mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x8D: // STA Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x8F: // STA Long
+            {
+                AddressModeAbsoluteLong mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x91: // STA (Direct),Y
+            {
+                AddressModeDirectIndirectIndexed mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x92: // STA (Direct)
+            {
+                AddressModeDirectIndirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x95: // STA Direct,X
+            {
+                AddressModeDirectIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x97: // STA [Direct],Y
+            {
+                AddressModeDirectIndirectLongIndexed mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x99: // STA Absolute,Y
+            {
+                AddressModeAbsoluteIndexedY mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x9D: // STA Absolute,X
+            {
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x9F: // STA Long,X
+            {
+                AddressModeAbsoluteLongIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(reg.a);
+                else
+                    mode.Write8Bit(reg.a);
+            }
+            break;
+
+        case 0x86: // STX Direct
+            {
+                AddressModeDirect mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.x);
+                else
+                    mode.Write8Bit(reg.x);
+            }
+            break;
+
+        case 0x8E: // STX Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.x);
+                else
+                    mode.Write8Bit(reg.x);
+            }
+            break;
+
+        case 0x96: // STX Direct,Y
+            {
+                AddressModeDirectIndexedY mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.x);
+                else
+                    mode.Write8Bit(reg.x);
+            }
+            break;
+
+        case 0x84: // STY Direct
+            {
+                AddressModeDirect mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.y);
+                else
+                    mode.Write8Bit(reg.y);
+            }
+            break;
+
+        case 0x8C: // STY Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.y);
+                else
+                    mode.Write8Bit(reg.y);
+            }
+            break;
+
+        case 0x94: // STY Direct,X
+            {
+                AddressModeDirectIndexedX mode(this, memory);
+                if (IsIndex16Bit())
+                    mode.Write16Bit(reg.y);
+                else
+                    mode.Write8Bit(reg.y);
+            }
+            break;
+
+        case 0x64: // STZ Direct
+            {
+                AddressModeDirect mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(0);
+                else
+                    mode.Write8Bit(0);
+            }
+            break;
+
+        case 0x74: // STZ Direct,X
+            {
+                AddressModeDirectIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(0);
+                else
+                    mode.Write8Bit(0);
+            }
+            break;
+
+        case 0x9C: // STZ Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(0);
+                else
+                    mode.Write8Bit(0);
+            }
+            break;
+
+        case 0x9E: // STZ Absolute,X
+            {
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                if (IsAccumulator16Bit())
+                    mode.Write16Bit(0);
+                else
+                    mode.Write8Bit(0);
+            }
+            break;
 
         case 0x00: NotYetImplemented(0x00); break;
         case 0x01: NotYetImplemented(0x01); break;
@@ -564,7 +783,7 @@ void Cpu::ProcessOpCode()
         case 0x61: NotYetImplemented(0x61); break;
         case 0x62: NotYetImplemented(0x62); break;
         case 0x63: NotYetImplemented(0x63); break;
-        case 0x64: NotYetImplemented(0x64); break;
+        //case 0x64: NotYetImplemented(0x64); break;
         case 0x65: NotYetImplemented(0x65); break;
         case 0x66: NotYetImplemented(0x66); break;
         case 0x67: NotYetImplemented(0x67); break;
@@ -581,7 +800,7 @@ void Cpu::ProcessOpCode()
         case 0x71: NotYetImplemented(0x71); break;
         case 0x72: NotYetImplemented(0x72); break;
         case 0x73: NotYetImplemented(0x73); break;
-        case 0x74: NotYetImplemented(0x74); break;
+        //case 0x74: NotYetImplemented(0x74); break;
         case 0x75: NotYetImplemented(0x75); break;
         case 0x76: NotYetImplemented(0x76); break;
         case 0x77: NotYetImplemented(0x77); break;
@@ -597,36 +816,36 @@ void Cpu::ProcessOpCode()
         case 0x80: NotYetImplemented(0x80); break;
         //case 0x81: NotYetImplemented(0x81); break;
         case 0x82: NotYetImplemented(0x82); break;
-        case 0x83: NotYetImplemented(0x83); break;
-        case 0x84: NotYetImplemented(0x84); break;
-        case 0x85: NotYetImplemented(0x85); break;
-        case 0x86: NotYetImplemented(0x86); break;
-        case 0x87: NotYetImplemented(0x87); break;
+        //case 0x83: NotYetImplemented(0x83); break;
+        //case 0x84: NotYetImplemented(0x84); break;
+        //case 0x85: NotYetImplemented(0x85); break;
+        //case 0x86: NotYetImplemented(0x86); break;
+        //case 0x87: NotYetImplemented(0x87); break;
         case 0x88: NotYetImplemented(0x88); break;
         case 0x89: NotYetImplemented(0x89); break;
         //case 0x8A: NotYetImplemented(0x8A); break;
         case 0x8B: NotYetImplemented(0x8B); break;
-        case 0x8C: NotYetImplemented(0x8C); break;
-        case 0x8D: NotYetImplemented(0x8D); break;
-        case 0x8E: NotYetImplemented(0x8E); break;
-        case 0x8F: NotYetImplemented(0x8F); break;
+        //case 0x8C: NotYetImplemented(0x8C); break;
+        //case 0x8D: NotYetImplemented(0x8D); break;
+        //case 0x8E: NotYetImplemented(0x8E); break;
+        //case 0x8F: NotYetImplemented(0x8F); break;
 
         case 0x90: NotYetImplemented(0x90); break;
-        case 0x91: NotYetImplemented(0x91); break;
-        case 0x92: NotYetImplemented(0x92); break;
+        //case 0x91: NotYetImplemented(0x91); break;
+        //case 0x92: NotYetImplemented(0x92); break;
         case 0x93: NotYetImplemented(0x93); break;
-        case 0x94: NotYetImplemented(0x94); break;
-        case 0x95: NotYetImplemented(0x95); break;
-        case 0x96: NotYetImplemented(0x96); break;
-        case 0x97: NotYetImplemented(0x97); break;
+        //case 0x94: NotYetImplemented(0x94); break;
+        //case 0x95: NotYetImplemented(0x95); break;
+        //case 0x96: NotYetImplemented(0x96); break;
+        //case 0x97: NotYetImplemented(0x97); break;
         //case 0x98: NotYetImplemented(0x98); break;
-        case 0x99: NotYetImplemented(0x99); break;
+        //case 0x99: NotYetImplemented(0x99); break;
         //case 0x9A: NotYetImplemented(0x9A); break;
         //case 0x9B: NotYetImplemented(0x9B); break;
-        case 0x9C: NotYetImplemented(0x9C); break;
-        case 0x9D: NotYetImplemented(0x9D); break;
-        case 0x9E: NotYetImplemented(0x9E); break;
-        case 0x9F: NotYetImplemented(0x9F); break;
+        //case 0x9C: NotYetImplemented(0x9C); break;
+        //case 0x9D: NotYetImplemented(0x9D); break;
+        //case 0x9E: NotYetImplemented(0x9E); break;
+        //case 0x9F: NotYetImplemented(0x9F); break;
 
         //case 0xA0: NotYetImplemented(0xA0); break;
         //case 0xA1: NotYetImplemented(0xA1); break;
