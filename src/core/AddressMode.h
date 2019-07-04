@@ -87,7 +87,7 @@ public:
 
     virtual uint8_t Read8Bit() {throw std::logic_error("Can't read from AddressModeAbsoluteIndirect");}
     virtual uint16_t Read16Bit() {throw std::logic_error("Can't read from AddressModeAbsoluteIndirect");}
-    virtual void Write8Bit(uint16_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndirect");}
+    virtual void Write8Bit(uint8_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndirect");}
     virtual void Write16Bit(uint16_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndirect");}
 };
 
@@ -105,7 +105,7 @@ public:
 
     virtual uint8_t Read8Bit() {throw std::logic_error("Can't read from AddressModeAbsoluteIndexedIndirect");}
     virtual uint16_t Read16Bit() {throw std::logic_error("Can't read from AddressModeAbsoluteIndexedIndirect");}
-    virtual void Write8Bit(uint16_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndexedIndirect");}
+    virtual void Write8Bit(uint8_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndexedIndirect");}
     virtual void Write16Bit(uint16_t value) {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndexedIndirect");}
 };
 
