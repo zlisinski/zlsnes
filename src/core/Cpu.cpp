@@ -677,6 +677,176 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Stack opcodes                                                                                                     //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x48: // PHA - Push A
+            {
+                LogInstruction("%02X: PHA", opcode);
+                if (IsAccumulator16Bit())
+                    Push16Bit(reg.a);
+                else
+                    Push8Bit(GetByte<0>(reg.a));
+            }
+            break;
+
+        case 0xDA: // PHX - Push X
+            {
+                LogInstruction("%02X: PHX", opcode);
+                if (IsIndex16Bit())
+                    Push16Bit(reg.x);
+                else
+                    Push8Bit(GetByte<0>(reg.x));
+            }
+            break;
+
+        case 0x5A: // PHY - Push Y
+            {
+                LogInstruction("%02X: PHX", opcode);
+                if (IsIndex16Bit())
+                    Push16Bit(reg.y);
+                else
+                    Push8Bit(GetByte<0>(reg.y));
+            }
+            break;
+
+        case 0x8B: // PHB - Push DB
+            {
+                LogInstruction("%02X: PHB", opcode);
+                Push8Bit(reg.db);
+            }
+            break;
+
+        case 0x0B: // PHD - Push D
+            {
+                LogInstruction("%02X: PHD", opcode);
+                Push16Bit(reg.d);
+            }
+            break;
+
+        case 0x4B: // PHK - Push PB
+            {
+                LogInstruction("%02X: PHK", opcode);
+                Push8Bit(reg.pb);
+            }
+            break;
+
+        case 0x08: // PHP - Push P
+            {
+                LogInstruction("%02X: PHP", opcode);
+                Push8Bit(reg.p);
+            }
+            break;
+
+        case 0xF4: // PEA - Push Effective Address
+            {
+                uint16_t value = ReadPC16Bit();
+                LogInstruction("%02X %02X %02X: PEA", opcode, GetByte<1>(value), GetByte<0>(value));
+                Push16Bit(value);
+            }
+            break;
+
+        case 0xD4: // PEI - Push Effective Indirect Address
+            {
+                AddressModeDirect mode(this, memory);
+                LogInstruction("%02X: PEI", opcode);
+                Push16Bit(mode.Read16Bit());
+            }
+            break;
+
+        case 0x62: // PER - Push Effective Relative Address
+            {
+                int8_t value = static_cast<int8_t>(ReadPC8Bit());
+                LogInstruction("%02X %02X: PER", opcode, value);
+                Push16Bit(reg.pc + value);
+            }
+            break;
+
+        case 0x68: // PLA - Pull/Pop A
+            {
+                LogInstruction("%02X: PLA", opcode);
+                if (IsAccumulator16Bit())
+                {
+                    reg.a = Pop16Bit();
+                    reg.flags.n = (reg.a & 0x8000) != 0;
+                    reg.flags.z = reg.a == 0;
+                }
+                else
+                {
+                    uint8_t value = Pop8Bit();
+                    reg.a = (reg.a & 0xFF00) | value;
+                    reg.flags.n = (value & 0x80) != 0;
+                    reg.flags.z = value == 0;
+                }
+            }
+            break;
+
+        case 0xFA: // PLX - Pull/Pop X
+            {
+                LogInstruction("%02X: PLX", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.x = Pop16Bit();
+                    reg.flags.n = (reg.x & 0x8000) != 0;
+                    reg.flags.z = reg.x == 0;
+                }
+                else
+                {
+                    uint8_t value = Pop8Bit();
+                    reg.x = (reg.x & 0xFF00) | value;
+                    reg.flags.n = (value & 0x80) != 0;
+                    reg.flags.z = value == 0;
+                }
+            }
+            break;
+
+        case 0x7A: // PLY - Pull/Pop Y
+            {
+                LogInstruction("%02X: PLY", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.y = Pop16Bit();
+                    reg.flags.n = (reg.y & 0x8000) != 0;
+                    reg.flags.z = reg.y == 0;
+                }
+                else
+                {
+                    uint8_t value = Pop8Bit();
+                    reg.y = (reg.y & 0xFF00) | value;
+                    reg.flags.n = (value & 0x80) != 0;
+                    reg.flags.z = value == 0;
+                }
+            }
+            break;
+
+        case 0xAB: // PLB - Pull/Pop DB
+            {
+                LogInstruction("%02X: PLB", opcode);
+                reg.db = Pop8Bit();
+                reg.flags.n = (reg.db & 0x80) != 0;
+                reg.flags.z = reg.db == 0;
+            }
+            break;
+
+        case 0x2B: // PLD - Pull/Pop D
+            {
+                LogInstruction("%02X: PLD", opcode);
+                reg.d = Pop16Bit();
+                reg.flags.n = (reg.d & 0x8000) != 0;
+                reg.flags.z = reg.d == 0;
+            }
+            break;
+
+        case 0x28: // PLP - Pull/Pop P
+            {
+                LogInstruction("%02X: PLP", opcode);
+                reg.p = Pop8Bit();
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x01: NotYetImplemented(0x01); break;
         case 0x02: NotYetImplemented(0x02); break;
@@ -685,10 +855,10 @@ void Cpu::ProcessOpCode()
         case 0x05: NotYetImplemented(0x05); break;
         case 0x06: NotYetImplemented(0x06); break;
         case 0x07: NotYetImplemented(0x07); break;
-        case 0x08: NotYetImplemented(0x08); break;
+        //case 0x08: NotYetImplemented(0x08); break;
         case 0x09: NotYetImplemented(0x09); break;
         case 0x0A: NotYetImplemented(0x0A); break;
-        case 0x0B: NotYetImplemented(0x0B); break;
+        //case 0x0B: NotYetImplemented(0x0B); break;
         case 0x0C: NotYetImplemented(0x0C); break;
         case 0x0D: NotYetImplemented(0x0D); break;
         case 0x0E: NotYetImplemented(0x0E); break;
@@ -719,10 +889,10 @@ void Cpu::ProcessOpCode()
         case 0x25: NotYetImplemented(0x25); break;
         case 0x26: NotYetImplemented(0x26); break;
         case 0x27: NotYetImplemented(0x27); break;
-        case 0x28: NotYetImplemented(0x28); break;
+        //case 0x28: NotYetImplemented(0x28); break;
         case 0x29: NotYetImplemented(0x29); break;
         case 0x2A: NotYetImplemented(0x2A); break;
-        case 0x2B: NotYetImplemented(0x2B); break;
+        //case 0x2B: NotYetImplemented(0x2B); break;
         case 0x2C: NotYetImplemented(0x2C); break;
         case 0x2D: NotYetImplemented(0x2D); break;
         case 0x2E: NotYetImplemented(0x2E); break;
@@ -753,10 +923,10 @@ void Cpu::ProcessOpCode()
         case 0x45: NotYetImplemented(0x45); break;
         case 0x46: NotYetImplemented(0x46); break;
         case 0x47: NotYetImplemented(0x47); break;
-        case 0x48: NotYetImplemented(0x48); break;
+        //case 0x48: NotYetImplemented(0x48); break;
         case 0x49: NotYetImplemented(0x49); break;
         case 0x4A: NotYetImplemented(0x4A); break;
-        case 0x4B: NotYetImplemented(0x4B); break;
+        //case 0x4B: NotYetImplemented(0x4B); break;
         case 0x4C: NotYetImplemented(0x4C); break;
         case 0x4D: NotYetImplemented(0x4D); break;
         case 0x4E: NotYetImplemented(0x4E); break;
@@ -772,7 +942,7 @@ void Cpu::ProcessOpCode()
         case 0x57: NotYetImplemented(0x57); break;
         case 0x58: NotYetImplemented(0x58); break;
         case 0x59: NotYetImplemented(0x59); break;
-        case 0x5A: NotYetImplemented(0x5A); break;
+        //case 0x5A: NotYetImplemented(0x5A); break;
         //case 0x5B: NotYetImplemented(0x5B); break;
         case 0x5C: NotYetImplemented(0x5C); break;
         case 0x5D: NotYetImplemented(0x5D); break;
@@ -781,13 +951,13 @@ void Cpu::ProcessOpCode()
 
         case 0x60: NotYetImplemented(0x60); break;
         case 0x61: NotYetImplemented(0x61); break;
-        case 0x62: NotYetImplemented(0x62); break;
+        //case 0x62: NotYetImplemented(0x62); break;
         case 0x63: NotYetImplemented(0x63); break;
         //case 0x64: NotYetImplemented(0x64); break;
         case 0x65: NotYetImplemented(0x65); break;
         case 0x66: NotYetImplemented(0x66); break;
         case 0x67: NotYetImplemented(0x67); break;
-        case 0x68: NotYetImplemented(0x68); break;
+        //case 0x68: NotYetImplemented(0x68); break;
         case 0x69: NotYetImplemented(0x69); break;
         case 0x6A: NotYetImplemented(0x6A); break;
         case 0x6B: NotYetImplemented(0x6B); break;
@@ -806,7 +976,7 @@ void Cpu::ProcessOpCode()
         case 0x77: NotYetImplemented(0x77); break;
         case 0x78: NotYetImplemented(0x78); break;
         case 0x79: NotYetImplemented(0x79); break;
-        case 0x7A: NotYetImplemented(0x7A); break;
+        //case 0x7A: NotYetImplemented(0x7A); break;
         //case 0x7B: NotYetImplemented(0x7B); break;
         case 0x7C: NotYetImplemented(0x7C); break;
         case 0x7D: NotYetImplemented(0x7D); break;
@@ -824,7 +994,7 @@ void Cpu::ProcessOpCode()
         case 0x88: NotYetImplemented(0x88); break;
         case 0x89: NotYetImplemented(0x89); break;
         //case 0x8A: NotYetImplemented(0x8A); break;
-        case 0x8B: NotYetImplemented(0x8B); break;
+        //case 0x8B: NotYetImplemented(0x8B); break;
         //case 0x8C: NotYetImplemented(0x8C); break;
         //case 0x8D: NotYetImplemented(0x8D); break;
         //case 0x8E: NotYetImplemented(0x8E); break;
@@ -858,7 +1028,7 @@ void Cpu::ProcessOpCode()
         //case 0xA8: NotYetImplemented(0xA8); break;
         //case 0xA9: NotYetImplemented(0xA9); break;
         //case 0xAA: NotYetImplemented(0xAA); break;
-        case 0xAB: NotYetImplemented(0xAB); break;
+        //case 0xAB: NotYetImplemented(0xAB); break;
         //case 0xAC: NotYetImplemented(0xAC); break;
         //case 0xAD: NotYetImplemented(0xAD); break;
         //case 0xAE: NotYetImplemented(0xAE); break;
@@ -902,13 +1072,13 @@ void Cpu::ProcessOpCode()
         case 0xD1: NotYetImplemented(0xD1); break;
         case 0xD2: NotYetImplemented(0xD2); break;
         case 0xD3: NotYetImplemented(0xD3); break;
-        case 0xD4: NotYetImplemented(0xD4); break;
+        //case 0xD4: NotYetImplemented(0xD4); break;
         case 0xD5: NotYetImplemented(0xD5); break;
         case 0xD6: NotYetImplemented(0xD6); break;
         case 0xD7: NotYetImplemented(0xD7); break;
         case 0xD8: NotYetImplemented(0xD8); break;
         case 0xD9: NotYetImplemented(0xD9); break;
-        case 0xDA: NotYetImplemented(0xDA); break;
+        //case 0xDA: NotYetImplemented(0xDA); break;
         case 0xDB: NotYetImplemented(0xDB); break;
         case 0xDC: NotYetImplemented(0xDC); break;
         case 0xDD: NotYetImplemented(0xDD); break;
@@ -936,13 +1106,13 @@ void Cpu::ProcessOpCode()
         case 0xF1: NotYetImplemented(0xF1); break;
         case 0xF2: NotYetImplemented(0xF2); break;
         case 0xF3: NotYetImplemented(0xF3); break;
-        case 0xF4: NotYetImplemented(0xF4); break;
+        //case 0xF4: NotYetImplemented(0xF4); break;
         case 0xF5: NotYetImplemented(0xF5); break;
         case 0xF6: NotYetImplemented(0xF6); break;
         case 0xF7: NotYetImplemented(0xF7); break;
         case 0xF8: NotYetImplemented(0xF8); break;
         case 0xF9: NotYetImplemented(0xF9); break;
-        case 0xFA: NotYetImplemented(0xFA); break;
+        //case 0xFA: NotYetImplemented(0xFA); break;
         case 0xFB: NotYetImplemented(0xFB); break;
         case 0xFC: NotYetImplemented(0xFC); break;
         case 0xFD: NotYetImplemented(0xFD); break;

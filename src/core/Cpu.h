@@ -113,6 +113,63 @@ private:
         reg.flags.z = *dest == 0;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    inline void Push8Bit(uint8_t value)
+    {
+        memory->Write8Bit(Address(0, reg.sp), value);
+        reg.sp--;
+
+        // High byte is always 0x01 in emulation mode, and low byte wraps.
+        if (reg.emulationMode == true && reg.sp < 0x0100)
+            reg.sp = 0x01FF;
+    }
+
+    inline void Push16Bit(uint16_t value)
+    {
+        Push8Bit(GetByte<1>(value));
+        Push8Bit(GetByte<0>(value));
+    }
+
+    inline void Push24Bit(uint32_t value)
+    {
+        Push8Bit(GetByte<2>(value));
+        Push8Bit(GetByte<1>(value));
+        Push8Bit(GetByte<0>(value));
+    }
+
+    inline uint8_t Pop8Bit()
+    {
+        reg.sp++;
+
+        // High byte is always 0x01 in emulation mode, and low byte wraps.
+        if (reg.emulationMode == true && reg.sp > 0x01FF)
+            reg.sp = 0x0100;
+
+        uint8_t value = memory->Read8Bit(Address(0, reg.sp));
+
+        return value;
+    }
+
+    inline uint16_t Pop16Bit()
+    {
+        uint8_t low = Pop8Bit();
+        uint8_t high = Pop8Bit();
+
+        return Make16Bit(high, low);
+    }
+
+    inline uint32_t Pop24Bit()
+    {
+        uint8_t low = Pop8Bit();
+        uint8_t mid = Pop8Bit();
+        uint8_t high = Pop8Bit();
+
+        return Make24Bit(high, mid, low);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;
