@@ -97,20 +97,40 @@ private:
         return (reg.pb << 16) | pc;
     }
 
+    inline void SetNFlag8Bit(uint8_t value)
+    {
+        reg.flags.n = (value & 0x80) != 0;
+    }
+
+    inline void SetNFlag16Bit(uint16_t value)
+    {
+        reg.flags.n = (value & 0x8000) != 0;
+    }
+
+    inline void SetZFlag8Bit(uint8_t value)
+    {
+        reg.flags.z = value == 0;
+    }
+
+    inline void SetZFlag16Bit(uint16_t value)
+    {
+        reg.flags.z = value == 0;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     inline void LoadRegister8Bit(uint16_t *dest, uint16_t value)
     {
         *dest = (*dest & 0xFF00) | (value & 0x00FF);
-        reg.flags.n = (*dest & 0x80) != 0;
-        reg.flags.z = (*dest & 0x00FF) == 0;
+        SetNFlag8Bit(*dest);
+        SetZFlag8Bit(*dest);
     }
 
     inline void LoadRegister16Bit(uint16_t *dest, uint16_t value)
     {
         *dest = value;
-        reg.flags.n = (*dest & 0x8000) != 0;
-        reg.flags.z = *dest == 0;
+        SetNFlag16Bit(*dest);
+        SetZFlag16Bit(*dest);
     }
 
     ///////////////////////////////////////////////////////////////////////////

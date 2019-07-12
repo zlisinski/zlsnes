@@ -771,15 +771,15 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                 {
                     reg.a = Pop16Bit();
-                    reg.flags.n = (reg.a & 0x8000) != 0;
-                    reg.flags.z = reg.a == 0;
+                    SetNFlag16Bit(reg.a);
+                    SetZFlag16Bit(reg.a);
                 }
                 else
                 {
                     uint8_t value = Pop8Bit();
                     reg.a = (reg.a & 0xFF00) | value;
-                    reg.flags.n = (value & 0x80) != 0;
-                    reg.flags.z = value == 0;
+                    SetNFlag8Bit(value);
+                    SetZFlag8Bit(value);
                 }
             }
             break;
@@ -790,15 +790,15 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                 {
                     reg.x = Pop16Bit();
-                    reg.flags.n = (reg.x & 0x8000) != 0;
-                    reg.flags.z = reg.x == 0;
+                    SetNFlag16Bit(reg.x);
+                    SetZFlag16Bit(reg.x);
                 }
                 else
                 {
                     uint8_t value = Pop8Bit();
                     reg.x = (reg.x & 0xFF00) | value;
-                    reg.flags.n = (value & 0x80) != 0;
-                    reg.flags.z = value == 0;
+                    SetNFlag8Bit(value);
+                    SetZFlag8Bit(value);
                 }
             }
             break;
@@ -809,15 +809,15 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                 {
                     reg.y = Pop16Bit();
-                    reg.flags.n = (reg.y & 0x8000) != 0;
-                    reg.flags.z = reg.y == 0;
+                    SetNFlag16Bit(reg.y);
+                    SetZFlag16Bit(reg.y);
                 }
                 else
                 {
                     uint8_t value = Pop8Bit();
                     reg.y = (reg.y & 0xFF00) | value;
-                    reg.flags.n = (value & 0x80) != 0;
-                    reg.flags.z = value == 0;
+                    SetNFlag8Bit(value);
+                    SetZFlag8Bit(value);
                 }
             }
             break;
@@ -826,8 +826,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLB", opcode);
                 reg.db = Pop8Bit();
-                reg.flags.n = (reg.db & 0x80) != 0;
-                reg.flags.z = reg.db == 0;
+                SetNFlag8Bit(reg.db);
+                SetZFlag8Bit(reg.db);
             }
             break;
 
@@ -835,8 +835,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLD", opcode);
                 reg.d = Pop16Bit();
-                reg.flags.n = (reg.d & 0x8000) != 0;
-                reg.flags.z = reg.d == 0;
+                SetNFlag16Bit(reg.d);
+                SetZFlag16Bit(reg.d);
             }
             break;
 
