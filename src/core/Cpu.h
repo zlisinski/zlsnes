@@ -122,7 +122,7 @@ private:
 
     inline void LoadRegister8Bit(uint16_t *dest, uint16_t value)
     {
-        *dest = (*dest & 0xFF00) | (value & 0x00FF);
+        *dest = Bytes::MaskByte<1>(*dest) | Bytes::MaskByte<0>(value);
         SetNFlag8Bit(*dest);
         SetZFlag8Bit(*dest);
     }

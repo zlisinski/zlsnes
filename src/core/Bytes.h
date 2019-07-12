@@ -28,4 +28,13 @@ namespace Bytes
         // Return type is uint8_t, so there is no need to mask off other bytes.
         return value >> (8 * N);
     }
+
+    template <uint8_t N, typename T>
+    inline T MaskByte(T value)
+    {
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(N < sizeof(T), "N must be less than sizeof(T)");
+
+        return value & (0xFF << (N * 8));
+    }
 }

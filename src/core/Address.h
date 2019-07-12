@@ -12,7 +12,7 @@ public:
     {}
 
     explicit Address(uint32_t addr) :
-        bank((addr >> 16) & 0xFF),
+        bank(Bytes::GetByte<2>(addr)),
         offset(addr & 0xFFFF)
     {}
 

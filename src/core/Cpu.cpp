@@ -119,7 +119,7 @@ void Cpu::ProcessOpCode()
 
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
-                    reg.sp = 0x0100 | (reg.x & 0x00FF);
+                    reg.sp = 0x0100 | Bytes::MaskByte<0>(reg.x);
                 else
                     reg.sp = reg.x;
             }
@@ -168,7 +168,7 @@ void Cpu::ProcessOpCode()
 
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
-                    reg.sp = 0x0100 | (reg.a & 0x00FF);
+                    reg.sp = 0x0100 | Bytes::MaskByte<0>(reg.a);
                 else
                     reg.sp = reg.a;
             }
@@ -777,7 +777,7 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = Pop8Bit();
-                    reg.a = (reg.a & 0xFF00) | value;
+                    reg.a = Bytes::MaskByte<1>(reg.a) | value;
                     SetNFlag8Bit(value);
                     SetZFlag8Bit(value);
                 }
@@ -796,7 +796,7 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = Pop8Bit();
-                    reg.x = (reg.x & 0xFF00) | value;
+                    reg.x = Bytes::MaskByte<1>(reg.x) | value;
                     SetNFlag8Bit(value);
                     SetZFlag8Bit(value);
                 }
@@ -815,7 +815,7 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = Pop8Bit();
-                    reg.y = (reg.y & 0xFF00) | value;
+                    reg.y = Bytes::MaskByte<1>(reg.y) | value;
                     SetNFlag8Bit(value);
                     SetZFlag8Bit(value);
                 }
