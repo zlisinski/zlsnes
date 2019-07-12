@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Address.h"
+#include "Bytes.h"
 #include "Zlsnes.h"
 
 class Memory
@@ -22,37 +23,37 @@ public:
     uint8_t ReadRaw8Bit(uint32_t addr) const {return memory[addr];}
 
     // Reads that don't wrap at bank boundaries. E.G. Read16Bit(0x12FFFF) will read from 0x12FFFF and 0x130000.
-    uint16_t Read16Bit(uint32_t addr) const {return Make16Bit(Read8Bit(addr + 1), Read8Bit(addr));}
-    uint32_t Read24Bit(uint32_t addr) const {return Make24Bit(Read8Bit(addr + 2), Read8Bit(addr + 1), Read8Bit(addr));}
+    uint16_t Read16Bit(uint32_t addr) const {return Bytes::Make16Bit(Read8Bit(addr + 1), Read8Bit(addr));}
+    uint32_t Read24Bit(uint32_t addr) const {return Bytes::Make24Bit(Read8Bit(addr + 2), Read8Bit(addr + 1), Read8Bit(addr));}
     uint16_t Read16Bit(const Address &addr) const
     {
         uint8_t low = Read8Bit(addr);
         uint8_t high = Read8Bit(addr.AddOffset(1));
-        return Make16Bit(high, low);
+        return Bytes::Make16Bit(high, low);
     }
     uint32_t Read24Bit(const Address &addr) const
     {
         uint8_t low = Read8Bit(addr);
         uint8_t mid = Read8Bit(addr.AddOffset(1));
         uint8_t high = Read8Bit(addr.AddOffset(2));
-        return Make24Bit(high, mid, low);
+        return Bytes::Make24Bit(high, mid, low);
     }
 
     // Reads that wrap at bank boundaries. E.G. Read16BitWrapBank(0x12, 0xFFFF) will read from 0x12FFFF and 0x120000.
-    uint16_t Read16BitWrapBank(uint8_t bank, uint16_t addr) const {return Make16Bit(Read8Bit(Make24Bit(bank, addr + 1)), Read8Bit(Make24Bit(bank, addr)));}
-    uint32_t Read24BitWrapBank(uint8_t bank, uint16_t addr) const {return Make24Bit(Read8Bit(Make24Bit(bank, addr + 2)), Read8Bit(Make24Bit(bank, addr + 1)), Read8Bit(Make24Bit(bank, addr)));}
+    uint16_t Read16BitWrapBank(uint8_t bank, uint16_t addr) const {return Bytes::Make16Bit(Read8Bit(Bytes::Make24Bit(bank, addr + 1)), Read8Bit(Bytes::Make24Bit(bank, addr)));}
+    uint32_t Read24BitWrapBank(uint8_t bank, uint16_t addr) const {return Bytes::Make24Bit(Read8Bit(Bytes::Make24Bit(bank, addr + 2)), Read8Bit(Bytes::Make24Bit(bank, addr + 1)), Read8Bit(Bytes::Make24Bit(bank, addr)));}
     uint16_t Read16BitWrapBank(const Address &addr) const
     {
         uint8_t low = Read8Bit(addr);
         uint8_t high = Read8Bit(addr.AddOffsetWrapBank(1));
-        return Make16Bit(high, low);
+        return Bytes::Make16Bit(high, low);
     }
     uint32_t Read24BitWrapBank(const Address &addr) const
     {
         uint8_t low = Read8Bit(addr);
         uint8_t mid = Read8Bit(addr.AddOffsetWrapBank(1));
         uint8_t high = Read8Bit(addr.AddOffsetWrapBank(2));
-        return Make24Bit(high, mid, low);
+        return Bytes::Make24Bit(high, mid, low);
     }
 
     // Bypasses checking of reads/writes from/to special addresses. Don't use unless you know what you are doing.

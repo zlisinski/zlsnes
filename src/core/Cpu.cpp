@@ -15,7 +15,7 @@ Cpu::Cpu(Memory *memory) :
 
 uint8_t Cpu::ReadPC8Bit()
 {
-    uint8_t byte = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t byte = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     //timer->AddCycle();
 
     reg.pc++;
@@ -26,11 +26,11 @@ uint8_t Cpu::ReadPC8Bit()
 
 uint16_t Cpu::ReadPC16Bit()
 {
-    uint8_t low = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t low = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
     //timer->AddCycle();
 
-    uint8_t high = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t high = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
     //timer->AddCycle();
 
@@ -42,15 +42,15 @@ uint16_t Cpu::ReadPC16Bit()
 
 uint32_t Cpu::ReadPC24Bit()
 {
-    uint8_t low = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t low = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
     //timer->AddCycle();
 
-    uint8_t mid = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t mid = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
     //timer->AddCycle();
 
-    uint8_t high = memory->Read8Bit(Make24Bit(reg.pb, reg.pc));
+    uint8_t high = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
     //timer->AddCycle();
 
@@ -689,7 +689,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     Push16Bit(reg.a);
                 else
-                    Push8Bit(GetByte<0>(reg.a));
+                    Push8Bit(Bytes::GetByte<0>(reg.a));
             }
             break;
 
@@ -699,7 +699,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     Push16Bit(reg.x);
                 else
-                    Push8Bit(GetByte<0>(reg.x));
+                    Push8Bit(Bytes::GetByte<0>(reg.x));
             }
             break;
 
@@ -709,7 +709,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
-                    Push8Bit(GetByte<0>(reg.y));
+                    Push8Bit(Bytes::GetByte<0>(reg.y));
             }
             break;
 
@@ -744,7 +744,7 @@ void Cpu::ProcessOpCode()
         case 0xF4: // PEA - Push Effective Address
             {
                 uint16_t value = ReadPC16Bit();
-                LogInstruction("%02X %02X %02X: PEA", opcode, GetByte<1>(value), GetByte<0>(value));
+                LogInstruction("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
                 Push16Bit(value);
             }
             break;

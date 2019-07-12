@@ -1426,8 +1426,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1447,7 +1447,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -1465,8 +1465,8 @@ TEST_F(CpuTest, TEST_STA_StackRelative)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, 0xFF10);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x00000A], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x00000B], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x00000A], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x00000B], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.sp = 0xFF10;
@@ -1483,7 +1483,7 @@ TEST_F(CpuTest, TEST_STA_StackRelative)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, 0xFF10);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x00000A], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x00000A], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x00000B], 0x11);
 }
 
@@ -1501,8 +1501,8 @@ TEST_F(CpuTest, TEST_STA_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x000000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1519,7 +1519,7 @@ TEST_F(CpuTest, TEST_STA_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x000000], 0x11);
 }
 
@@ -1540,8 +1540,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectLong)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1561,7 +1561,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectLong)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -1579,8 +1579,8 @@ TEST_F(CpuTest, TEST_STA_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.flags.m = 1;
@@ -1597,7 +1597,7 @@ TEST_F(CpuTest, TEST_STA_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -1616,8 +1616,8 @@ TEST_F(CpuTest, TEST_STA_AbsoluteLong)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.flags.m = 1;
@@ -1635,7 +1635,7 @@ TEST_F(CpuTest, TEST_STA_AbsoluteLong)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -1656,8 +1656,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectIndexed)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1677,7 +1677,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectIndexed)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130009], 0x11);
 }
 
@@ -1697,8 +1697,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1717,7 +1717,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndirect)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -1736,8 +1736,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x000009], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000009], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1755,7 +1755,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x000009], 0x11);
 }
 
@@ -1777,8 +1777,8 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectLongIndexed)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x130006], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130007], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x130006], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130007], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1799,7 +1799,7 @@ TEST_F(CpuTest, TEST_STA_DirectIndirectLongIndexed)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x130006], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130006], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130007], 0x11);
 }
 
@@ -1818,8 +1818,8 @@ TEST_F(CpuTest, TEST_STA_AbsoluteIndexedY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.y = 0x000A;
@@ -1837,7 +1837,7 @@ TEST_F(CpuTest, TEST_STA_AbsoluteIndexedY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130009], 0x11);
 }
 
@@ -1856,8 +1856,8 @@ TEST_F(CpuTest, TEST_STA_AbsoluteIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.x = 0x000A;
@@ -1875,7 +1875,7 @@ TEST_F(CpuTest, TEST_STA_AbsoluteIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130009], 0x11);
 }
 
@@ -1895,8 +1895,8 @@ TEST_F(CpuTest, TEST_STA_AbsoluteLongIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
-    ASSERT_EQ(memory[0x130009], GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130009], Bytes::GetByte<1>(A_VALUE));
 
     ResetState();
     cpu->reg.x = 0x000A;
@@ -1915,7 +1915,7 @@ TEST_F(CpuTest, TEST_STA_AbsoluteLongIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[0x130008], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[0x130008], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[0x130009], 0x11);
 }
 
@@ -1933,8 +1933,8 @@ TEST_F(CpuTest, TEST_STX_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(X_VALUE));
-    ASSERT_EQ(memory[0x000000], GetByte<1>(X_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000000], Bytes::GetByte<1>(X_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -1951,7 +1951,7 @@ TEST_F(CpuTest, TEST_STX_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(X_VALUE));
     ASSERT_EQ(memory[0x000000], 0x11);
 }
 
@@ -1969,8 +1969,8 @@ TEST_F(CpuTest, TEST_STX_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(X_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(X_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(X_VALUE));
 
     ResetState();
     cpu->reg.flags.x = 1;
@@ -1987,7 +1987,7 @@ TEST_F(CpuTest, TEST_STX_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(X_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -2006,8 +2006,8 @@ TEST_F(CpuTest, TEST_STX_DirectIndexedY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(X_VALUE));
-    ASSERT_EQ(memory[0x000009], GetByte<1>(X_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000009], Bytes::GetByte<1>(X_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -2025,7 +2025,7 @@ TEST_F(CpuTest, TEST_STX_DirectIndexedY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(X_VALUE));
     ASSERT_EQ(memory[0x000009], 0x11);
 }
 
@@ -2043,8 +2043,8 @@ TEST_F(CpuTest, TEST_STY_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(Y_VALUE));
-    ASSERT_EQ(memory[0x000000], GetByte<1>(Y_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000000], Bytes::GetByte<1>(Y_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -2061,7 +2061,7 @@ TEST_F(CpuTest, TEST_STY_Direct)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x00FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x00FFFF], Bytes::GetByte<0>(Y_VALUE));
     ASSERT_EQ(memory[0x000000], 0x11);
 }
 
@@ -2079,8 +2079,8 @@ TEST_F(CpuTest, TEST_STY_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(Y_VALUE));
-    ASSERT_EQ(memory[0x130000], GetByte<1>(Y_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x130000], Bytes::GetByte<1>(Y_VALUE));
 
     ResetState();
     cpu->reg.flags.x = 1;
@@ -2097,7 +2097,7 @@ TEST_F(CpuTest, TEST_STY_Absolute)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x12FFFF], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x12FFFF], Bytes::GetByte<0>(Y_VALUE));
     ASSERT_EQ(memory[0x130000], 0x11);
 }
 
@@ -2116,8 +2116,8 @@ TEST_F(CpuTest, TEST_STY_DirectIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(Y_VALUE));
-    ASSERT_EQ(memory[0x000009], GetByte<1>(Y_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000009], Bytes::GetByte<1>(Y_VALUE));
 
     ResetState();
     cpu->reg.d = 0xFF00;
@@ -2135,7 +2135,7 @@ TEST_F(CpuTest, TEST_STY_DirectIndexedX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[0x000008], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[0x000008], Bytes::GetByte<0>(Y_VALUE));
     ASSERT_EQ(memory[0x000009], 0x11);
 }
 
@@ -2330,8 +2330,8 @@ TEST_F(CpuTest, TEST_PHA)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 2);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<1>(A_VALUE));
-    ASSERT_EQ(memory[SP_VALUE - 1], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<1>(A_VALUE));
+    ASSERT_EQ(memory[SP_VALUE - 1], Bytes::GetByte<0>(A_VALUE));
 
     ResetState();
     cpu->reg.flags.m = 1;
@@ -2345,7 +2345,7 @@ TEST_F(CpuTest, TEST_PHA)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 1);
     ASSERT_EQ(cpu->reg.p, 0x20);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<0>(A_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<0>(A_VALUE));
     ASSERT_EQ(memory[SP_VALUE - 1], 0);
 }
 
@@ -2361,8 +2361,8 @@ TEST_F(CpuTest, TEST_PHX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 2);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<1>(X_VALUE));
-    ASSERT_EQ(memory[SP_VALUE - 1], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<1>(X_VALUE));
+    ASSERT_EQ(memory[SP_VALUE - 1], Bytes::GetByte<0>(X_VALUE));
 
     ResetState();
     cpu->reg.flags.x = 1;
@@ -2376,7 +2376,7 @@ TEST_F(CpuTest, TEST_PHX)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 1);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<0>(X_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<0>(X_VALUE));
     ASSERT_EQ(memory[SP_VALUE - 1], 0);
 }
 
@@ -2392,8 +2392,8 @@ TEST_F(CpuTest, TEST_PHY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 2);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<1>(Y_VALUE));
-    ASSERT_EQ(memory[SP_VALUE - 1], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<1>(Y_VALUE));
+    ASSERT_EQ(memory[SP_VALUE - 1], Bytes::GetByte<0>(Y_VALUE));
 
     ResetState();
     cpu->reg.flags.x = 1;
@@ -2407,7 +2407,7 @@ TEST_F(CpuTest, TEST_PHY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 1);
     ASSERT_EQ(cpu->reg.p, 0x10);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<0>(Y_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<0>(Y_VALUE));
     ASSERT_EQ(memory[SP_VALUE - 1], 0);
 }
 
@@ -2438,8 +2438,8 @@ TEST_F(CpuTest, TEST_PHD)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE - 2);
     ASSERT_EQ(cpu->reg.p, 0x00);
-    ASSERT_EQ(memory[SP_VALUE], GetByte<1>(D_VALUE));
-    ASSERT_EQ(memory[SP_VALUE - 1], GetByte<0>(D_VALUE));
+    ASSERT_EQ(memory[SP_VALUE], Bytes::GetByte<1>(D_VALUE));
+    ASSERT_EQ(memory[SP_VALUE - 1], Bytes::GetByte<0>(D_VALUE));
 }
 
 TEST_F(CpuTest, TEST_PHK)

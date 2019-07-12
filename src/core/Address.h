@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Zlsnes.h"
+#include "Bytes.h"
 
 class Address
 {
@@ -22,12 +23,12 @@ public:
 
     explicit operator uint32_t() const
     {
-        return Make24Bit(bank, offset);
+        return Bytes::Make24Bit(bank, offset);
     }
 
     uint32_t ToUint() const
     {
-        return Make24Bit(bank, offset);
+        return Bytes::Make24Bit(bank, offset);
     }
 
     Address AddOffset(uint16_t off) const

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Zlsnes.h"
+#include "Bytes.h"
 #include "Memory.h"
 
 
@@ -147,15 +148,15 @@ private:
 
     inline void Push16Bit(uint16_t value)
     {
-        Push8Bit(GetByte<1>(value));
-        Push8Bit(GetByte<0>(value));
+        Push8Bit(Bytes::GetByte<1>(value));
+        Push8Bit(Bytes::GetByte<0>(value));
     }
 
     inline void Push24Bit(uint32_t value)
     {
-        Push8Bit(GetByte<2>(value));
-        Push8Bit(GetByte<1>(value));
-        Push8Bit(GetByte<0>(value));
+        Push8Bit(Bytes::GetByte<2>(value));
+        Push8Bit(Bytes::GetByte<1>(value));
+        Push8Bit(Bytes::GetByte<0>(value));
     }
 
     inline uint8_t Pop8Bit()
@@ -176,7 +177,7 @@ private:
         uint8_t low = Pop8Bit();
         uint8_t high = Pop8Bit();
 
-        return Make16Bit(high, low);
+        return Bytes::Make16Bit(high, low);
     }
 
     inline uint32_t Pop24Bit()
@@ -185,7 +186,7 @@ private:
         uint8_t mid = Pop8Bit();
         uint8_t high = Pop8Bit();
 
-        return Make24Bit(high, mid, low);
+        return Bytes::Make24Bit(high, mid, low);
     }
 
     ///////////////////////////////////////////////////////////////////////////

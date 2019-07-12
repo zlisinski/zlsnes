@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gtest/gtest.h>
+#include "../Bytes.h"
 #include "../Cpu.h"
 
 class Memory;
@@ -15,7 +16,7 @@ protected:
     void TearDown() override;
 
     void ResetState();
-    uint32_t GetPC() {return Make24Bit(cpu->reg.pb, cpu->reg.pc);}
+    uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
 
     // Used for testing private methods.
     bool IsAccumulator8Bit() {return cpu->IsAccumulator8Bit();}
