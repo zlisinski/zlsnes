@@ -57,6 +57,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsolute) // a - Absolute
     memory[GetPC() + 1] = 0xFF;
 
     AddressModeAbsolute mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x12FFFF);
 
@@ -75,6 +76,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteIndexedX) // a,x - Absolute,X
     memory[GetPC() + 1] = 0xFF;
 
     AddressModeAbsoluteIndexedX mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130008);
 
@@ -92,6 +94,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteIndexedY) // a,y - Absolute,Y
     memory[GetPC() + 1] = 0xFF;
 
     AddressModeAbsoluteIndexedY mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130008);
 
@@ -108,6 +111,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteIndirect) // (a) - (Absolute)
     memory[0x000000] = 0x56;
     memory[0x00FFFF] = 0x78;
     AddressModeAbsoluteIndirect mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x345678);
 }
@@ -120,6 +124,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteIndexedIndirect) // (a,x) - (Absolute,
     memory[0x340008] = 0x78;
     memory[0x340009] = 0x56;
     AddressModeAbsoluteIndexedIndirect mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x345678);
 }
@@ -130,6 +135,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirect) // d - Direct
     memory[GetPC()] = 0xFF;
 
     AddressModeDirect mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x00FFFF);
 
@@ -146,6 +152,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndexedX) // d,x - Direct,X
     memory[GetPC()] = 0xFE;
 
     AddressModeDirectIndexedX mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x000008);
 
@@ -162,6 +169,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndexedY) // d,y - Direct,Y
     memory[GetPC()] = 0xFE;
 
     AddressModeDirectIndexedY mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x000008);
 
@@ -179,6 +187,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndirect) // (d) - (Direct)
     memory[0x000000] = 0xFF;
 
     AddressModeDirectIndirect mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x12FFFF);
 
@@ -197,6 +206,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndirectLong) // [d] - [Direct]
     memory[0x000000] = 0x12;
 
     AddressModeDirectIndirectLong mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x12FFFF);
 
@@ -215,6 +225,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndexedIndirect) // (d,x) - (Direct,X)
     memory[0x000009] = 0xFF;
 
     AddressModeDirectIndexedIndirect mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x12FFFF);
 
@@ -233,6 +244,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndirectIndexed) // (d),y - (Direct),Y
     memory[0x00FFFF] = 0xFE;
 
     AddressModeDirectIndirectIndexed mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130008);
 
@@ -252,6 +264,7 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndirectLongIndexed) // [d],y - [Direct]
     memory[0x00FFFF] = 0xFF;
 
     AddressModeDirectIndirectLongIndexed mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130006);
 
@@ -268,6 +281,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteLong) // al - Long
     memory[GetPC() + 2] = 0x12;
 
     AddressModeAbsoluteLong mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x12FFFF);
 
@@ -285,6 +299,7 @@ TEST_F(AddressModeTest, TEST_GetOpAbsoluteLongIndexedX) // al,x - Long,X
     memory[GetPC() + 2] = 0x12;
 
     AddressModeAbsoluteLongIndexedX mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130008);
 
@@ -300,6 +315,7 @@ TEST_F(AddressModeTest, TEST_GetOpStackRelative) // d,s - Stack,S
     memory[GetPC()] = 0xFA;
 
     AddressModeStackRelative mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x00000A);
 
@@ -318,6 +334,7 @@ TEST_F(AddressModeTest, TEST_GetOpStackRelativeIndirectIndexed) // (d,s),y - (St
     memory[0x00000B] = 0xFF;
 
     AddressModeStackRelativeIndirectIndexed mode(cpu, memory_);
+    mode.LoadAddress();
     Address addr = mode.GetAddress();
     ASSERT_EQ(addr.ToUint(), 0x130040);
 

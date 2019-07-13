@@ -9,9 +9,37 @@ Cpu::Cpu(Memory *memory) :
     reg(),
     memory(memory)
 {
+    // Used by LDA, STA, ORA, AND, EOR, ADC, SBC, CMP, CPX, CPY
+    addressModes[0x01] = std::make_unique<AddressModeDirectIndexedIndirect>(this, memory);
+    addressModes[0x03] = std::make_unique<AddressModeStackRelative>(this, memory);
+    addressModes[0x05] = std::make_unique<AddressModeDirect>(this, memory);
+    addressModes[0x07] = std::make_unique<AddressModeDirectIndirectLong>(this, memory);
+    addressModes[0x0D] = std::make_unique<AddressModeAbsolute>(this, memory);
+    addressModes[0x0F] = std::make_unique<AddressModeAbsoluteLong>(this, memory);
+    addressModes[0x11] = std::make_unique<AddressModeDirectIndirectIndexed>(this, memory);
+    addressModes[0x12] = std::make_unique<AddressModeDirectIndirect>(this, memory);
+    addressModes[0x13] = std::make_unique<AddressModeStackRelativeIndirectIndexed>(this, memory);
+    addressModes[0x15] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
+    addressModes[0x17] = std::make_unique<AddressModeDirectIndirectLongIndexed>(this, memory);
+    addressModes[0x19] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
+    addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
+    addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
+    // Used by LDX, LDY, STX, STY, STZ
+    addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
+    addressModes[0x06] = std::make_unique<AddressModeDirect>(this, memory);
+    addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
+    addressModes[0x0E] = std::make_unique<AddressModeAbsolute>(this, memory);
+    addressModes[0x14] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
+    addressModes[0x16] = std::make_unique<AddressModeDirectIndexedY>(this, memory);
+    addressModes[0x1C] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
+    addressModes[0x1E] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
 }
 
+Cpu::~Cpu()
+{
+
+}
 
 uint8_t Cpu::ReadPC8Bit()
 {
@@ -195,42 +223,26 @@ void Cpu::ProcessOpCode()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         case 0xA1: // LDA (Direct,X)
-            {
-                AddressModeDirectIndexedIndirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
         case 0xA3: // LDA Stack,S
-            {
-                AddressModeStackRelative mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
         case 0xA5: // LDA Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
         case 0xA7: // LDA [Direct]
+        case 0xAD: // LDA Absolute
+        case 0xAF: // LDA Long
+        case 0xB1: // LDA (Direct),Y
+        case 0xB2: // LDA (Direct)
+        case 0xB3: // LDA (Stack,S),Y
+        case 0xB5: // LDA Direct,X
+        case 0xB7: // LDA [Direct],Y
+        case 0xB9: // LDA Absolute,Y
+        case 0xBD: // LDA Absolute,X
+        case 0xBF: // LDA Long,X
             {
-                AddressModeDirectIndirectLong mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
+                    LoadRegister16Bit(&reg.a, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
+                    LoadRegister8Bit(&reg.a, mode->Read8Bit());
             }
             break;
 
@@ -240,106 +252,6 @@ void Cpu::ProcessOpCode()
                     LoadRegister16Bit(&reg.a, ReadPC16Bit());
                 else
                     LoadRegister8Bit(&reg.a, ReadPC8Bit());
-            }
-            break;
-
-        case 0xAD: // LDA Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xAF: // LDA Long
-            {
-                AddressModeAbsoluteLong mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB1: // LDA (Direct),Y
-            {
-                AddressModeDirectIndirectIndexed mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB2: // LDA (Direct)
-            {
-                AddressModeDirectIndirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB3: // LDA (Stack,S),Y
-            {
-                AddressModeStackRelativeIndirectIndexed mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB5: // LDA Direct,X
-            {
-                AddressModeDirectIndexedX mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB7: // LDA [Direct],Y
-            {
-                AddressModeDirectIndirectLongIndexed mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xB9: // LDA Absolute,Y
-            {
-                AddressModeAbsoluteIndexedY mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xBD: // LDA Absolute,X
-            {
-                AddressModeAbsoluteIndexedX mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
-            }
-            break;
-
-        case 0xBF: // LDA Long,X
-            {
-                AddressModeAbsoluteLongIndexedX mode(this, memory);
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, mode.Read8Bit());
             }
             break;
 
@@ -353,42 +265,16 @@ void Cpu::ProcessOpCode()
             break;
 
         case 0xA6: // LDX Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
-            }
-            break;
-
         case 0xAE: // LDX Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
-            }
-            break;
-
         case 0xB6: // LDX Direct,Y
-            {
-                AddressModeDirectIndexedY mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
-            }
-            break;
-
         case 0xBE: // LDX Absolute,Y
             {
-                AddressModeAbsoluteIndexedY mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, mode.Read16Bit());
+                    LoadRegister16Bit(&reg.x, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.x, mode.Read8Bit());
+                    LoadRegister8Bit(&reg.x, mode->Read8Bit());
             }
             break;
 
@@ -402,42 +288,16 @@ void Cpu::ProcessOpCode()
             break;
 
         case 0xA4: // LDY Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
-            }
-            break;
-
         case 0xAC: // LDY Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
-            }
-            break;
-
         case 0xB4: // LDY Direct,X
-            {
-                AddressModeDirectIndexedX mode(this, memory);
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
-                else
-                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
-            }
-            break;
-
         case 0xBC: // LDY Absolute,X
             {
-                AddressModeAbsoluteIndexedX mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, mode.Read16Bit());
+                    LoadRegister16Bit(&reg.y, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.y, mode.Read8Bit());
+                    LoadRegister8Bit(&reg.y, mode->Read8Bit());
             }
             break;
 
@@ -448,218 +308,71 @@ void Cpu::ProcessOpCode()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         case 0x81: // STA (Direct,X)
-            {
-                AddressModeDirectIndexedIndirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x83: // STA Stack,S
-            {
-                AddressModeStackRelative mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x85: // STA Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x87: // STA [Direct]
-            {
-                AddressModeDirectIndirectLong mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x8D: // STA Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x8F: // STA Long
-            {
-                AddressModeAbsoluteLong mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x91: // STA (Direct),Y
-            {
-                AddressModeDirectIndirectIndexed mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x92: // STA (Direct)
-            {
-                AddressModeDirectIndirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x95: // STA Direct,X
-            {
-                AddressModeDirectIndexedX mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x97: // STA [Direct],Y
-            {
-                AddressModeDirectIndirectLongIndexed mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x99: // STA Absolute,Y
-            {
-                AddressModeAbsoluteIndexedY mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x9D: // STA Absolute,X
-            {
-                AddressModeAbsoluteIndexedX mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
-                else
-                    mode.Write8Bit(reg.a);
-            }
-            break;
-
         case 0x9F: // STA Long,X
             {
-                AddressModeAbsoluteLongIndexedX mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsAccumulator16Bit())
-                    mode.Write16Bit(reg.a);
+                    mode->Write16Bit(reg.a);
                 else
-                    mode.Write8Bit(reg.a);
+                    mode->Write8Bit(reg.a);
             }
             break;
 
         case 0x86: // STX Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsIndex16Bit())
-                    mode.Write16Bit(reg.x);
-                else
-                    mode.Write8Bit(reg.x);
-            }
-            break;
-
         case 0x8E: // STX Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsIndex16Bit())
-                    mode.Write16Bit(reg.x);
-                else
-                    mode.Write8Bit(reg.x);
-            }
-            break;
-
         case 0x96: // STX Direct,Y
             {
-                AddressModeDirectIndexedY mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsIndex16Bit())
-                    mode.Write16Bit(reg.x);
+                    mode->Write16Bit(reg.x);
                 else
-                    mode.Write8Bit(reg.x);
+                    mode->Write8Bit(reg.x);
             }
             break;
 
         case 0x84: // STY Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsIndex16Bit())
-                    mode.Write16Bit(reg.y);
-                else
-                    mode.Write8Bit(reg.y);
-            }
-            break;
-
         case 0x8C: // STY Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                if (IsIndex16Bit())
-                    mode.Write16Bit(reg.y);
-                else
-                    mode.Write8Bit(reg.y);
-            }
-            break;
-
         case 0x94: // STY Direct,X
             {
-                AddressModeDirectIndexedX mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsIndex16Bit())
-                    mode.Write16Bit(reg.y);
+                    mode->Write16Bit(reg.y);
                 else
-                    mode.Write8Bit(reg.y);
+                    mode->Write8Bit(reg.y);
             }
             break;
 
         case 0x64: // STZ Direct
-            {
-                AddressModeDirect mode(this, memory);
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(0);
-                else
-                    mode.Write8Bit(0);
-            }
-            break;
-
         case 0x74: // STZ Direct,X
             {
-                AddressModeDirectIndexedX mode(this, memory);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 if (IsAccumulator16Bit())
-                    mode.Write16Bit(0);
+                    mode->Write16Bit(0);
                 else
-                    mode.Write8Bit(0);
+                    mode->Write8Bit(0);
             }
             break;
 
         case 0x9C: // STZ Absolute
             {
+                // This opcode doesn't follow the pattern for address mode, so we can't use the addressModes lookup table.
                 AddressModeAbsolute mode(this, memory);
+                mode.LoadAddress();
                 if (IsAccumulator16Bit())
                     mode.Write16Bit(0);
                 else
@@ -669,7 +382,9 @@ void Cpu::ProcessOpCode()
 
         case 0x9E: // STZ Absolute,X
             {
+                // This opcode doesn't follow the pattern for address mode, so we can't use the addressModes lookup table.
                 AddressModeAbsoluteIndexedX mode(this, memory);
+                mode.LoadAddress();
                 if (IsAccumulator16Bit())
                     mode.Write16Bit(0);
                 else
@@ -752,6 +467,7 @@ void Cpu::ProcessOpCode()
         case 0xD4: // PEI - Push Effective Indirect Address
             {
                 AddressModeDirect mode(this, memory);
+                mode.LoadAddress();
                 LogInstruction("%02X: PEI", opcode);
                 Push16Bit(mode.Read16Bit());
             }

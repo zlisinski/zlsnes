@@ -1,9 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include "Zlsnes.h"
 #include "Bytes.h"
 #include "Memory.h"
 
+class AbsAddressMode;
 
 struct Registers
 {
@@ -55,6 +58,7 @@ class Cpu
 {
 public:
     Cpu(Memory *memory);
+    ~Cpu();
 
     uint8_t ReadPC8Bit();
     uint16_t ReadPC16Bit();
@@ -194,6 +198,9 @@ private:
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;
+
+    using AddressModePtr = std::unique_ptr<AbsAddressMode>;
+    AddressModePtr addressModes[32];
 
     friend class CpuTest;
 };
