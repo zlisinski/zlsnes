@@ -560,6 +560,66 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLP", opcode);
                 reg.p = Pop8Bit();
+                // TODO: Clear high byte of reg.x and reg.y if reg.flags.x is 1.
+            }
+            break;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Logical opcodes                                                                                                   //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x21: // AND (Direct,X)
+        case 0x23: // AND Stack,S
+        case 0x25: // AND Direct
+        case 0x27: // AND [Direct]
+        case 0x2D: // AND Absolute
+        case 0x2F: // AND Long
+        case 0x31: // AND (Direct),Y
+        case 0x32: // AND (Direct)
+        case 0x33: // AND (Stack,S),Y
+        case 0x35: // AND Direct,X
+        case 0x37: // AND [Direct],Y
+        case 0x39: // AND Absolute,Y
+        case 0x3D: // AND Absolute,X
+        case 0x3F: // AND Long,X
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    reg.a &= value;
+                    SetNFlag16Bit(reg.a);
+                    SetZFlag16Bit(reg.a);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) & value);
+                    SetNFlag8Bit(reg.a);
+                    SetZFlag8Bit(reg.a);
+                }
+            }
+            break;
+
+        case 0x29: // AND Immediate
+            {
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = ReadPC16Bit();
+                    reg.a &= value;
+                    SetNFlag16Bit(reg.a);
+                    SetZFlag16Bit(reg.a);
+                }
+                else
+                {
+                    uint8_t value = ReadPC8Bit();
+                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) & value);
+                    SetNFlag8Bit(reg.a);
+                    SetZFlag8Bit(reg.a);
+                }
             }
             break;
 
@@ -598,38 +658,38 @@ void Cpu::ProcessOpCode()
         case 0x1F: NotYetImplemented(0x1F); break;
 
         case 0x20: NotYetImplemented(0x20); break;
-        case 0x21: NotYetImplemented(0x21); break;
+        //case 0x21: NotYetImplemented(0x21); break;
         case 0x22: NotYetImplemented(0x22); break;
-        case 0x23: NotYetImplemented(0x23); break;
+        //case 0x23: NotYetImplemented(0x23); break;
         case 0x24: NotYetImplemented(0x24); break;
-        case 0x25: NotYetImplemented(0x25); break;
+        //case 0x25: NotYetImplemented(0x25); break;
         case 0x26: NotYetImplemented(0x26); break;
-        case 0x27: NotYetImplemented(0x27); break;
+        //case 0x27: NotYetImplemented(0x27); break;
         //case 0x28: NotYetImplemented(0x28); break;
-        case 0x29: NotYetImplemented(0x29); break;
+        //case 0x29: NotYetImplemented(0x29); break;
         case 0x2A: NotYetImplemented(0x2A); break;
         //case 0x2B: NotYetImplemented(0x2B); break;
         case 0x2C: NotYetImplemented(0x2C); break;
-        case 0x2D: NotYetImplemented(0x2D); break;
+        //case 0x2D: NotYetImplemented(0x2D); break;
         case 0x2E: NotYetImplemented(0x2E); break;
-        case 0x2F: NotYetImplemented(0x2F); break;
+        //case 0x2F: NotYetImplemented(0x2F); break;
 
         case 0x30: NotYetImplemented(0x30); break;
-        case 0x31: NotYetImplemented(0x31); break;
-        case 0x32: NotYetImplemented(0x32); break;
-        case 0x33: NotYetImplemented(0x33); break;
+        //case 0x31: NotYetImplemented(0x31); break;
+        //case 0x32: NotYetImplemented(0x32); break;
+        //case 0x33: NotYetImplemented(0x33); break;
         case 0x34: NotYetImplemented(0x34); break;
-        case 0x35: NotYetImplemented(0x35); break;
+        //case 0x35: NotYetImplemented(0x35); break;
         case 0x36: NotYetImplemented(0x36); break;
-        case 0x37: NotYetImplemented(0x37); break;
+        //case 0x37: NotYetImplemented(0x37); break;
         case 0x38: NotYetImplemented(0x38); break;
-        case 0x39: NotYetImplemented(0x39); break;
+        //case 0x39: NotYetImplemented(0x39); break;
         case 0x3A: NotYetImplemented(0x3A); break;
         //case 0x3B: NotYetImplemented(0x3B); break;
         case 0x3C: NotYetImplemented(0x3C); break;
-        case 0x3D: NotYetImplemented(0x3D); break;
+        //case 0x3D: NotYetImplemented(0x3D); break;
         case 0x3E: NotYetImplemented(0x3E); break;
-        case 0x3F: NotYetImplemented(0x3F); break;
+        //case 0x3F: NotYetImplemented(0x3F); break;
 
         case 0x40: NotYetImplemented(0x40); break;
         case 0x41: NotYetImplemented(0x41); break;
