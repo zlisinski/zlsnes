@@ -14,6 +14,7 @@ Cpu::Cpu(Memory *memory) :
     addressModes[0x03] = std::make_unique<AddressModeStackRelative>(this, memory);
     addressModes[0x05] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x07] = std::make_unique<AddressModeDirectIndirectLong>(this, memory);
+    addressModes[0x09] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x0D] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x0F] = std::make_unique<AddressModeAbsoluteLong>(this, memory);
     addressModes[0x11] = std::make_unique<AddressModeDirectIndirectIndexed>(this, memory);
@@ -26,6 +27,8 @@ Cpu::Cpu(Memory *memory) :
     addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
     // Used by LDX, LDY, STX, STY, STZ
+    addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
+    addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x06] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
@@ -226,6 +229,7 @@ void Cpu::ProcessOpCode()
         case 0xA3: // LDA Stack,S
         case 0xA5: // LDA Direct
         case 0xA7: // LDA [Direct]
+        case 0xA9: // LDA Immediate
         case 0xAD: // LDA Absolute
         case 0xAF: // LDA Long
         case 0xB1: // LDA (Direct),Y
@@ -246,24 +250,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0xA9: // LDA Immediate
-            {
-                if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, ReadPC16Bit());
-                else
-                    LoadRegister8Bit(&reg.a, ReadPC8Bit());
-            }
-            break;
-
         case 0xA2: // LDX Immediate
-            {
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, ReadPC16Bit());
-                else
-                    LoadRegister8Bit(&reg.x, ReadPC8Bit());
-            }
-            break;
-
         case 0xA6: // LDX Direct
         case 0xAE: // LDX Absolute
         case 0xB6: // LDX Direct,Y
@@ -279,14 +266,6 @@ void Cpu::ProcessOpCode()
             break;
 
         case 0xA0: // LDY Immediate
-            {
-                if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, ReadPC16Bit());
-                else
-                    LoadRegister8Bit(&reg.y, ReadPC8Bit());
-            }
-            break;
-
         case 0xA4: // LDY Direct
         case 0xAC: // LDY Absolute
         case 0xB4: // LDY Direct,X
@@ -574,6 +553,7 @@ void Cpu::ProcessOpCode()
         case 0x23: // AND Stack,S
         case 0x25: // AND Direct
         case 0x27: // AND [Direct]
+        case 0x29: // AND Immediate
         case 0x2D: // AND Absolute
         case 0x2F: // AND Long
         case 0x31: // AND (Direct),Y
@@ -597,25 +577,6 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = mode->Read8Bit();
-                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) & value);
-                    SetNFlag8Bit(reg.a);
-                    SetZFlag8Bit(reg.a);
-                }
-            }
-            break;
-
-        case 0x29: // AND Immediate
-            {
-                if (IsAccumulator16Bit())
-                {
-                    uint16_t value = ReadPC16Bit();
-                    reg.a &= value;
-                    SetNFlag16Bit(reg.a);
-                    SetZFlag16Bit(reg.a);
-                }
-                else
-                {
-                    uint8_t value = ReadPC8Bit();
                     reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) & value);
                     SetNFlag8Bit(reg.a);
                     SetZFlag8Bit(reg.a);

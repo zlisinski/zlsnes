@@ -274,6 +274,20 @@ TEST_F(AddressModeTest, TEST_GetOpDirectIndirectLongIndexed) // [d],y - [Direct]
     ASSERT_EQ(result, 0x1234);
 }
 
+TEST_F(AddressModeTest, TEST_GetOpDirectImmediate) // Immediate
+{
+    memory[GetPC()] = 0xCD;
+    memory[GetPC() + 1] = 0xAB;
+
+    AddressModeImmediate mode(cpu, memory_);
+    mode.LoadAddress();
+    Address addr = mode.GetAddress();
+    ASSERT_EQ(addr.ToUint(), 0x00);
+
+    uint16_t result = mode.Read16Bit();
+    ASSERT_EQ(result, 0xABCD);
+}
+
 TEST_F(AddressModeTest, TEST_GetOpAbsoluteLong) // al - Long
 {
     memory[GetPC()] = 0xFF;

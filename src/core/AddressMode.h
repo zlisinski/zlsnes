@@ -298,6 +298,23 @@ public:
 };
 
 
+// Immediate
+class AddressModeImmediate : public AbsAddressMode
+{
+public:
+    AddressModeImmediate(Cpu *cpu, Memory *memory) :
+        AbsAddressMode(cpu, memory, "(%04X,X)", 3)
+    {}
+
+    // Does nothing.
+    virtual void LoadAddress() override {}
+
+    virtual uint8_t Read8Bit() override {return cpu->ReadPC8Bit();}
+    virtual uint16_t Read16Bit() override {return cpu->ReadPC16Bit();}
+    virtual void Write8Bit(uint8_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeImmediate");}
+    virtual void Write16Bit(uint16_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeImmediate");}
+};
+
 // d,s - Stack,S
 class AddressModeStackRelative : public AbsAddressMode
 {
