@@ -15,23 +15,68 @@ struct Registers
         x(0),
         y(0),
         d(0),
+        sp(0x0100),
         db(0),
         pb(0),
         pc(0),
-        sp(0x0100),
         p(0x34),
         breakFlag(false),
         emulationMode(true)
     {}
 
-    uint16_t a; // Accumulator.
-    uint16_t x; // X index.
-    uint16_t y; // Y index.
-    uint16_t d; // Direct page register.
+// Temporarily turn off errors for anonymous structs. This also works on clang, not just gcc.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
+    union // Accumulator.
+    {
+        uint16_t a;
+        struct
+        {
+            uint8_t al;
+            uint8_t ah;
+        };
+    };
+    union // X index.
+    {
+        uint16_t x;
+        struct
+        {
+            uint8_t xl;
+            uint8_t xh;
+        };
+    };
+    union // Y index.
+    {
+        uint16_t y;
+        struct
+        {
+            uint8_t yl;
+            uint8_t yh;
+        };
+    };
+    union // Direct page register.
+    {
+        uint16_t d;
+        struct
+        {
+            uint8_t dl;
+            uint8_t dh;
+        };
+    };
+    union // Stack pointer.
+    {
+        uint16_t sp;
+        struct
+        {
+            uint8_t sl;
+            uint8_t sh;
+        };
+    };
+
     uint8_t db; // Data bank register.
     uint8_t pb; // Program bank register.
     uint16_t pc; // Program counter.
-    uint16_t sp; // Stack pointer.
 
     union
     {
@@ -48,6 +93,8 @@ struct Registers
             uint8_t n:1; // Negative, bit 7.
         } flags;
     };
+
+#pragma GCC diagnostic pop
 
     bool breakFlag;
     bool emulationMode;
@@ -124,9 +171,9 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    inline void LoadRegister8Bit(uint16_t *dest, uint16_t value)
+    inline void LoadRegister8Bit(uint8_t *dest, uint8_t value)
     {
-        *dest = Bytes::MaskByte<1>(*dest) | Bytes::MaskByte<0>(value);
+        *dest = value;
         SetNFlag8Bit(*dest);
         SetZFlag8Bit(*dest);
     }

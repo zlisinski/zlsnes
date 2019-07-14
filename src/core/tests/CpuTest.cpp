@@ -57,28 +57,28 @@ void CpuTest::ResetState()
 
 TEST_F(CpuTest, TEST_LoadRegister8Bit)
 {
-    uint16_t dest;
+    uint8_t dest;
 
     ResetState();
-    dest = 0x1234;
+    dest = 0x34;
     LoadRegister8Bit(&dest, 0);
-    ASSERT_EQ(dest, 0x1200);
+    ASSERT_EQ(dest, 0x00);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 1);
     ASSERT_EQ(cpu->reg.p, 0x02);
 
     ResetState();
-    dest = 0x1234;
-    LoadRegister8Bit(&dest, 0x5678);
-    ASSERT_EQ(dest, 0x1278);
+    dest = 0x34;
+    LoadRegister8Bit(&dest, 0x78);
+    ASSERT_EQ(dest, 0x78);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 0);
     ASSERT_EQ(cpu->reg.p, 0x00);
 
     ResetState();
-    dest = 0x1234;
+    dest = 0x34;
     LoadRegister8Bit(&dest, 0x80);
-    ASSERT_EQ(dest, 0x1280);
+    ASSERT_EQ(dest, 0x80);
     ASSERT_EQ(cpu->reg.flags.n, 1);
     ASSERT_EQ(cpu->reg.flags.z, 0);
     ASSERT_EQ(cpu->reg.p, 0x80);
@@ -180,7 +180,8 @@ TEST_F(CpuTest, TEST_TAX)
     cpu->reg.flags.x = 1;
     cpu->ProcessOpCode();
     ASSERT_EQ(cpu->reg.a, 0);
-    ASSERT_EQ(cpu->reg.x, Bytes::MaskByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xh, Bytes::GetByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xl, 0);
     ASSERT_EQ(cpu->reg.y, Y_VALUE);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
     ASSERT_EQ(cpu->reg.db, DB_VALUE);
@@ -212,7 +213,8 @@ TEST_F(CpuTest, TEST_TAY)
     cpu->ProcessOpCode();
     ASSERT_EQ(cpu->reg.a, 0);
     ASSERT_EQ(cpu->reg.x, X_VALUE);
-    ASSERT_EQ(cpu->reg.y, Bytes::MaskByte<1>(Y_VALUE));
+    ASSERT_EQ(cpu->reg.yh, Bytes::GetByte<1>(Y_VALUE));
+    ASSERT_EQ(cpu->reg.yl, 0);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
     ASSERT_EQ(cpu->reg.db, DB_VALUE);
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
@@ -242,7 +244,8 @@ TEST_F(CpuTest, TEST_TSX)
     cpu->reg.flags.x = 1;
     cpu->ProcessOpCode();
     ASSERT_EQ(cpu->reg.a, A_VALUE);
-    ASSERT_EQ(cpu->reg.x, Bytes::MaskByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xh, Bytes::GetByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xl, 0);
     ASSERT_EQ(cpu->reg.y, Y_VALUE);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
     ASSERT_EQ(cpu->reg.db, DB_VALUE);
@@ -272,7 +275,8 @@ TEST_F(CpuTest, TEST_TXA)
     cpu->reg.x = 0;
     cpu->reg.flags.m = 1;
     cpu->ProcessOpCode();
-    ASSERT_EQ(cpu->reg.a, Bytes::MaskByte<1>(A_VALUE));
+    ASSERT_EQ(cpu->reg.ah, Bytes::GetByte<1>(A_VALUE));
+    ASSERT_EQ(cpu->reg.al, 0);
     ASSERT_EQ(cpu->reg.x, 0);
     ASSERT_EQ(cpu->reg.y, Y_VALUE);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
@@ -336,7 +340,8 @@ TEST_F(CpuTest, TEST_TXY)
     cpu->ProcessOpCode();
     ASSERT_EQ(cpu->reg.a, A_VALUE);
     ASSERT_EQ(cpu->reg.x, 0);
-    ASSERT_EQ(cpu->reg.y, Bytes::MaskByte<1>(Y_VALUE));
+    ASSERT_EQ(cpu->reg.yh, Bytes::GetByte<1>(Y_VALUE));
+    ASSERT_EQ(cpu->reg.yl, 0);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
     ASSERT_EQ(cpu->reg.db, DB_VALUE);
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
@@ -365,7 +370,8 @@ TEST_F(CpuTest, TEST_TYA)
     cpu->reg.y = 0;
     cpu->reg.flags.m = 1;
     cpu->ProcessOpCode();
-    ASSERT_EQ(cpu->reg.a, Bytes::MaskByte<1>(A_VALUE));
+    ASSERT_EQ(cpu->reg.ah, Bytes::GetByte<1>(A_VALUE));
+    ASSERT_EQ(cpu->reg.al, 0);
     ASSERT_EQ(cpu->reg.x, X_VALUE);
     ASSERT_EQ(cpu->reg.y, 0);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
@@ -397,7 +403,8 @@ TEST_F(CpuTest, TEST_TYX)
     cpu->reg.flags.x = 1;
     cpu->ProcessOpCode();
     ASSERT_EQ(cpu->reg.a, A_VALUE);
-    ASSERT_EQ(cpu->reg.x, Bytes::MaskByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xh, Bytes::GetByte<1>(X_VALUE));
+    ASSERT_EQ(cpu->reg.xl, 0);
     ASSERT_EQ(cpu->reg.y, 0);
     ASSERT_EQ(cpu->reg.d, D_VALUE);
     ASSERT_EQ(cpu->reg.db, DB_VALUE);

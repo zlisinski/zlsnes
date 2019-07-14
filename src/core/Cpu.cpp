@@ -110,7 +110,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.x, reg.a);
                 else
-                    LoadRegister8Bit(&reg.x, reg.a);
+                    LoadRegister8Bit(&reg.xl, reg.al);
             }
             break;
 
@@ -120,7 +120,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.y, reg.a);
                 else
-                    LoadRegister8Bit(&reg.y, reg.a);
+                    LoadRegister8Bit(&reg.yl, reg.al);
             }
             break;
 
@@ -130,7 +130,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.x, reg.sp);
                 else
-                    LoadRegister8Bit(&reg.x, reg.sp);
+                    LoadRegister8Bit(&reg.xl, reg.sl);
             }
             break;
 
@@ -140,7 +140,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     LoadRegister16Bit(&reg.a, reg.x);
                 else
-                    LoadRegister8Bit(&reg.a, reg.x);
+                    LoadRegister8Bit(&reg.al, reg.xl);
             }
             break;
 
@@ -150,7 +150,7 @@ void Cpu::ProcessOpCode()
 
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
-                    reg.sp = 0x0100 | Bytes::MaskByte<0>(reg.x);
+                    reg.sp = 0x0100 | reg.xl;
                 else
                     reg.sp = reg.x;
             }
@@ -162,7 +162,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.y, reg.x);
                 else
-                    LoadRegister8Bit(&reg.y, reg.x);
+                    LoadRegister8Bit(&reg.yl, reg.xl);
             }
             break;
 
@@ -172,7 +172,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     LoadRegister16Bit(&reg.a, reg.y);
                 else
-                    LoadRegister8Bit(&reg.a, reg.y);
+                    LoadRegister8Bit(&reg.al, reg.yl);
             }
             break;
 
@@ -182,7 +182,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.x, reg.y);
                 else
-                    LoadRegister8Bit(&reg.x, reg.y);
+                    LoadRegister8Bit(&reg.xl, reg.yl);
             }
             break;
 
@@ -199,7 +199,7 @@ void Cpu::ProcessOpCode()
 
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
-                    reg.sp = 0x0100 | Bytes::MaskByte<0>(reg.a);
+                    reg.sp = 0x0100 | reg.al;
                 else
                     reg.sp = reg.a;
             }
@@ -246,7 +246,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     LoadRegister16Bit(&reg.a, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.a, mode->Read8Bit());
+                    LoadRegister8Bit(&reg.al, mode->Read8Bit());
             }
             break;
 
@@ -261,7 +261,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.x, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.x, mode->Read8Bit());
+                    LoadRegister8Bit(&reg.xl, mode->Read8Bit());
             }
             break;
 
@@ -276,7 +276,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     LoadRegister16Bit(&reg.y, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.y, mode->Read8Bit());
+                    LoadRegister8Bit(&reg.yl, mode->Read8Bit());
             }
             break;
 
@@ -305,7 +305,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(reg.a);
                 else
-                    mode->Write8Bit(reg.a);
+                    mode->Write8Bit(reg.al);
             }
             break;
 
@@ -318,7 +318,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.x);
                 else
-                    mode->Write8Bit(reg.x);
+                    mode->Write8Bit(reg.xl);
             }
             break;
 
@@ -331,7 +331,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.y);
                 else
-                    mode->Write8Bit(reg.y);
+                    mode->Write8Bit(reg.yl);
             }
             break;
 
@@ -383,7 +383,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                     Push16Bit(reg.a);
                 else
-                    Push8Bit(Bytes::GetByte<0>(reg.a));
+                    Push8Bit(reg.al);
             }
             break;
 
@@ -393,7 +393,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     Push16Bit(reg.x);
                 else
-                    Push8Bit(Bytes::GetByte<0>(reg.x));
+                    Push8Bit(reg.xl);
             }
             break;
 
@@ -403,7 +403,7 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
-                    Push8Bit(Bytes::GetByte<0>(reg.y));
+                    Push8Bit(reg.yl);
             }
             break;
 
@@ -471,10 +471,9 @@ void Cpu::ProcessOpCode()
                 }
                 else
                 {
-                    uint8_t value = Pop8Bit();
-                    reg.a = Bytes::MaskByte<1>(reg.a) | value;
-                    SetNFlag8Bit(value);
-                    SetZFlag8Bit(value);
+                    reg.al = Pop8Bit();
+                    SetNFlag8Bit(reg.al);
+                    SetZFlag8Bit(reg.al);
                 }
             }
             break;
@@ -490,10 +489,9 @@ void Cpu::ProcessOpCode()
                 }
                 else
                 {
-                    uint8_t value = Pop8Bit();
-                    reg.x = Bytes::MaskByte<1>(reg.x) | value;
-                    SetNFlag8Bit(value);
-                    SetZFlag8Bit(value);
+                    reg.xl = Pop8Bit();
+                    SetNFlag8Bit(reg.xl);
+                    SetZFlag8Bit(reg.xl);
                 }
             }
             break;
@@ -509,10 +507,9 @@ void Cpu::ProcessOpCode()
                 }
                 else
                 {
-                    uint8_t value = Pop8Bit();
-                    reg.y = Bytes::MaskByte<1>(reg.y) | value;
-                    SetNFlag8Bit(value);
-                    SetZFlag8Bit(value);
+                    reg.yl = Pop8Bit();
+                    SetNFlag8Bit(reg.yl);
+                    SetZFlag8Bit(reg.yl);
                 }
             }
             break;
@@ -577,9 +574,9 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = mode->Read8Bit();
-                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) & value);
-                    SetNFlag8Bit(reg.a);
-                    SetZFlag8Bit(reg.a);
+                    reg.al &= value;
+                    SetNFlag8Bit(reg.al);
+                    SetZFlag8Bit(reg.al);
                 }
             }
             break;
@@ -612,9 +609,9 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = mode->Read8Bit();
-                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) ^ value);
-                    SetNFlag8Bit(reg.a);
-                    SetZFlag8Bit(reg.a);
+                    reg.al ^= value;
+                    SetNFlag8Bit(reg.al);
+                    SetZFlag8Bit(reg.al);
                 }
             }
             break;
@@ -647,9 +644,9 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t value = mode->Read8Bit();
-                    reg.a = Bytes::MaskByte<1>(reg.a) | (Bytes::MaskByte<0>(reg.a) | value);
-                    SetNFlag8Bit(reg.a);
-                    SetZFlag8Bit(reg.a);
+                    reg.al |= value;
+                    SetNFlag8Bit(reg.al);
+                    SetZFlag8Bit(reg.al);
                 }
             }
             break;

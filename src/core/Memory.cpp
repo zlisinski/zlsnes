@@ -27,7 +27,7 @@ void Memory::SetRomMemory(std::vector<uint8_t> &gameRomMemory)
 
 uint8_t Memory::Read8Bit(uint32_t addr) const
 {
-    printf("Read %08X\n", addr);
+    //printf("Read %08X\n", addr);
     return memory[addr];
 }
 
