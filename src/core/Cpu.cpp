@@ -108,9 +108,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TAX", opcode);
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, reg.a);
+                    LoadRegister(&reg.x, reg.a);
                 else
-                    LoadRegister8Bit(&reg.xl, reg.al);
+                    LoadRegister(&reg.xl, reg.al);
             }
             break;
 
@@ -118,9 +118,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TAY", opcode);
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, reg.a);
+                    LoadRegister(&reg.y, reg.a);
                 else
-                    LoadRegister8Bit(&reg.yl, reg.al);
+                    LoadRegister(&reg.yl, reg.al);
             }
             break;
 
@@ -128,9 +128,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TSX", opcode);
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, reg.sp);
+                    LoadRegister(&reg.x, reg.sp);
                 else
-                    LoadRegister8Bit(&reg.xl, reg.sl);
+                    LoadRegister(&reg.xl, reg.sl);
             }
             break;
 
@@ -138,9 +138,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TXA", opcode);
                 if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, reg.x);
+                    LoadRegister(&reg.a, reg.x);
                 else
-                    LoadRegister8Bit(&reg.al, reg.xl);
+                    LoadRegister(&reg.al, reg.xl);
             }
             break;
 
@@ -160,9 +160,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TXY", opcode);
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, reg.x);
+                    LoadRegister(&reg.y, reg.x);
                 else
-                    LoadRegister8Bit(&reg.yl, reg.xl);
+                    LoadRegister(&reg.yl, reg.xl);
             }
             break;
 
@@ -170,9 +170,9 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TYA", opcode);
                 if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, reg.y);
+                    LoadRegister(&reg.a, reg.y);
                 else
-                    LoadRegister8Bit(&reg.al, reg.yl);
+                    LoadRegister(&reg.al, reg.yl);
             }
             break;
 
@@ -180,16 +180,16 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: TYX", opcode);
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, reg.y);
+                    LoadRegister(&reg.x, reg.y);
                 else
-                    LoadRegister8Bit(&reg.xl, reg.yl);
+                    LoadRegister(&reg.xl, reg.yl);
             }
             break;
 
         case 0x5B: // TCD/TAD - Transfer A to D.
             {
                 LogInstruction("%02X: TCD", opcode);
-                LoadRegister16Bit(&reg.d, reg.a);
+                LoadRegister(&reg.d, reg.a);
             }
             break;
 
@@ -208,14 +208,14 @@ void Cpu::ProcessOpCode()
         case 0x7B: // TDC/TDA - Transfer D to A.
             {
                 LogInstruction("%02X: TDC", opcode);
-                LoadRegister16Bit(&reg.a, reg.d);
+                LoadRegister(&reg.a, reg.d);
             }
             break;
 
         case 0x3B: // TSC/TSA - Transfer SP to A.
             {
                 LogInstruction("%02X: TSC", opcode);
-                LoadRegister16Bit(&reg.a, reg.sp);
+                LoadRegister(&reg.a, reg.sp);
             }
             break;
 
@@ -244,9 +244,9 @@ void Cpu::ProcessOpCode()
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
                 if (IsAccumulator16Bit())
-                    LoadRegister16Bit(&reg.a, mode->Read16Bit());
+                    LoadRegister(&reg.a, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.al, mode->Read8Bit());
+                    LoadRegister(&reg.al, mode->Read8Bit());
             }
             break;
 
@@ -259,9 +259,9 @@ void Cpu::ProcessOpCode()
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.x, mode->Read16Bit());
+                    LoadRegister(&reg.x, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.xl, mode->Read8Bit());
+                    LoadRegister(&reg.xl, mode->Read8Bit());
             }
             break;
 
@@ -274,9 +274,9 @@ void Cpu::ProcessOpCode()
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
                 if (IsIndex16Bit())
-                    LoadRegister16Bit(&reg.y, mode->Read16Bit());
+                    LoadRegister(&reg.y, mode->Read16Bit());
                 else
-                    LoadRegister8Bit(&reg.yl, mode->Read8Bit());
+                    LoadRegister(&reg.yl, mode->Read8Bit());
             }
             break;
 
@@ -466,14 +466,14 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                 {
                     reg.a = Pop16Bit();
-                    SetNFlag16Bit(reg.a);
-                    SetZFlag16Bit(reg.a);
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
                 }
                 else
                 {
                     reg.al = Pop8Bit();
-                    SetNFlag8Bit(reg.al);
-                    SetZFlag8Bit(reg.al);
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
                 }
             }
             break;
@@ -484,14 +484,14 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                 {
                     reg.x = Pop16Bit();
-                    SetNFlag16Bit(reg.x);
-                    SetZFlag16Bit(reg.x);
+                    SetNFlag(reg.x);
+                    SetZFlag(reg.x);
                 }
                 else
                 {
                     reg.xl = Pop8Bit();
-                    SetNFlag8Bit(reg.xl);
-                    SetZFlag8Bit(reg.xl);
+                    SetNFlag(reg.xl);
+                    SetZFlag(reg.xl);
                 }
             }
             break;
@@ -502,14 +502,14 @@ void Cpu::ProcessOpCode()
                 if (IsIndex16Bit())
                 {
                     reg.y = Pop16Bit();
-                    SetNFlag16Bit(reg.y);
-                    SetZFlag16Bit(reg.y);
+                    SetNFlag(reg.y);
+                    SetZFlag(reg.y);
                 }
                 else
                 {
                     reg.yl = Pop8Bit();
-                    SetNFlag8Bit(reg.yl);
-                    SetZFlag8Bit(reg.yl);
+                    SetNFlag(reg.yl);
+                    SetZFlag(reg.yl);
                 }
             }
             break;
@@ -518,8 +518,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLB", opcode);
                 reg.db = Pop8Bit();
-                SetNFlag8Bit(reg.db);
-                SetZFlag8Bit(reg.db);
+                SetNFlag(reg.db);
+                SetZFlag(reg.db);
             }
             break;
 
@@ -527,8 +527,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLD", opcode);
                 reg.d = Pop16Bit();
-                SetNFlag16Bit(reg.d);
-                SetZFlag16Bit(reg.d);
+                SetNFlag(reg.d);
+                SetZFlag(reg.d);
             }
             break;
 
@@ -568,15 +568,15 @@ void Cpu::ProcessOpCode()
                 {
                     uint16_t value = mode->Read16Bit();
                     reg.a &= value;
-                    SetNFlag16Bit(reg.a);
-                    SetZFlag16Bit(reg.a);
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
                 }
                 else
                 {
                     uint8_t value = mode->Read8Bit();
                     reg.al &= value;
-                    SetNFlag8Bit(reg.al);
-                    SetZFlag8Bit(reg.al);
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
                 }
             }
             break;
@@ -603,15 +603,15 @@ void Cpu::ProcessOpCode()
                 {
                     uint16_t value = mode->Read16Bit();
                     reg.a ^= value;
-                    SetNFlag16Bit(reg.a);
-                    SetZFlag16Bit(reg.a);
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
                 }
                 else
                 {
                     uint8_t value = mode->Read8Bit();
                     reg.al ^= value;
-                    SetNFlag8Bit(reg.al);
-                    SetZFlag8Bit(reg.al);
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
                 }
             }
             break;
@@ -638,15 +638,15 @@ void Cpu::ProcessOpCode()
                 {
                     uint16_t value = mode->Read16Bit();
                     reg.a |= value;
-                    SetNFlag16Bit(reg.a);
-                    SetZFlag16Bit(reg.a);
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
                 }
                 else
                 {
                     uint8_t value = mode->Read8Bit();
                     reg.al |= value;
-                    SetNFlag8Bit(reg.al);
-                    SetZFlag8Bit(reg.al);
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
                 }
             }
             break;

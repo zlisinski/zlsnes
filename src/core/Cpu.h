@@ -149,40 +149,35 @@ private:
         return (reg.pb << 16) | pc;
     }
 
-    inline void SetNFlag8Bit(uint8_t value)
+    template <typename T>
+    inline void SetNFlag(T value)
     {
-        reg.flags.n = (value & 0x80) != 0;
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(sizeof(T) <= 2, "sizeof(T) should be 1 or 2 bytes");
+
+        reg.flags.n = (value & (0x80 << ((sizeof(T) - 1) * 8))) != 0;
     }
 
-    inline void SetNFlag16Bit(uint16_t value)
+    template <typename T>
+    inline void SetZFlag(T value)
     {
-        reg.flags.n = (value & 0x8000) != 0;
-    }
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(sizeof(T) <= 2, "sizeof(T) should be 1 or 2 bytes");
 
-    inline void SetZFlag8Bit(uint8_t value)
-    {
-        reg.flags.z = value == 0;
-    }
-
-    inline void SetZFlag16Bit(uint16_t value)
-    {
         reg.flags.z = value == 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    inline void LoadRegister8Bit(uint8_t *dest, uint8_t value)
+    template <typename T>
+    inline void LoadRegister(T *dest, T value)
     {
-        *dest = value;
-        SetNFlag8Bit(*dest);
-        SetZFlag8Bit(*dest);
-    }
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(sizeof(T) <= 2, "sizeof(T) should be 1 or 2 bytes");
 
-    inline void LoadRegister16Bit(uint16_t *dest, uint16_t value)
-    {
         *dest = value;
-        SetNFlag16Bit(*dest);
-        SetZFlag16Bit(*dest);
+        SetNFlag(*dest);
+        SetZFlag(*dest);
     }
 
     ///////////////////////////////////////////////////////////////////////////

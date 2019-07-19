@@ -61,7 +61,7 @@ TEST_F(CpuTest, TEST_LoadRegister8Bit)
 
     ResetState();
     dest = 0x34;
-    LoadRegister8Bit(&dest, 0);
+    LoadRegister(&dest, uint8_t{0});
     ASSERT_EQ(dest, 0x00);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 1);
@@ -69,7 +69,7 @@ TEST_F(CpuTest, TEST_LoadRegister8Bit)
 
     ResetState();
     dest = 0x34;
-    LoadRegister8Bit(&dest, 0x78);
+    LoadRegister(&dest, uint8_t{0x78});
     ASSERT_EQ(dest, 0x78);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 0);
@@ -77,7 +77,7 @@ TEST_F(CpuTest, TEST_LoadRegister8Bit)
 
     ResetState();
     dest = 0x34;
-    LoadRegister8Bit(&dest, 0x80);
+    LoadRegister(&dest, uint8_t{0x80});
     ASSERT_EQ(dest, 0x80);
     ASSERT_EQ(cpu->reg.flags.n, 1);
     ASSERT_EQ(cpu->reg.flags.z, 0);
@@ -91,7 +91,7 @@ TEST_F(CpuTest, TEST_LoadRegister16Bit)
 
     ResetState();
     dest = 0;
-    LoadRegister16Bit(&dest, 0x1234);
+    LoadRegister(&dest, uint16_t{0x1234});
     ASSERT_EQ(dest, 0x1234);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 0);
@@ -99,7 +99,7 @@ TEST_F(CpuTest, TEST_LoadRegister16Bit)
 
     ResetState();
     dest = 0xFFFF;
-    LoadRegister16Bit(&dest, 0);
+    LoadRegister(&dest, uint16_t{0});
     ASSERT_EQ(dest, 0);
     ASSERT_EQ(cpu->reg.flags.n, 0);
     ASSERT_EQ(cpu->reg.flags.z, 1);
@@ -107,7 +107,7 @@ TEST_F(CpuTest, TEST_LoadRegister16Bit)
 
     ResetState();
     dest = 0;
-    LoadRegister16Bit(&dest, 0xFFFF);
+    LoadRegister(&dest, uint16_t{0xFFFF});
     ASSERT_EQ(dest, 0xFFFF);
     ASSERT_EQ(cpu->reg.flags.n, 1);
     ASSERT_EQ(cpu->reg.flags.z, 0);
