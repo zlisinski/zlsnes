@@ -651,6 +651,89 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Arithmetic opcodes                                                                                                //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x61: // ADC (Direct,X)
+        case 0x63: // ADC Stack,S
+        case 0x65: // ADC Direct
+        case 0x67: // ADC [Direct]
+        case 0x69: // ADC Immediate
+        case 0x6D: // ADC Absolute
+        case 0x6F: // ADC Long
+        case 0x71: // ADC (Direct),Y
+        case 0x72: // ADC (Direct)
+        case 0x73: // ADC (Stack,S),Y
+        case 0x75: // ADC Direct,X
+        case 0x77: // ADC [Direct],Y
+        case 0x79: // ADC Absolute,Y
+        case 0x7D: // ADC Absolute,X
+        case 0x7F: // ADC Long,X
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t operand = mode->Read16Bit();
+                    uint32_t result;
+
+                    if (reg.flags.d == 0)
+                    {
+                        result = reg.a + reg.flags.c + operand;
+                    }
+                    else
+                    {
+                        result = (reg.a & 0x000F) + (operand & 0x000F) + reg.flags.c;
+                        if (result > 0x0009)
+                            result += 0x0006;
+                        result += (reg.a & 0x00F0) + (operand & 0x00F0);
+                        if (result > 0x0099)
+                            result += 0x0060;
+                        result += (reg.a & 0x0F00) + (operand & 0x0F00);
+                        if (result > 0x0999)
+                            result += 0x0600;
+                        result += (reg.a & 0xF000) + (operand & 0xF000);
+                        if (result > 0x9999)
+                            result += 0x6000;
+                    }
+
+                    reg.flags.c = result > 0xFFFF;
+                    reg.flags.v = (((reg.a ^ result) & (reg.a ^ operand)) & 0x8000) != 0;
+                    reg.a = result;
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
+                }
+                else
+                {
+                    uint8_t operand = mode->Read8Bit();
+                    uint16_t result;
+
+                    if (reg.flags.d == 0)
+                    {
+                        result = reg.al + reg.flags.c + operand;
+                    }
+                    else
+                    {
+                        result = (reg.a & 0x000F) + (operand & 0x000F) + reg.flags.c;
+                        if (result > 0x0009)
+                            result += 0x0006;
+                        result += (reg.a & 0x00F0) + (operand & 0x00F0);
+                        if (result > 0x0099)
+                            result += 0x0060;
+                    }
+
+                    reg.flags.c = result > 0xFF;
+                    reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
+                    reg.al = result;
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
         case 0x04: NotYetImplemented(0x04); break;
@@ -699,32 +782,17 @@ void Cpu::ProcessOpCode()
         case 0x5E: NotYetImplemented(0x5E); break;
 
         case 0x60: NotYetImplemented(0x60); break;
-        case 0x61: NotYetImplemented(0x61); break;
-        case 0x63: NotYetImplemented(0x63); break;
-        case 0x65: NotYetImplemented(0x65); break;
         case 0x66: NotYetImplemented(0x66); break;
-        case 0x67: NotYetImplemented(0x67); break;
-        case 0x69: NotYetImplemented(0x69); break;
         case 0x6A: NotYetImplemented(0x6A); break;
         case 0x6B: NotYetImplemented(0x6B); break;
         case 0x6C: NotYetImplemented(0x6C); break;
-        case 0x6D: NotYetImplemented(0x6D); break;
         case 0x6E: NotYetImplemented(0x6E); break;
-        case 0x6F: NotYetImplemented(0x6F); break;
 
         case 0x70: NotYetImplemented(0x70); break;
-        case 0x71: NotYetImplemented(0x71); break;
-        case 0x72: NotYetImplemented(0x72); break;
-        case 0x73: NotYetImplemented(0x73); break;
-        case 0x75: NotYetImplemented(0x75); break;
         case 0x76: NotYetImplemented(0x76); break;
-        case 0x77: NotYetImplemented(0x77); break;
         case 0x78: NotYetImplemented(0x78); break;
-        case 0x79: NotYetImplemented(0x79); break;
         case 0x7C: NotYetImplemented(0x7C); break;
-        case 0x7D: NotYetImplemented(0x7D); break;
         case 0x7E: NotYetImplemented(0x7E); break;
-        case 0x7F: NotYetImplemented(0x7F); break;
 
         case 0x80: NotYetImplemented(0x80); break;
         case 0x82: NotYetImplemented(0x82); break;
