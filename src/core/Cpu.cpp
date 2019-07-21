@@ -10,7 +10,7 @@ Cpu::Cpu(Memory *memory) :
     reg(),
     memory(memory)
 {
-    // Used by LDA, STA, ORA, AND, EOR, ADC, SBC, CMP, CPX, CPY
+    // Used by LDA, STA, ORA, AND, EOR, ADC, SBC, CMP
     addressModes[0x01] = std::make_unique<AddressModeDirectIndexedIndirect>(this, memory);
     addressModes[0x03] = std::make_unique<AddressModeStackRelative>(this, memory);
     addressModes[0x05] = std::make_unique<AddressModeDirect>(this, memory);
@@ -27,7 +27,7 @@ Cpu::Cpu(Memory *memory) :
     addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
     addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
-    // Used by LDX, LDY, STX, STY, STZ
+    // Used by LDX, LDY, STX, STY, STZ, CPX, CPY
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
@@ -794,7 +794,7 @@ void Cpu::ProcessOpCode()
                         result = Bcd::Subtract(result, !reg.flags.c);
                     }
 
-                    reg.flags.c = reg.a > operand;
+                    reg.flags.c = reg.a >= operand;
                     reg.flags.v = (((reg.a ^ result) & (reg.a ^ operand)) & 0x8000) != 0;
                     reg.a = result;
                     SetNFlag(reg.a);
@@ -815,7 +815,7 @@ void Cpu::ProcessOpCode()
                         result = Bcd::Subtract(result, !reg.flags.c);
                     }
 
-                    reg.flags.c = reg.al > operand;
+                    reg.flags.c = reg.al >= operand;
                     reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
                     reg.al = result;
                     SetNFlag(reg.al);
@@ -1036,6 +1036,69 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Comparison opcodes                                                                                                //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0xC1: // CMP (Direct,X)
+        case 0xC3: // CMP Stack,S
+        case 0xC5: // CMP Direct
+        case 0xC7: // CMP [Direct]
+        case 0xC9: // CMP Immediate
+        case 0xCD: // CMP Absolute
+        case 0xCF: // CMP Long
+        case 0xD1: // CMP (Direct),Y
+        case 0xD2: // CMP (Direct)
+        case 0xD3: // CMP (Stack,S),Y
+        case 0xD5: // CMP Direct,X
+        case 0xD7: // CMP [Direct],Y
+        case 0xD9: // CMP Absolute,Y
+        case 0xDD: // CMP Absolute,X
+        case 0xDF: // CMP Long,X
+            {
+                LogInstruction("%02X: CMP", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsAccumulator16Bit())
+                    Compare(reg.a, mode->Read16Bit());
+                else
+                    Compare(reg.al, mode->Read8Bit());
+            }
+            break;
+
+        case 0xE0: // CPX Immediate
+        case 0xE4: // CPX Direct
+        case 0xEC: // CPX Absolute
+            {
+                LogInstruction("%02X: CPX", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsIndex16Bit())
+                    Compare(reg.x, mode->Read16Bit());
+                else
+                    Compare(reg.xl, mode->Read8Bit());
+            }
+            break;
+
+        case 0xC0: // CPY Immediate
+        case 0xC4: // CPY Direct
+        case 0xCC: // CPY Absolute
+            {
+                LogInstruction("%02X: CPY", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsIndex16Bit())
+                    Compare(reg.y, mode->Read16Bit());
+                else
+                    Compare(reg.yl, mode->Read8Bit());
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
         case 0x04: NotYetImplemented(0x04); break;
@@ -1104,38 +1167,17 @@ void Cpu::ProcessOpCode()
         case 0xB0: NotYetImplemented(0xB0); break;
         case 0xB8: NotYetImplemented(0xB8); break;
 
-        case 0xC0: NotYetImplemented(0xC0); break;
-        case 0xC1: NotYetImplemented(0xC1); break;
         case 0xC2: NotYetImplemented(0xC2); break;
-        case 0xC3: NotYetImplemented(0xC3); break;
-        case 0xC4: NotYetImplemented(0xC4); break;
-        case 0xC5: NotYetImplemented(0xC5); break;
-        case 0xC7: NotYetImplemented(0xC7); break;
-        case 0xC9: NotYetImplemented(0xC9); break;
         case 0xCB: NotYetImplemented(0xCB); break;
-        case 0xCC: NotYetImplemented(0xCC); break;
-        case 0xCD: NotYetImplemented(0xCD); break;
-        case 0xCF: NotYetImplemented(0xCF); break;
 
         case 0xD0: NotYetImplemented(0xD0); break;
-        case 0xD1: NotYetImplemented(0xD1); break;
-        case 0xD2: NotYetImplemented(0xD2); break;
-        case 0xD3: NotYetImplemented(0xD3); break;
-        case 0xD5: NotYetImplemented(0xD5); break;
-        case 0xD7: NotYetImplemented(0xD7); break;
         case 0xD8: NotYetImplemented(0xD8); break;
-        case 0xD9: NotYetImplemented(0xD9); break;
         case 0xDB: NotYetImplemented(0xDB); break;
         case 0xDC: NotYetImplemented(0xDC); break;
-        case 0xDD: NotYetImplemented(0xDD); break;
-        case 0xDF: NotYetImplemented(0xDF); break;
 
-        case 0xE0: NotYetImplemented(0xE0); break;
         case 0xE2: NotYetImplemented(0xE2); break;
-        case 0xE4: NotYetImplemented(0xE4); break;
         case 0xEA: NotYetImplemented(0xEA); break;
         case 0xEB: NotYetImplemented(0xEB); break;
-        case 0xEC: NotYetImplemented(0xEC); break;
 
         case 0xF0: NotYetImplemented(0xF0); break;
         case 0xF8: NotYetImplemented(0xF8); break;

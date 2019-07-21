@@ -247,6 +247,20 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////
 
+    template <typename T>
+    inline void Compare(T a, T b)
+    {
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(sizeof(T) <= 2, "sizeof(T) should be 1 or 2 bytes");
+
+        T result = a - b;
+        reg.flags.c = a >= b;
+        SetNFlag(result);
+        SetZFlag(result);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;

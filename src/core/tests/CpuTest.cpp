@@ -4409,6 +4409,8 @@ TEST_F(CpuTest, TEST_ORA_AbsoluteLongIndexedX)
     ASSERT_EQ(cpu->reg.p, 0xA0);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 TEST_F(CpuTest, TEST_ADC)
 {
     cpu->reg.a = 0x4545;
@@ -4574,6 +4576,22 @@ TEST_F(CpuTest, TEST_SBC)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x08);
+
+    ResetState();
+    cpu->reg.flags.c = 1;
+    cpu->reg.a = 0x0001;
+    memory[GetPC()] = 0xE9;
+    memory[GetPC() + 1] = 0x01;
+    memory[GetPC() + 2] = 0x00;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0x0000);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x03);
 
     // TODO: Add more tests...
 }
@@ -5070,4 +5088,60 @@ TEST_F(CpuTest, TEST_INY)
     ASSERT_EQ(cpu->reg.pb, PB_VALUE);
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x12);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_CMP)
+{
+    memory[GetPC()] = 0xC9;
+    memory[GetPC() + 1] = 0x34;
+    memory[GetPC() + 2] = 0x12;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x03);
+
+    // TODO: Add more tests...
+}
+
+TEST_F(CpuTest, TEST_CPX)
+{
+    memory[GetPC()] = 0xE0;
+    memory[GetPC() + 1] = 0x78;
+    memory[GetPC() + 2] = 0x56;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x03);
+
+    // TODO: Add more tests...
+}
+
+TEST_F(CpuTest, TEST_CPY)
+{
+    memory[GetPC()] = 0xC0;
+    memory[GetPC() + 1] = 0xBC;
+    memory[GetPC() + 2] = 0x9A;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, A_VALUE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x03);
+
+    // TODO: Add more tests...
 }
