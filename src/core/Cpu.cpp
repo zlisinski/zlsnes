@@ -782,7 +782,7 @@ void Cpu::ProcessOpCode()
                 if (IsAccumulator16Bit())
                 {
                     uint16_t operand = mode->Read16Bit();
-                    uint32_t result;
+                    uint16_t result;
 
                     if (reg.flags.d == 0)
                     {
@@ -803,7 +803,7 @@ void Cpu::ProcessOpCode()
                 else
                 {
                     uint8_t operand = mode->Read8Bit();
-                    uint16_t result;
+                    uint8_t result;
 
                     if (reg.flags.d == 0)
                     {
