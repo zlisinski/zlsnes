@@ -4507,3 +4507,73 @@ TEST_F(CpuTest, TEST_ADC)
     ASSERT_EQ(cpu->reg.sp, SP_VALUE);
     ASSERT_EQ(cpu->reg.p, 0x0B);
 }
+
+TEST_F(CpuTest, TEST_SBC)
+{
+    cpu->reg.a = 0x0001;
+    cpu->reg.flags.c = 1;
+    memory[GetPC()] = 0xE9;
+    memory[GetPC() + 1] = 0x03;
+    memory[GetPC() + 2] = 0x20;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0xDFFE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x80);
+
+    ResetState();
+    cpu->reg.flags.m = 1;
+    cpu->reg.flags.c = 1;
+    cpu->reg.al = 0x01;
+    memory[GetPC()] = 0xE9;
+    memory[GetPC() + 1] = 0x03;
+    memory[GetPC() + 2] = 0x20;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, Bytes::MaskByte<1>(A_VALUE) | 0xFE);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0xA0);
+
+    ResetState();
+    cpu->reg.a = 0x0001;
+    cpu->reg.flags.c = 0;
+    memory[GetPC()] = 0xE9;
+    memory[GetPC() + 1] = 0x03;
+    memory[GetPC() + 2] = 0x20;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0xDFFD);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x80);
+
+    ResetState();
+    cpu->reg.flags.d = 1;
+    cpu->reg.flags.c = 1;
+    cpu->reg.a = 0x0001;
+    memory[GetPC()] = 0xE9;
+    memory[GetPC() + 1] = 0x03;
+    memory[GetPC() + 2] = 0x20;
+    cpu->ProcessOpCode();
+    ASSERT_EQ(cpu->reg.a, 0x7998);
+    ASSERT_EQ(cpu->reg.x, X_VALUE);
+    ASSERT_EQ(cpu->reg.y, Y_VALUE);
+    ASSERT_EQ(cpu->reg.d, D_VALUE);
+    ASSERT_EQ(cpu->reg.db, DB_VALUE);
+    ASSERT_EQ(cpu->reg.pb, PB_VALUE);
+    ASSERT_EQ(cpu->reg.sp, SP_VALUE);
+    ASSERT_EQ(cpu->reg.p, 0x08);
+
+    // TODO: Add more tests...
+}

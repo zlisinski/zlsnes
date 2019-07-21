@@ -8,6 +8,7 @@ target_link_libraries(gtest Threads::Threads)
 
 set(TEST_SRC
     AddressModeTest.cpp
+    BcdTest.cpp
     CpuTest.cpp
     main.cpp
 )

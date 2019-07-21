@@ -1,6 +1,7 @@
 #include <sstream>
 
 #include "AddressMode.h"
+#include "Bcd.h"
 #include "Cpu.h"
 #include "Memory.h"
 
@@ -686,18 +687,8 @@ void Cpu::ProcessOpCode()
                     }
                     else
                     {
-                        result = (reg.a & 0x000F) + (operand & 0x000F) + reg.flags.c;
-                        if (result > 0x0009)
-                            result += 0x0006;
-                        result += (reg.a & 0x00F0) + (operand & 0x00F0);
-                        if (result > 0x0099)
-                            result += 0x0060;
-                        result += (reg.a & 0x0F00) + (operand & 0x0F00);
-                        if (result > 0x0999)
-                            result += 0x0600;
-                        result += (reg.a & 0xF000) + (operand & 0xF000);
-                        if (result > 0x9999)
-                            result += 0x6000;
+                        result = Bcd::Add(reg.a, operand);
+                        result = Bcd::Add(result, reg.flags.c);
                     }
 
                     reg.flags.c = result > 0xFFFF;
@@ -717,15 +708,74 @@ void Cpu::ProcessOpCode()
                     }
                     else
                     {
-                        result = (reg.a & 0x000F) + (operand & 0x000F) + reg.flags.c;
-                        if (result > 0x0009)
-                            result += 0x0006;
-                        result += (reg.a & 0x00F0) + (operand & 0x00F0);
-                        if (result > 0x0099)
-                            result += 0x0060;
+                        result = Bcd::Add(reg.al, operand);
+                        result = Bcd::Add(result, reg.flags.c);
                     }
 
                     reg.flags.c = result > 0xFF;
+                    reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
+                    reg.al = result;
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
+                }
+            }
+            break;
+
+        case 0xE1: // SBC (Direct,X)
+        case 0xE3: // SBC Stack,S
+        case 0xE5: // SBC Direct
+        case 0xE7: // SBC [Direct]
+        case 0xE9: // SBC Immediate
+        case 0xED: // SBC Absolute
+        case 0xEF: // SBC Long
+        case 0xF1: // SBC (Direct),Y
+        case 0xF2: // SBC (Direct)
+        case 0xF3: // SBC (Stack,S),Y
+        case 0xF5: // SBC Direct,X
+        case 0xF7: // SBC [Direct],Y
+        case 0xF9: // SBC Absolute,Y
+        case 0xFD: // SBC Absolute,X
+        case 0xFF: // SBC Long,X
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t operand = mode->Read16Bit();
+                    uint32_t result;
+
+                    if (reg.flags.d == 0)
+                    {
+                        result = reg.a - operand - !reg.flags.c;
+                    }
+                    else
+                    {
+                        result = Bcd::Subtract(reg.a, operand);
+                        result = Bcd::Subtract(result, !reg.flags.c);
+                    }
+
+                    reg.flags.c = reg.a > operand;
+                    reg.flags.v = (((reg.a ^ result) & (reg.a ^ operand)) & 0x8000) != 0;
+                    reg.a = result;
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
+                }
+                else
+                {
+                    uint8_t operand = mode->Read8Bit();
+                    uint16_t result;
+
+                    if (reg.flags.d == 0)
+                    {
+                        result = reg.al - operand - !reg.flags.c;
+                    }
+                    else
+                    {
+                        result = Bcd::Subtract(reg.al, operand);
+                        result = Bcd::Subtract(result, !reg.flags.c);
+                    }
+
+                    reg.flags.c = reg.al > operand;
                     reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
                     reg.al = result;
                     SetNFlag(reg.al);
@@ -838,36 +888,21 @@ void Cpu::ProcessOpCode()
         case 0xDF: NotYetImplemented(0xDF); break;
 
         case 0xE0: NotYetImplemented(0xE0); break;
-        case 0xE1: NotYetImplemented(0xE1); break;
         case 0xE2: NotYetImplemented(0xE2); break;
-        case 0xE3: NotYetImplemented(0xE3); break;
         case 0xE4: NotYetImplemented(0xE4); break;
-        case 0xE5: NotYetImplemented(0xE5); break;
         case 0xE6: NotYetImplemented(0xE6); break;
-        case 0xE7: NotYetImplemented(0xE7); break;
         case 0xE8: NotYetImplemented(0xE8); break;
-        case 0xE9: NotYetImplemented(0xE9); break;
         case 0xEA: NotYetImplemented(0xEA); break;
         case 0xEB: NotYetImplemented(0xEB); break;
         case 0xEC: NotYetImplemented(0xEC); break;
-        case 0xED: NotYetImplemented(0xED); break;
         case 0xEE: NotYetImplemented(0xEE); break;
-        case 0xEF: NotYetImplemented(0xEF); break;
 
         case 0xF0: NotYetImplemented(0xF0); break;
-        case 0xF1: NotYetImplemented(0xF1); break;
-        case 0xF2: NotYetImplemented(0xF2); break;
-        case 0xF3: NotYetImplemented(0xF3); break;
-        case 0xF5: NotYetImplemented(0xF5); break;
         case 0xF6: NotYetImplemented(0xF6); break;
-        case 0xF7: NotYetImplemented(0xF7); break;
         case 0xF8: NotYetImplemented(0xF8); break;
-        case 0xF9: NotYetImplemented(0xF9); break;
         case 0xFB: NotYetImplemented(0xFB); break;
         case 0xFC: NotYetImplemented(0xFC); break;
-        case 0xFD: NotYetImplemented(0xFD); break;
         case 0xFE: NotYetImplemented(0xFE); break;
-        case 0xFF: NotYetImplemented(0xFF); break;
     }
 }
 
