@@ -92,6 +92,46 @@ uint32_t Cpu::ReadPC24Bit()
 }
 
 
+void Cpu::Decrement8Bit(AbsAddressMode &mode)
+{
+    uint8_t value = mode.Read8Bit();
+    value--;
+    mode.Write8Bit(value);
+    SetNFlag(value);
+    SetZFlag(value);
+}
+
+
+void Cpu::Decrement16Bit(AbsAddressMode &mode)
+{
+    uint16_t value = mode.Read16Bit();
+    value--;
+    mode.Write16Bit(value);
+    SetNFlag(value);
+    SetZFlag(value);
+}
+
+
+void Cpu::Increment8Bit(AbsAddressMode &mode)
+{
+    uint8_t value = mode.Read8Bit();
+    value++;
+    mode.Write8Bit(value);
+    SetNFlag(value);
+    SetZFlag(value);
+}
+
+
+void Cpu::Increment16Bit(AbsAddressMode &mode)
+{
+    uint16_t value = mode.Read16Bit();
+    value++;
+    mode.Write16Bit(value);
+    SetNFlag(value);
+    SetZFlag(value);
+}
+
+
 void Cpu::ProcessOpCode()
 {
     uint8_t opcode = ReadPC8Bit();
@@ -784,6 +824,218 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        case 0x3A: // DEC
+            {
+                LogInstruction("%02X: DEC", opcode);
+                if (IsAccumulator16Bit())
+                {
+                    reg.a--;
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
+                }
+                else
+                {
+                    reg.al--;
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
+                }
+            }
+            break;
+
+        case 0xC6: // DEC Direct
+            {
+                AddressModeDirect mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: DEC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Decrement16Bit(mode);
+                else
+                    Decrement8Bit(mode);
+            }
+            break;
+
+        case 0xCE: // DEC Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: DEC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Decrement16Bit(mode);
+                else
+                    Decrement8Bit(mode);
+            }
+            break;
+
+        case 0xD6: // DEC Direct,X
+            {
+                AddressModeDirectIndexedX mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: DEC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Decrement16Bit(mode);
+                else
+                    Decrement8Bit(mode);
+            }
+            break;
+
+        case 0xDE: // DEC Absolute,X
+            {
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: DEC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Decrement16Bit(mode);
+                else
+                    Decrement8Bit(mode);
+            }
+            break;
+
+        case 0xCA: // DEX
+            {
+                LogInstruction("%02X: DEX", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.x--;
+                    SetNFlag(reg.x);
+                    SetZFlag(reg.x);
+                }
+                else
+                {
+                    reg.xl--;
+                    SetNFlag(reg.xl);
+                    SetZFlag(reg.xl);
+                }
+            }
+            break;
+
+        case 0x88: // DEY
+            {
+                LogInstruction("%02X: DEY", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.y--;
+                    SetNFlag(reg.y);
+                    SetZFlag(reg.y);
+                }
+                else
+                {
+                    reg.yl--;
+                    SetNFlag(reg.yl);
+                    SetZFlag(reg.yl);
+                }
+            }
+            break;
+
+        case 0x1A: // INC
+            {
+                LogInstruction("%02X: INC", opcode);
+                if (IsAccumulator16Bit())
+                {
+                    reg.a++;
+                    SetNFlag(reg.a);
+                    SetZFlag(reg.a);
+                }
+                else
+                {
+                    reg.al++;
+                    SetNFlag(reg.al);
+                    SetZFlag(reg.al);
+                }
+            }
+            break;
+
+        case 0xE6: // INC Direct
+            {
+                AddressModeDirect mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: INC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Increment16Bit(mode);
+                else
+                    Increment8Bit(mode);
+            }
+            break;
+
+        case 0xEE: // INC Absolute
+            {
+                AddressModeAbsolute mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: INC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Increment16Bit(mode);
+                else
+                    Increment8Bit(mode);
+            }
+            break;
+
+        case 0xF6: // INC Direct,X
+            {
+                AddressModeDirectIndexedX mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: INC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Increment16Bit(mode);
+                else
+                    Increment8Bit(mode);
+            }
+            break;
+
+        case 0xFE: // INC Absolute,X
+            {
+                AddressModeAbsoluteIndexedX mode(this, memory);
+                mode.LoadAddress();
+                LogInstruction("%02X: INC", opcode);
+
+                if (IsAccumulator16Bit())
+                    Increment16Bit(mode);
+                else
+                    Increment8Bit(mode);
+            }
+            break;
+
+        case 0xE8: // INX
+            {
+                LogInstruction("%02X: INX", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.x++;
+                    SetNFlag(reg.x);
+                    SetZFlag(reg.x);
+                }
+                else
+                {
+                    reg.xl++;
+                    SetNFlag(reg.xl);
+                    SetZFlag(reg.xl);
+                }
+            }
+            break;
+
+        case 0xC8: // INY
+            {
+                LogInstruction("%02X: INY", opcode);
+                if (IsIndex16Bit())
+                {
+                    reg.y++;
+                    SetNFlag(reg.y);
+                    SetZFlag(reg.y);
+                }
+                else
+                {
+                    reg.yl++;
+                    SetNFlag(reg.yl);
+                    SetZFlag(reg.yl);
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
         case 0x04: NotYetImplemented(0x04); break;
@@ -796,7 +1048,6 @@ void Cpu::ProcessOpCode()
         case 0x14: NotYetImplemented(0x14); break;
         case 0x16: NotYetImplemented(0x16); break;
         case 0x18: NotYetImplemented(0x18); break;
-        case 0x1A: NotYetImplemented(0x1A); break;
         case 0x1C: NotYetImplemented(0x1C); break;
         case 0x1E: NotYetImplemented(0x1E); break;
 
@@ -812,7 +1063,6 @@ void Cpu::ProcessOpCode()
         case 0x34: NotYetImplemented(0x34); break;
         case 0x36: NotYetImplemented(0x36); break;
         case 0x38: NotYetImplemented(0x38); break;
-        case 0x3A: NotYetImplemented(0x3A); break;
         case 0x3C: NotYetImplemented(0x3C); break;
         case 0x3E: NotYetImplemented(0x3E); break;
 
@@ -846,7 +1096,6 @@ void Cpu::ProcessOpCode()
 
         case 0x80: NotYetImplemented(0x80); break;
         case 0x82: NotYetImplemented(0x82); break;
-        case 0x88: NotYetImplemented(0x88); break;
         case 0x89: NotYetImplemented(0x89); break;
 
         case 0x90: NotYetImplemented(0x90); break;
@@ -861,15 +1110,11 @@ void Cpu::ProcessOpCode()
         case 0xC3: NotYetImplemented(0xC3); break;
         case 0xC4: NotYetImplemented(0xC4); break;
         case 0xC5: NotYetImplemented(0xC5); break;
-        case 0xC6: NotYetImplemented(0xC6); break;
         case 0xC7: NotYetImplemented(0xC7); break;
-        case 0xC8: NotYetImplemented(0xC8); break;
         case 0xC9: NotYetImplemented(0xC9); break;
-        case 0xCA: NotYetImplemented(0xCA); break;
         case 0xCB: NotYetImplemented(0xCB); break;
         case 0xCC: NotYetImplemented(0xCC); break;
         case 0xCD: NotYetImplemented(0xCD); break;
-        case 0xCE: NotYetImplemented(0xCE); break;
         case 0xCF: NotYetImplemented(0xCF); break;
 
         case 0xD0: NotYetImplemented(0xD0); break;
@@ -877,32 +1122,25 @@ void Cpu::ProcessOpCode()
         case 0xD2: NotYetImplemented(0xD2); break;
         case 0xD3: NotYetImplemented(0xD3); break;
         case 0xD5: NotYetImplemented(0xD5); break;
-        case 0xD6: NotYetImplemented(0xD6); break;
         case 0xD7: NotYetImplemented(0xD7); break;
         case 0xD8: NotYetImplemented(0xD8); break;
         case 0xD9: NotYetImplemented(0xD9); break;
         case 0xDB: NotYetImplemented(0xDB); break;
         case 0xDC: NotYetImplemented(0xDC); break;
         case 0xDD: NotYetImplemented(0xDD); break;
-        case 0xDE: NotYetImplemented(0xDE); break;
         case 0xDF: NotYetImplemented(0xDF); break;
 
         case 0xE0: NotYetImplemented(0xE0); break;
         case 0xE2: NotYetImplemented(0xE2); break;
         case 0xE4: NotYetImplemented(0xE4); break;
-        case 0xE6: NotYetImplemented(0xE6); break;
-        case 0xE8: NotYetImplemented(0xE8); break;
         case 0xEA: NotYetImplemented(0xEA); break;
         case 0xEB: NotYetImplemented(0xEB); break;
         case 0xEC: NotYetImplemented(0xEC); break;
-        case 0xEE: NotYetImplemented(0xEE); break;
 
         case 0xF0: NotYetImplemented(0xF0); break;
-        case 0xF6: NotYetImplemented(0xF6); break;
         case 0xF8: NotYetImplemented(0xF8); break;
         case 0xFB: NotYetImplemented(0xFB); break;
         case 0xFC: NotYetImplemented(0xFC); break;
-        case 0xFE: NotYetImplemented(0xFE); break;
     }
 }
 
