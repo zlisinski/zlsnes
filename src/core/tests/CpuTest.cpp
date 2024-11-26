@@ -3,6 +3,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QString>
 
 #include "CpuTest.h"
 #include "../Memory.h"
@@ -136,11 +137,77 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
         // If there were errors, stop processing this opcode. We don't want 10000 errors.
         if (this->HasNonfatalFailure())
         {
-            QJsonDocument d(obj);
+            QString str;
+            this->FormatData(obj, str);
             qDebug("Encountered failure, not continuing.");
-            qDebug("JSON Data: %s", qPrintable(d.toJson()));
+            qDebug("Test Data: %s", qPrintable(str));
             return;
         }
+    }
+}
+
+void CpuTest::FormatData(const QJsonObject &obj, QString &str)
+{
+    str += "\nname: \"" + obj["name"].toString() + "\"\n";
+
+    QJsonObject initial = obj["initial"].toObject();
+    str += "initial: \n";
+    str += QStringLiteral("\ta: 0x%1\n").arg(initial["a"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\tx: 0x%1\n").arg(initial["x"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\ty: 0x%1\n").arg(initial["y"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\td: 0x%1\n").arg(initial["d"].toInt(), 4, 16, QChar('0'));
+    uint8_t p = initial["p"].toInt();
+    str += QStringLiteral("\tp: 0x%1 (n=%2 v=%3 m=%4 x=%5 d=%6 i=%7 z=%8 c=%9)\n")
+        .arg(p, 2, 16, QChar('0'))
+        .arg(p >> 7)
+        .arg((p >> 6) & 0x01)
+        .arg((p >> 5) & 0x01)
+        .arg((p >> 4) & 0x01)
+        .arg((p >> 3) & 0x01)
+        .arg((p >> 2) & 0x01)
+        .arg((p >> 1) & 0x01)
+        .arg(p & 0x01);
+    str += QStringLiteral("\tdb: 0x%1\n").arg(initial["dbr"].toInt(), 2, 16, QChar('0'));
+    str += QStringLiteral("\tpb: 0x%1\n").arg(initial["pbr"].toInt(), 2, 16, QChar('0'));
+    str += QStringLiteral("\tsp: 0x%1\n").arg(initial["s"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\tpc: 0x%1\n").arg(initial["pc"].toInt(), 4, 16, QChar('0'));
+
+    QJsonArray initalRam = initial["ram"].toArray();
+    str += "\tram: \n";
+    for (int i = 0; i < initalRam.size(); i++)
+    {
+        QJsonArray pair = initalRam[i].toArray();
+        str += QStringLiteral("\t\t0x%1 = 0x%2\n").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(pair[1].toInt(), 2, 16, QChar('0'));
+    }
+
+    QJsonObject final = obj["final"].toObject();
+    str += "final: \n";
+    str += QStringLiteral("\ta: 0x%1\n").arg(final["a"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\tx: 0x%1\n").arg(final["x"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\ty: 0x%1\n").arg(final["y"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\td: 0x%1\n").arg(final["d"].toInt(), 4, 16, QChar('0'));
+    p = final["p"].toInt();
+    str += QStringLiteral("\tp: 0x%1 (n=%2 v=%3 m=%4 x=%5 d=%6 i=%7 z=%8 c=%9)\n")
+        .arg(p, 2, 16, QChar('0'))
+        .arg(p >> 7)
+        .arg((p >> 6) & 0x01)
+        .arg((p >> 5) & 0x01)
+        .arg((p >> 4) & 0x01)
+        .arg((p >> 3) & 0x01)
+        .arg((p >> 2) & 0x01)
+        .arg((p >> 1) & 0x01)
+        .arg(p & 0x01);
+    str += QStringLiteral("\tdb: 0x%1\n").arg(final["dbr"].toInt(), 2, 16, QChar('0'));
+    str += QStringLiteral("\tpb: 0x%1\n").arg(final["pbr"].toInt(), 2, 16, QChar('0'));
+    str += QStringLiteral("\tsp: 0x%1\n").arg(final["s"].toInt(), 4, 16, QChar('0'));
+    str += QStringLiteral("\tpc: 0x%1\n").arg(final["pc"].toInt(), 4, 16, QChar('0'));
+
+    QJsonArray finalRam = final["ram"].toArray();
+    str += "\tram: \n";
+    for (int i = 0; i < finalRam.size(); i++)
+    {
+        QJsonArray pair = finalRam[i].toArray();
+        str += QStringLiteral("\t\t0x%1 = 0x%2\n").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(pair[1].toInt(), 2, 16, QChar('0'));
     }
 }
 

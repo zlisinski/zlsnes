@@ -1,11 +1,12 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include <QString>
 #include "../Bytes.h"
 #include "../Cpu.h"
 
 class Memory;
+class QString;
+class QJsonObject;
 
 class CpuTest : public ::testing::Test
 {
@@ -18,6 +19,7 @@ protected:
 
     void ResetState();
     void RunInstructionTest(const QString &opcodeName, const QString &opcode, bool emulationMode);
+    void FormatData(const QJsonObject &obj, QString &str);
 
     uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
 
