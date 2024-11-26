@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gtest/gtest.h>
+#include <QString>
 #include "../Bytes.h"
 #include "../Cpu.h"
 
@@ -16,6 +17,8 @@ protected:
     void TearDown() override;
 
     void ResetState();
+    void RunInstructionTest(const QString &opcodeName, const QString &opcode, bool emulationMode);
+
     uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
 
     // Used for testing private methods.

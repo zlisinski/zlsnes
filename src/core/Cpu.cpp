@@ -266,6 +266,7 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // LDA - Load A
         case 0xA1: // LDA (Direct,X)
         case 0xA3: // LDA Stack,S
         case 0xA5: // LDA Direct
@@ -291,6 +292,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // LDX - Load X
         case 0xA2: // LDX Immediate
         case 0xA6: // LDX Direct
         case 0xAE: // LDX Absolute
@@ -306,6 +308,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // LDY - Load Y
         case 0xA0: // LDY Immediate
         case 0xA4: // LDY Direct
         case 0xAC: // LDY Absolute
@@ -327,6 +330,7 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // STA - Store A
         case 0x81: // STA (Direct,X)
         case 0x83: // STA Stack,S
         case 0x85: // STA Direct
@@ -350,6 +354,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // STX - Store X
         case 0x86: // STX Direct
         case 0x8E: // STX Absolute
         case 0x96: // STX Direct,Y
@@ -363,6 +368,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // STY - Store Y
         case 0x84: // STY Direct
         case 0x8C: // STY Absolute
         case 0x94: // STY Direct,X
@@ -376,6 +382,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // STZ - Store Zero
         case 0x64: // STZ Direct
         case 0x74: // STZ Direct,X
             {
@@ -440,7 +447,7 @@ void Cpu::ProcessOpCode()
 
         case 0x5A: // PHY - Push Y
             {
-                LogInstruction("%02X: PHX", opcode);
+                LogInstruction("%02X: PHY", opcode);
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
@@ -587,6 +594,7 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // AND - Bitwise AND
         case 0x21: // AND (Direct,X)
         case 0x23: // AND Stack,S
         case 0x25: // AND Direct
@@ -622,6 +630,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // EOR - Bitwise Exclusive OR
         case 0x41: // EOR (Direct,X)
         case 0x43: // EOR Stack,S
         case 0x45: // EOR Direct
@@ -657,6 +666,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // ORA - Bitwise OR Accumulator
         case 0x01: // ORA (Direct,X)
         case 0x03: // ORA Stack,S
         case 0x05: // ORA Direct
@@ -698,6 +708,7 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // ADC - Add with Carry
         case 0x61: // ADC (Direct,X)
         case 0x63: // ADC Stack,S
         case 0x65: // ADC Direct
@@ -761,6 +772,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // SBC - Subtract with Carry
         case 0xE1: // SBC (Direct,X)
         case 0xE3: // SBC Stack,S
         case 0xE5: // SBC Direct
@@ -1042,6 +1054,7 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        // CMP - Compare to Accumulator
         case 0xC1: // CMP (Direct,X)
         case 0xC3: // CMP Stack,S
         case 0xC5: // CMP Direct
@@ -1069,6 +1082,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // CPX - Compare to X
         case 0xE0: // CPX Immediate
         case 0xE4: // CPX Direct
         case 0xEC: // CPX Absolute
@@ -1084,6 +1098,7 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // CPY - Compare to Y
         case 0xC0: // CPY Immediate
         case 0xC4: // CPY Direct
         case 0xCC: // CPY Absolute

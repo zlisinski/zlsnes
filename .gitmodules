@@ -1,0 +1,4 @@
+[submodule "test_data/65816"]
+	path = test_data/65816
+	url = https://github.com/SingleStepTests/65816.git
+	branch = main

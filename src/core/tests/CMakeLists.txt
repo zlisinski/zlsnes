@@ -6,6 +6,8 @@ include_directories(${GTEST_SRC})
 add_library(gtest ${GTEST_SRC}/src/gtest-all.cc)
 target_link_libraries(gtest Threads::Threads)
 
+find_package(Qt5 REQUIRED COMPONENTS Core)
+
 set(TEST_SRC
     AddressModeTest.cpp
     BcdTest.cpp
@@ -18,6 +20,7 @@ add_executable(test_zlsnes
 )
 target_link_libraries(test_zlsnes
     gtest
+    Qt5::Core
     zlsnes_core
 )
 
