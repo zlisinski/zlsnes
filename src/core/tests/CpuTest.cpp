@@ -181,7 +181,7 @@ void CpuTest::FormatData(const QJsonObject &obj, QString &str)
     }
 
     QJsonObject final = obj["final"].toObject();
-    str += "final: \n";
+    str += "expected: \n";
     str += QStringLiteral("\ta: 0x%1\n").arg(final["a"].toInt(), 4, 16, QChar('0'));
     str += QStringLiteral("\tx: 0x%1\n").arg(final["x"].toInt(), 4, 16, QChar('0'));
     str += QStringLiteral("\ty: 0x%1\n").arg(final["y"].toInt(), 4, 16, QChar('0'));
@@ -208,6 +208,34 @@ void CpuTest::FormatData(const QJsonObject &obj, QString &str)
     {
         QJsonArray pair = finalRam[i].toArray();
         str += QStringLiteral("\t\t0x%1 = 0x%2\n").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(pair[1].toInt(), 2, 16, QChar('0'));
+    }
+
+    str += "actual: \n";
+    str += QStringLiteral("\ta: 0x%1\n").arg(cpu->reg.a, 4, 16, QChar('0'));
+    str += QStringLiteral("\tx: 0x%1\n").arg(cpu->reg.x, 4, 16, QChar('0'));
+    str += QStringLiteral("\ty: 0x%1\n").arg(cpu->reg.y, 4, 16, QChar('0'));
+    str += QStringLiteral("\td: 0x%1\n").arg(cpu->reg.d, 4, 16, QChar('0'));
+    p = cpu->reg.p;
+    str += QStringLiteral("\tp: 0x%1 (n=%2 v=%3 m=%4 x=%5 d=%6 i=%7 z=%8 c=%9)\n")
+        .arg(p, 2, 16, QChar('0'))
+        .arg(p >> 7)
+        .arg((p >> 6) & 0x01)
+        .arg((p >> 5) & 0x01)
+        .arg((p >> 4) & 0x01)
+        .arg((p >> 3) & 0x01)
+        .arg((p >> 2) & 0x01)
+        .arg((p >> 1) & 0x01)
+        .arg(p & 0x01);
+    str += QStringLiteral("\tdb: 0x%1\n").arg(cpu->reg.db, 2, 16, QChar('0'));
+    str += QStringLiteral("\tpb: 0x%1\n").arg(cpu->reg.pb, 2, 16, QChar('0'));
+    str += QStringLiteral("\tsp: 0x%1\n").arg(cpu->reg.sp, 4, 16, QChar('0'));
+    str += QStringLiteral("\tpc: 0x%1\n").arg(cpu->reg.pc, 4, 16, QChar('0'));
+
+    str += "\tram: \n";
+    for (int i = 0; i < finalRam.size(); i++)
+    {
+        QJsonArray pair = finalRam[i].toArray();
+        str += QStringLiteral("\t\t0x%1 = 0x%2\n").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(memory[pair[0].toInt()], 2, 16, QChar('0'));
     }
 }
 
