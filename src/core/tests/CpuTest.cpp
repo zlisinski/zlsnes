@@ -1365,3 +1365,59 @@ TEST_F(CpuTest, TEST_CPY)
     this->RunInstructionTest(this->test_info_->name(), "C0", false);
     //this->RunInstructionTest(this->test_info_->name(), "C0", true);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_BIT_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "24", false);
+    //this->RunInstructionTest(this->test_info_->name(), "24", true);
+}
+
+TEST_F(CpuTest, TEST_BIT_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "2C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "2C", true);
+}
+
+TEST_F(CpuTest, TEST_BIT_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "34", false);
+    //this->RunInstructionTest(this->test_info_->name(), "34", true);
+}
+
+TEST_F(CpuTest, TEST_BIT_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "3C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "3C", true);
+}
+
+TEST_F(CpuTest, TEST_BIT_Immediate)
+{
+    this->RunInstructionTest(this->test_info_->name(), "89", false);
+    //this->RunInstructionTest(this->test_info_->name(), "89", true);
+}
+
+TEST_F(CpuTest, TEST_TRB_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "14", false);
+    //this->RunInstructionTest(this->test_info_->name(), "14", true);
+}
+
+TEST_F(CpuTest, TEST_TRB_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "1C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "1C", true);
+}
+
+TEST_F(CpuTest, TEST_TSB_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "04", false);
+    //this->RunInstructionTest(this->test_info_->name(), "04", true);
+}
+
+TEST_F(CpuTest, TEST_TSB_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "0C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "0C", true);
+}

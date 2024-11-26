@@ -27,7 +27,7 @@ Cpu::Cpu(Memory *memory) :
     addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
     addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
-    // Used by LDX, LDY, STX, STY, STZ, CPX, CPY
+    // Used by LDX, LDY, STX, STY, STZ, CPX, CPY, BIT, TRB, TSB
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
@@ -1114,34 +1114,142 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Bit test/set/reset opcodes                                                                                        //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // BIT - Test Bit
+        case 0x24: // BIT Direct
+        case 0x2C: // BIT Absolute
+        case 0x34: // BIT Direct,X
+        case 0x3C: // BIT Absolute,X
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = reg.a & value;
+
+                    // N and V flag look at data, not result.
+                    SetNFlag(value);
+                    // V looks at the second highest bit.
+                    reg.flags.v = (value & 0x4000) != 0;
+                    SetZFlag(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = reg.al & value;
+
+                    // N and V flag look at data, not result.
+                    SetNFlag(value);
+                    // V looks at the second highest bit.
+                    reg.flags.v = (value & 0x40) != 0;
+                    SetZFlag(result);
+                }
+            }
+            break;
+
+        case 0x89: // BIT Immediate
+            {
+                AddressModeImmediate mode(this, memory);
+                mode.LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode.Read16Bit();
+                    uint16_t result = reg.a & value;
+
+                    // N and V flags are not changed.
+                    SetZFlag(result);
+                }
+                else
+                {
+                    uint8_t value = mode.Read8Bit();
+                    uint8_t result = reg.al & value;
+
+                    // N and V flags are not changed.
+                    SetZFlag(result);
+                }
+            }
+            break;
+
+        // TRB - Test and Reset Bit
+        case 0x14: // TRB Direct
+        case 0x1C: // TRB Absolute
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x0F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = ~reg.a & value;
+
+                    // Z flag is based on reg.a AND value.
+                    SetZFlag(static_cast<uint16_t>(reg.a & value));
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = ~reg.al & value;
+
+                    // Z flag is based on reg.al AND value.
+                    SetZFlag(static_cast<uint8_t>(reg.al & value));
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
+        // TSB - Test and Set Bit
+        case 0x04: // TSB Direct
+        case 0x0C: // TSB Absolute
+            {
+                AddressModePtr &mode = addressModes[opcode & 0x0F];
+                mode->LoadAddress();
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = reg.a | value;
+
+                    // Z flag is based on reg.a AND value.
+                    SetZFlag(static_cast<uint16_t>(reg.a & value));
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = reg.al | value;
+
+                    // Z flag is based on reg.al AND value.
+                    SetZFlag(static_cast<uint8_t>(reg.al & value));
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
-        case 0x04: NotYetImplemented(0x04); break;
         case 0x06: NotYetImplemented(0x06); break;
         case 0x0A: NotYetImplemented(0x0A); break;
-        case 0x0C: NotYetImplemented(0x0C); break;
         case 0x0E: NotYetImplemented(0x0E); break;
 
         case 0x10: NotYetImplemented(0x10); break;
-        case 0x14: NotYetImplemented(0x14); break;
         case 0x16: NotYetImplemented(0x16); break;
         case 0x18: NotYetImplemented(0x18); break;
-        case 0x1C: NotYetImplemented(0x1C); break;
         case 0x1E: NotYetImplemented(0x1E); break;
 
         case 0x20: NotYetImplemented(0x20); break;
         case 0x22: NotYetImplemented(0x22); break;
-        case 0x24: NotYetImplemented(0x24); break;
         case 0x26: NotYetImplemented(0x26); break;
         case 0x2A: NotYetImplemented(0x2A); break;
-        case 0x2C: NotYetImplemented(0x2C); break;
         case 0x2E: NotYetImplemented(0x2E); break;
 
         case 0x30: NotYetImplemented(0x30); break;
-        case 0x34: NotYetImplemented(0x34); break;
         case 0x36: NotYetImplemented(0x36); break;
         case 0x38: NotYetImplemented(0x38); break;
-        case 0x3C: NotYetImplemented(0x3C); break;
         case 0x3E: NotYetImplemented(0x3E); break;
 
         case 0x40: NotYetImplemented(0x40); break;
@@ -1174,7 +1282,6 @@ void Cpu::ProcessOpCode()
 
         case 0x80: NotYetImplemented(0x80); break;
         case 0x82: NotYetImplemented(0x82); break;
-        case 0x89: NotYetImplemented(0x89); break;
 
         case 0x90: NotYetImplemented(0x90); break;
         case 0x93: NotYetImplemented(0x93); break;
