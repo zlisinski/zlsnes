@@ -293,7 +293,7 @@ public:
     virtual void LoadAddress() override
     {
         uint32_t addr = memory->Read24BitWrapBank(0, cpu->ReadPC8Bit() + cpu->reg.d);
-        address = Address(cpu->reg.db, addr).AddOffset(cpu->reg.y);
+        address = Address(addr).AddOffset(cpu->reg.y);
     }
 };
 
