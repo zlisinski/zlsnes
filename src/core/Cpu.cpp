@@ -502,8 +502,8 @@ void Cpu::ProcessOpCode()
 
         case 0x62: // PER - Push Effective Relative Address
             {
-                int8_t value = static_cast<int8_t>(ReadPC8Bit());
-                LogInstruction("%02X %02X: PER", opcode, value);
+                int16_t value = static_cast<int16_t>(ReadPC16Bit());
+                LogInstruction("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
                 Push16Bit(reg.pc + value);
             }
             break;
@@ -584,7 +584,11 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLP", opcode);
                 reg.p = Pop8Bit();
-                // TODO: Clear high byte of reg.x and reg.y if reg.flags.x is 1.
+                if (IsIndex8Bit())
+                {
+                    reg.x &= 0xFF;
+                    reg.y &= 0xFF;
+                }
             }
             break;
 
