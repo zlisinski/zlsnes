@@ -10,36 +10,38 @@ Cpu::Cpu(Memory *memory) :
     reg(),
     memory(memory)
 {
-    // Used by LDA, STA, ORA, AND, EOR, ADC, SBC, CMP
+    addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x01] = std::make_unique<AddressModeDirectIndexedIndirect>(this, memory);
+    addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x03] = std::make_unique<AddressModeStackRelative>(this, memory);
+    addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x05] = std::make_unique<AddressModeDirect>(this, memory);
+    addressModes[0x06] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x07] = std::make_unique<AddressModeDirectIndirectLong>(this, memory);
+    // No 0x08
     addressModes[0x09] = std::make_unique<AddressModeImmediate>(this, memory);
+    addressModes[0x0A] = std::make_unique<AddressModeAccumulator>(this, memory);
+    // No 0x0B
+    addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x0D] = std::make_unique<AddressModeAbsolute>(this, memory);
+    addressModes[0x0E] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x0F] = std::make_unique<AddressModeAbsoluteLong>(this, memory);
+    // No 0x10
     addressModes[0x11] = std::make_unique<AddressModeDirectIndirectIndexed>(this, memory);
     addressModes[0x12] = std::make_unique<AddressModeDirectIndirect>(this, memory);
     addressModes[0x13] = std::make_unique<AddressModeStackRelativeIndirectIndexed>(this, memory);
-    addressModes[0x15] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
-    addressModes[0x17] = std::make_unique<AddressModeDirectIndirectLongIndexed>(this, memory);
-    addressModes[0x19] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
-    addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
-    addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
-
-    // Used by LDX, LDY, STX, STY, INC, DEC, CPX, CPY, BIT, TRB, TSB
-    addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
-    addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
-    addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
-    addressModes[0x06] = std::make_unique<AddressModeDirect>(this, memory);
-    addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
-    addressModes[0x0E] = std::make_unique<AddressModeAbsolute>(this, memory);
-    addressModes[0x0A] = std::make_unique<AddressModeAccumulator>(this, memory);
     addressModes[0x14] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
+    addressModes[0x15] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
     addressModes[0x16] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
+    addressModes[0x17] = std::make_unique<AddressModeDirectIndirectLongIndexed>(this, memory);
+    // No 0x18
+    addressModes[0x19] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
     addressModes[0x1A] = std::make_unique<AddressModeAccumulator>(this, memory);
+    // No 0x1B
     addressModes[0x1C] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
+    addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
     addressModes[0x1E] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
+    addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
     // Special cases for certain opcodes of LDX, STX, STZ
     addressModeAlternate[0x16] = std::make_unique<AddressModeDirectIndexedY>(this, memory); // LDX, STX
