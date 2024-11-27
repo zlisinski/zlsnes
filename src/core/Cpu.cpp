@@ -27,17 +27,24 @@ Cpu::Cpu(Memory *memory) :
     addressModes[0x1D] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
     addressModes[0x1F] = std::make_unique<AddressModeAbsoluteLongIndexedX>(this, memory);
 
-    // Used by LDX, LDY, STX, STY, STZ, CPX, CPY, BIT, TRB, TSB
+    // Used by LDX, LDY, STX, STY, INC, DEC, CPX, CPY, BIT, TRB, TSB
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x02] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x06] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x0E] = std::make_unique<AddressModeAbsolute>(this, memory);
+    addressModes[0x0A] = std::make_unique<AddressModeAccumulator>(this, memory);
     addressModes[0x14] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
-    addressModes[0x16] = std::make_unique<AddressModeDirectIndexedY>(this, memory);
+    addressModes[0x16] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
+    addressModes[0x1A] = std::make_unique<AddressModeAccumulator>(this, memory);
     addressModes[0x1C] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
-    addressModes[0x1E] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
+    addressModes[0x1E] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
+
+    // Special cases for certain opcodes of LDX, STX, STZ
+    addressModeAlternate[0x16] = std::make_unique<AddressModeDirectIndexedY>(this, memory); // LDX, STX
+    addressModeAlternate[0x1C] = std::make_unique<AddressModeAbsolute>(this, memory); // STZ
+    addressModeAlternate[0x1E] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory); // LDX
 }
 
 Cpu::~Cpu()
@@ -89,46 +96,6 @@ uint32_t Cpu::ReadPC24Bit()
     uint32_t word = (high << 16) | (mid << 8) | low;
 
     return word;
-}
-
-
-void Cpu::Decrement8Bit(AbsAddressMode &mode)
-{
-    uint8_t value = mode.Read8Bit();
-    value--;
-    mode.Write8Bit(value);
-    SetNFlag(value);
-    SetZFlag(value);
-}
-
-
-void Cpu::Decrement16Bit(AbsAddressMode &mode)
-{
-    uint16_t value = mode.Read16Bit();
-    value--;
-    mode.Write16Bit(value);
-    SetNFlag(value);
-    SetZFlag(value);
-}
-
-
-void Cpu::Increment8Bit(AbsAddressMode &mode)
-{
-    uint8_t value = mode.Read8Bit();
-    value++;
-    mode.Write8Bit(value);
-    SetNFlag(value);
-    SetZFlag(value);
-}
-
-
-void Cpu::Increment16Bit(AbsAddressMode &mode)
-{
-    uint16_t value = mode.Read16Bit();
-    value++;
-    mode.Write16Bit(value);
-    SetNFlag(value);
-    SetZFlag(value);
 }
 
 
@@ -299,7 +266,8 @@ void Cpu::ProcessOpCode()
         case 0xB6: // LDX Direct,Y
         case 0xBE: // LDX Absolute,Y
             {
-                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                // Opcodes 0xB6 and 0xBE are special cases.
+                AddressModePtr &mode = (opcode & 0x10 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, mode->Read16Bit());
@@ -359,7 +327,8 @@ void Cpu::ProcessOpCode()
         case 0x8E: // STX Absolute
         case 0x96: // STX Direct,Y
             {
-                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                // Opcodes 0x96 is a special case.
+                AddressModePtr &mode = (opcode == 0x96 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.x);
@@ -385,37 +354,16 @@ void Cpu::ProcessOpCode()
         // STZ - Store Zero
         case 0x64: // STZ Direct
         case 0x74: // STZ Direct,X
+        case 0x9C: // STZ Absolute
+        case 0x9E: // STZ Absolute,X
             {
-                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                // Opcodes 0x9C is a special case.
+                AddressModePtr &mode = (opcode == 0x9C ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(0);
                 else
                     mode->Write8Bit(0);
-            }
-            break;
-
-        case 0x9C: // STZ Absolute
-            {
-                // This opcode doesn't follow the pattern for address mode, so we can't use the addressModes lookup table.
-                AddressModeAbsolute mode(this, memory);
-                mode.LoadAddress();
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(0);
-                else
-                    mode.Write8Bit(0);
-            }
-            break;
-
-        case 0x9E: // STZ Absolute,X
-            {
-                // This opcode doesn't follow the pattern for address mode, so we can't use the addressModes lookup table.
-                AddressModeAbsoluteIndexedX mode(this, memory);
-                mode.LoadAddress();
-                if (IsAccumulator16Bit())
-                    mode.Write16Bit(0);
-                else
-                    mode.Write8Bit(0);
             }
             break;
 
@@ -840,73 +788,32 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x3A: // DEC
-            {
-                LogInstruction("%02X: DEC", opcode);
-                if (IsAccumulator16Bit())
-                {
-                    reg.a--;
-                    SetNFlag(reg.a);
-                    SetZFlag(reg.a);
-                }
-                else
-                {
-                    reg.al--;
-                    SetNFlag(reg.al);
-                    SetZFlag(reg.al);
-                }
-            }
-            break;
-
+        case 0x3A: // DEC Accumulator
         case 0xC6: // DEC Direct
-            {
-                AddressModeDirect mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: DEC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Decrement16Bit(mode);
-                else
-                    Decrement8Bit(mode);
-            }
-            break;
-
         case 0xCE: // DEC Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: DEC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Decrement16Bit(mode);
-                else
-                    Decrement8Bit(mode);
-            }
-            break;
-
         case 0xD6: // DEC Direct,X
-            {
-                AddressModeDirectIndexedX mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: DEC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Decrement16Bit(mode);
-                else
-                    Decrement8Bit(mode);
-            }
-            break;
-
         case 0xDE: // DEC Absolute,X
             {
-                AddressModeAbsoluteIndexedX mode(this, memory);
-                mode.LoadAddress();
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 LogInstruction("%02X: DEC", opcode);
 
                 if (IsAccumulator16Bit())
-                    Decrement16Bit(mode);
+                {
+                    uint16_t value = mode->Read16Bit();
+                    value--;
+                    mode->Write16Bit(value);
+                    SetNFlag(value);
+                    SetZFlag(value);
+                }
                 else
-                    Decrement8Bit(mode);
+                {
+                    uint8_t value = mode->Read8Bit();
+                    value--;
+                    mode->Write8Bit(value);
+                    SetNFlag(value);
+                    SetZFlag(value);
+                }
             }
             break;
 
@@ -946,73 +853,32 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x1A: // INC
-            {
-                LogInstruction("%02X: INC", opcode);
-                if (IsAccumulator16Bit())
-                {
-                    reg.a++;
-                    SetNFlag(reg.a);
-                    SetZFlag(reg.a);
-                }
-                else
-                {
-                    reg.al++;
-                    SetNFlag(reg.al);
-                    SetZFlag(reg.al);
-                }
-            }
-            break;
-
+        case 0x1A: // INC Accumulator
         case 0xE6: // INC Direct
-            {
-                AddressModeDirect mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: INC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Increment16Bit(mode);
-                else
-                    Increment8Bit(mode);
-            }
-            break;
-
         case 0xEE: // INC Absolute
-            {
-                AddressModeAbsolute mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: INC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Increment16Bit(mode);
-                else
-                    Increment8Bit(mode);
-            }
-            break;
-
         case 0xF6: // INC Direct,X
-            {
-                AddressModeDirectIndexedX mode(this, memory);
-                mode.LoadAddress();
-                LogInstruction("%02X: INC", opcode);
-
-                if (IsAccumulator16Bit())
-                    Increment16Bit(mode);
-                else
-                    Increment8Bit(mode);
-            }
-            break;
-
         case 0xFE: // INC Absolute,X
             {
-                AddressModeAbsoluteIndexedX mode(this, memory);
-                mode.LoadAddress();
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
                 LogInstruction("%02X: INC", opcode);
 
                 if (IsAccumulator16Bit())
-                    Increment16Bit(mode);
+                {
+                    uint16_t value = mode->Read16Bit();
+                    value++;
+                    mode->Write16Bit(value);
+                    SetNFlag(value);
+                    SetZFlag(value);
+                }
                 else
-                    Increment8Bit(mode);
+                {
+                    uint8_t value = mode->Read8Bit();
+                    value++;
+                    mode->Write8Bit(value);
+                    SetNFlag(value);
+                    SetZFlag(value);
+                }
             }
             break;
 
@@ -1184,6 +1050,7 @@ void Cpu::ProcessOpCode()
         case 0x14: // TRB Direct
         case 0x1C: // TRB Absolute
             {
+                // TRB is a special case, use 0x0F for masking.
                 AddressModePtr &mode = addressModes[opcode & 0x0F];
                 mode->LoadAddress();
                 if (IsAccumulator16Bit())
@@ -1211,7 +1078,7 @@ void Cpu::ProcessOpCode()
         case 0x04: // TSB Direct
         case 0x0C: // TSB Absolute
             {
-                AddressModePtr &mode = addressModes[opcode & 0x0F];
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
                 if (IsAccumulator16Bit())
                 {
@@ -1234,16 +1101,51 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Shift and Rotate opcodes                                                                                          //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // ASL - Arithmetic Shift Left
+        case 0x06: // ASL Direct
+        case 0x0A: // ASL Acc
+        case 0x0E: // ASL Absolute
+        case 0x16: // ASL Direct,X
+        case 0x1E: // ASL Absolute,X
+            {
+                LogInstruction("%02X: CPX", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = value << 1;
+
+                    reg.flags.c = value >> 15;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = value << 1;
+
+                    reg.flags.c = value >> 7;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
-        case 0x06: NotYetImplemented(0x06); break;
-        case 0x0A: NotYetImplemented(0x0A); break;
-        case 0x0E: NotYetImplemented(0x0E); break;
 
         case 0x10: NotYetImplemented(0x10); break;
-        case 0x16: NotYetImplemented(0x16); break;
         case 0x18: NotYetImplemented(0x18); break;
-        case 0x1E: NotYetImplemented(0x1E); break;
 
         case 0x20: NotYetImplemented(0x20); break;
         case 0x22: NotYetImplemented(0x22); break;

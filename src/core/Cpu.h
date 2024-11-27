@@ -237,16 +237,6 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // These can't be inlined right now because of cyclical dependencies with Cpu and AddressMode when including AddressMode.h in this file.
-    // Hopefully I'll get around to fixing this in the future, although I'm probably prematurely optimizing by inlining everything.
-
-    void Decrement8Bit(AbsAddressMode &mode);
-    void Decrement16Bit(AbsAddressMode &mode);
-    void Increment8Bit(AbsAddressMode &mode);
-    void Increment16Bit(AbsAddressMode &mode);
-
-    ///////////////////////////////////////////////////////////////////////////
-
     template <typename T>
     inline void Compare(T a, T b)
     {
@@ -267,6 +257,7 @@ private:
 
     using AddressModePtr = std::unique_ptr<AbsAddressMode>;
     AddressModePtr addressModes[32];
+    AddressModePtr addressModeAlternate[32];
 
     friend class CpuTest;
 };

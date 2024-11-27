@@ -1456,3 +1456,35 @@ TEST_F(CpuTest, TEST_TSB_Absolute)
     this->RunInstructionTest(this->test_info_->name(), "0C", false);
     //this->RunInstructionTest(this->test_info_->name(), "0C", true);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_ASL_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "06", false);
+    //this->RunInstructionTest(this->test_info_->name(), "06", true);
+}
+
+TEST_F(CpuTest, TEST_ASL_Accumulator)
+{
+    this->RunInstructionTest(this->test_info_->name(), "0A", false);
+    //this->RunInstructionTest(this->test_info_->name(), "0A", true);
+}
+
+TEST_F(CpuTest, TEST_ASL_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "0E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "0E", true);
+}
+
+TEST_F(CpuTest, TEST_ASL_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "16", false);
+    //this->RunInstructionTest(this->test_info_->name(), "16", true);
+}
+
+TEST_F(CpuTest, TEST_ASL_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "1E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "1E", true);
+}

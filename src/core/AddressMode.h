@@ -159,6 +159,26 @@ public:
 };
 
 
+// A - Accumulator
+class AddressModeAccumulator : public AbsAddressMode
+{
+public:
+    AddressModeAccumulator(Cpu *cpu, Memory *memory) :
+        AbsAddressMode(cpu, memory, "", 1)
+    {}
+
+    virtual void LoadAddress() override
+    {
+        address = Address();
+    }
+
+    virtual uint8_t Read8Bit() override {return cpu->reg.al;}
+    virtual uint16_t Read16Bit() override {return cpu->reg.a;}
+    virtual void Write8Bit(uint8_t value) override {cpu->reg.al = value;}
+    virtual void Write16Bit(uint16_t value) override {cpu->reg.a = value;}
+};
+
+
 // d - Direct
 class AddressModeDirect : public AbsAddressMode
 {
