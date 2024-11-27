@@ -743,7 +743,7 @@ void Cpu::ProcessOpCode()
                     }
 
                     reg.flags.c = result > 0xFFFF;
-                    reg.flags.v = (((reg.a ^ result) & (reg.a ^ operand)) & 0x8000) != 0;
+                    reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
                     reg.a = result;
                     SetNFlag(reg.a);
                     SetZFlag(reg.a);
@@ -764,7 +764,7 @@ void Cpu::ProcessOpCode()
                     }
 
                     reg.flags.c = result > 0xFF;
-                    reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
+                    reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
                     reg.al = result;
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
@@ -793,12 +793,12 @@ void Cpu::ProcessOpCode()
                 mode->LoadAddress();
                 if (IsAccumulator16Bit())
                 {
-                    uint16_t operand = mode->Read16Bit();
-                    uint16_t result;
+                    uint16_t operand = ~mode->Read16Bit();
+                    uint32_t result;
 
                     if (reg.flags.d == 0)
                     {
-                        result = reg.a - operand - !reg.flags.c;
+                        result = reg.a + reg.flags.c + operand;
                     }
                     else
                     {
@@ -806,20 +806,20 @@ void Cpu::ProcessOpCode()
                         result = Bcd::Subtract(result, !reg.flags.c);
                     }
 
-                    reg.flags.c = reg.a >= operand;
-                    reg.flags.v = (((reg.a ^ result) & (reg.a ^ operand)) & 0x8000) != 0;
+                    reg.flags.c = result > 0xFFFF;
+                    reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
                     reg.a = result;
                     SetNFlag(reg.a);
                     SetZFlag(reg.a);
                 }
                 else
                 {
-                    uint8_t operand = mode->Read8Bit();
-                    uint8_t result;
+                    uint8_t operand = ~mode->Read8Bit();
+                    uint16_t result;
 
                     if (reg.flags.d == 0)
                     {
-                        result = reg.al - operand - !reg.flags.c;
+                        result = reg.al + reg.flags.c + operand;
                     }
                     else
                     {
@@ -827,8 +827,8 @@ void Cpu::ProcessOpCode()
                         result = Bcd::Subtract(result, !reg.flags.c);
                     }
 
-                    reg.flags.c = reg.al >= operand;
-                    reg.flags.v = (((reg.al ^ result) & (reg.al ^ operand)) & 0x80) != 0;
+                    reg.flags.c = result > 0xFF;
+                    reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
                     reg.al = result;
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
