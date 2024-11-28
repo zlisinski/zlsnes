@@ -1488,3 +1488,93 @@ TEST_F(CpuTest, TEST_ASL_AbsoluteIndexedX)
     this->RunInstructionTest(this->test_info_->name(), "1E", false);
     //this->RunInstructionTest(this->test_info_->name(), "1E", true);
 }
+
+TEST_F(CpuTest, TEST_LSR_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "46", false);
+    //this->RunInstructionTest(this->test_info_->name(), "46", true);
+}
+
+TEST_F(CpuTest, TEST_LSR_Accumulator)
+{
+    this->RunInstructionTest(this->test_info_->name(), "4A", false);
+    //this->RunInstructionTest(this->test_info_->name(), "4A", true);
+}
+
+TEST_F(CpuTest, TEST_LSR_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "4E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "4E", true);
+}
+
+TEST_F(CpuTest, TEST_LSR_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "56", false);
+    //this->RunInstructionTest(this->test_info_->name(), "56", true);
+}
+
+TEST_F(CpuTest, TEST_LSR_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "5E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "5E", true);
+}
+
+TEST_F(CpuTest, TEST_ROL_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "26", false);
+    //this->RunInstructionTest(this->test_info_->name(), "26", true);
+}
+
+TEST_F(CpuTest, TEST_ROL_Accumulator)
+{
+    this->RunInstructionTest(this->test_info_->name(), "2A", false);
+    //this->RunInstructionTest(this->test_info_->name(), "2A", true);
+}
+
+TEST_F(CpuTest, TEST_ROL_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "2E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "2E", true);
+}
+
+TEST_F(CpuTest, TEST_ROL_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "36", false);
+    //this->RunInstructionTest(this->test_info_->name(), "36", true);
+}
+
+TEST_F(CpuTest, TEST_ROL_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "3E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "3E", true);
+}
+
+TEST_F(CpuTest, TEST_ROR_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "66", false);
+    //this->RunInstructionTest(this->test_info_->name(), "66", true);
+}
+
+TEST_F(CpuTest, TEST_ROR_Accumulator)
+{
+    this->RunInstructionTest(this->test_info_->name(), "6A", false);
+    //this->RunInstructionTest(this->test_info_->name(), "6A", true);
+}
+
+TEST_F(CpuTest, TEST_ROR_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "6E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "6E", true);
+}
+
+TEST_F(CpuTest, TEST_ROR_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "76", false);
+    //this->RunInstructionTest(this->test_info_->name(), "76", true);
+}
+
+TEST_F(CpuTest, TEST_ROR_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "7E", false);
+    //this->RunInstructionTest(this->test_info_->name(), "7E", true);
+}

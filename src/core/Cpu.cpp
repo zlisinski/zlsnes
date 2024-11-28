@@ -1116,7 +1116,7 @@ void Cpu::ProcessOpCode()
         case 0x16: // ASL Direct,X
         case 0x1E: // ASL Absolute,X
             {
-                LogInstruction("%02X: CPX", opcode);
+                LogInstruction("%02X: ASL", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1143,6 +1143,108 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        // LSR - Logical Shift Right
+        case 0x46: // LSR Direct
+        case 0x4A: // LSR Acc
+        case 0x4E: // LSR Absolute
+        case 0x56: // LSR Direct,X
+        case 0x5E: // LSR Absolute,X
+            {
+                LogInstruction("%02X: LSR", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = value >> 1;
+
+                    reg.flags.c = value & 0x01;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = value >> 1;
+
+                    reg.flags.c = value & 0x01;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
+        // ROL - Rotate Left
+        case 0x26: // ROL Direct
+        case 0x2A: // ROL Acc
+        case 0x2E: // ROL Absolute
+        case 0x36: // ROL Direct,X
+        case 0x3E: // ROL Absolute,X
+            {
+                LogInstruction("%02X: ROL", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = (value << 1) | reg.flags.c;
+
+                    reg.flags.c = value >> 15;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = (value << 1) | reg.flags.c;
+
+                    reg.flags.c = value >> 7;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
+        // ROR - Rotate Right
+        case 0x66: // ROR Direct
+        case 0x6A: // ROR Acc
+        case 0x6E: // ROR Absolute
+        case 0x76: // ROR Direct,X
+        case 0x7E: // ROR Absolute,X
+            {
+                LogInstruction("%02X: ROR", opcode);
+                AddressModePtr &mode = addressModes[opcode & 0x1F];
+                mode->LoadAddress();
+
+                if (IsAccumulator16Bit())
+                {
+                    uint16_t value = mode->Read16Bit();
+                    uint16_t result = (value >> 1) | (reg.flags.c << 15);
+
+                    reg.flags.c = value & 0x01;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write16Bit(result);
+                }
+                else
+                {
+                    uint8_t value = mode->Read8Bit();
+                    uint8_t result = (value >> 1) | (reg.flags.c << 7);
+
+                    reg.flags.c = value & 0x01;
+                    SetNFlag(result);
+                    SetZFlag(result);
+                    mode->Write8Bit(result);
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
 
@@ -1151,42 +1253,27 @@ void Cpu::ProcessOpCode()
 
         case 0x20: NotYetImplemented(0x20); break;
         case 0x22: NotYetImplemented(0x22); break;
-        case 0x26: NotYetImplemented(0x26); break;
-        case 0x2A: NotYetImplemented(0x2A); break;
-        case 0x2E: NotYetImplemented(0x2E); break;
 
         case 0x30: NotYetImplemented(0x30); break;
-        case 0x36: NotYetImplemented(0x36); break;
         case 0x38: NotYetImplemented(0x38); break;
-        case 0x3E: NotYetImplemented(0x3E); break;
 
         case 0x40: NotYetImplemented(0x40); break;
         case 0x42: NotYetImplemented(0x42); break;
         case 0x44: NotYetImplemented(0x44); break;
-        case 0x46: NotYetImplemented(0x46); break;
-        case 0x4A: NotYetImplemented(0x4A); break;
         case 0x4C: NotYetImplemented(0x4C); break;
-        case 0x4E: NotYetImplemented(0x4E); break;
 
         case 0x50: NotYetImplemented(0x50); break;
         case 0x54: NotYetImplemented(0x54); break;
-        case 0x56: NotYetImplemented(0x56); break;
         case 0x58: NotYetImplemented(0x58); break;
         case 0x5C: NotYetImplemented(0x5C); break;
-        case 0x5E: NotYetImplemented(0x5E); break;
 
         case 0x60: NotYetImplemented(0x60); break;
-        case 0x66: NotYetImplemented(0x66); break;
-        case 0x6A: NotYetImplemented(0x6A); break;
         case 0x6B: NotYetImplemented(0x6B); break;
         case 0x6C: NotYetImplemented(0x6C); break;
-        case 0x6E: NotYetImplemented(0x6E); break;
 
         case 0x70: NotYetImplemented(0x70); break;
-        case 0x76: NotYetImplemented(0x76); break;
         case 0x78: NotYetImplemented(0x78); break;
         case 0x7C: NotYetImplemented(0x7C); break;
-        case 0x7E: NotYetImplemented(0x7E); break;
 
         case 0x80: NotYetImplemented(0x80); break;
         case 0x82: NotYetImplemented(0x82); break;
