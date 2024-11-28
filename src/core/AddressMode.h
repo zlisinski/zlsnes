@@ -335,6 +335,7 @@ public:
     virtual void Write16Bit(uint16_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeImmediate");}
 };
 
+
 // d,s - Stack,S
 class AddressModeStackRelative : public AbsAddressMode
 {

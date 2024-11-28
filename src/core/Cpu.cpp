@@ -1245,16 +1245,62 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Branch opcodes                                                                                                    //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x80: // BRA - Branch
+            {
+                LogInstruction("%02X: BRA", opcode);
+                int8_t offset = static_cast<int8_t>(ReadPC8Bit());
+                reg.pc += offset;
+            }
+            break;
+
+        case 0x82: // BRL - Branch Long
+            {
+                LogInstruction("%02X: BRL", opcode);
+                int16_t offset = static_cast<int16_t>(ReadPC16Bit());
+                reg.pc += offset;
+            }
+            break;
+
+        case 0x10: // BPL - Branch if Plus (n flag clear)
+        case 0x30: // BMI - Branch if Minus (n flag set)
+        case 0x50: // BVC - Branch if Overflow Clear
+        case 0x70: // BVS - Branch if Overflow Set
+        case 0x90: // BCC - Branch if Carry Clear
+        case 0xB0: // BCS - Branch if Carry Set
+        case 0xD0: // BNE - Branch if Not Equal (z flag clear)
+        case 0xF0: // BEQ - Branch if Equal (z flag set)
+            {
+                const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
+                LogInstruction("%02X: %s", opcode, names[opcode >> 5]);
+
+                int8_t offset = static_cast<int8_t>(ReadPC8Bit());
+
+                // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
+                // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.
+                uint8_t flagShift[] = {7, 6, 0, 1};
+
+                // Bit 6 of the opcode says which flag to check, bit 5 is whether the flag should be set or cleared.
+                if (((reg.p >> flagShift[opcode >> 6]) & 0x01) == ((opcode >> 5) & 0x01))
+                {
+                    reg.pc += offset;
+                }
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
 
-        case 0x10: NotYetImplemented(0x10); break;
         case 0x18: NotYetImplemented(0x18); break;
 
         case 0x20: NotYetImplemented(0x20); break;
         case 0x22: NotYetImplemented(0x22); break;
 
-        case 0x30: NotYetImplemented(0x30); break;
         case 0x38: NotYetImplemented(0x38); break;
 
         case 0x40: NotYetImplemented(0x40); break;
@@ -1262,7 +1308,6 @@ void Cpu::ProcessOpCode()
         case 0x44: NotYetImplemented(0x44); break;
         case 0x4C: NotYetImplemented(0x4C); break;
 
-        case 0x50: NotYetImplemented(0x50); break;
         case 0x54: NotYetImplemented(0x54); break;
         case 0x58: NotYetImplemented(0x58); break;
         case 0x5C: NotYetImplemented(0x5C); break;
@@ -1271,23 +1316,16 @@ void Cpu::ProcessOpCode()
         case 0x6B: NotYetImplemented(0x6B); break;
         case 0x6C: NotYetImplemented(0x6C); break;
 
-        case 0x70: NotYetImplemented(0x70); break;
         case 0x78: NotYetImplemented(0x78); break;
         case 0x7C: NotYetImplemented(0x7C); break;
 
-        case 0x80: NotYetImplemented(0x80); break;
-        case 0x82: NotYetImplemented(0x82); break;
-
-        case 0x90: NotYetImplemented(0x90); break;
         case 0x93: NotYetImplemented(0x93); break;
 
-        case 0xB0: NotYetImplemented(0xB0); break;
         case 0xB8: NotYetImplemented(0xB8); break;
 
         case 0xC2: NotYetImplemented(0xC2); break;
         case 0xCB: NotYetImplemented(0xCB); break;
 
-        case 0xD0: NotYetImplemented(0xD0); break;
         case 0xD8: NotYetImplemented(0xD8); break;
         case 0xDB: NotYetImplemented(0xDB); break;
         case 0xDC: NotYetImplemented(0xDC); break;
@@ -1296,7 +1334,6 @@ void Cpu::ProcessOpCode()
         case 0xEA: NotYetImplemented(0xEA); break;
         case 0xEB: NotYetImplemented(0xEB); break;
 
-        case 0xF0: NotYetImplemented(0xF0); break;
         case 0xF8: NotYetImplemented(0xF8); break;
         case 0xFB: NotYetImplemented(0xFB); break;
         case 0xFC: NotYetImplemented(0xFC); break;
