@@ -31,6 +31,16 @@ public:
         return Bytes::Make24Bit(bank, offset);
     }
 
+    uint8_t GetBank() const
+    {
+        return bank;
+    }
+
+    uint16_t GetOffset() const
+    {
+        return offset;
+    }
+
     Address AddOffset(uint16_t off) const
     {
         return Address(this->ToUint() + off);

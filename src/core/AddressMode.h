@@ -98,7 +98,28 @@ public:
     virtual void LoadAddress() override
     {
         uint16_t addr = memory->Read16BitWrapBank(0, cpu->ReadPC16Bit());
-        address = Address(cpu->reg.pb, addr);
+        address = Address(0, addr);
+    }
+
+    virtual uint8_t Read8Bit() override {throw std::logic_error("Can't read from AddressModeAbsoluteIndirect");}
+    virtual uint16_t Read16Bit() override {throw std::logic_error("Can't read from AddressModeAbsoluteIndirect");}
+    virtual void Write8Bit(uint8_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndirect");}
+    virtual void Write16Bit(uint16_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeAbsoluteIndirect");}
+};
+
+
+// [a] - [Absolute]
+class AddressModeAbsoluteIndirectLong : public AbsAddressMode
+{
+public:
+    AddressModeAbsoluteIndirectLong(Cpu *cpu, Memory *memory) :
+        AbsAddressMode(cpu, memory, "[%04X]", 3)
+    {}
+
+    virtual void LoadAddress() override
+    {
+        uint32_t addr = memory->Read24BitWrapBank(0, cpu->ReadPC16Bit());
+        address = Address(addr);
     }
 
     virtual uint8_t Read8Bit() override {throw std::logic_error("Can't read from AddressModeAbsoluteIndirect");}

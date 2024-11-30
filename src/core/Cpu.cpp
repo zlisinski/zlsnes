@@ -47,6 +47,14 @@ Cpu::Cpu(Memory *memory) :
     addressModeAlternate[0x16] = std::make_unique<AddressModeDirectIndexedY>(this, memory); // LDX, STX
     addressModeAlternate[0x1C] = std::make_unique<AddressModeAbsolute>(this, memory); // STZ
     addressModeAlternate[0x1E] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory); // LDX
+
+    jmpAddressModes[0x02] = std::make_unique<AddressModeAbsolute>(this, memory); // JSR 20
+    jmpAddressModes[0x04] = std::make_unique<AddressModeAbsolute>(this, memory); // JMP 4C
+    jmpAddressModes[0x05] = std::make_unique<AddressModeAbsoluteLong>(this, memory); // JMP 5C
+    jmpAddressModes[0x06] = std::make_unique<AddressModeAbsoluteIndirect>(this, memory); // JMP 6C
+    jmpAddressModes[0x07] = std::make_unique<AddressModeAbsoluteIndexedIndirect>(this, memory); // JMP 7C
+    jmpAddressModes[0x0D] = std::make_unique<AddressModeAbsoluteIndirectLong>(this, memory); // JMP DC
+    jmpAddressModes[0x0F] = std::make_unique<AddressModeAbsoluteIndexedIndirect>(this, memory); // JSR FC
 }
 
 Cpu::~Cpu()
@@ -1293,31 +1301,77 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Jump opcodes                                                                                                      //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Short Jumps
+        case 0x4C: // JMP Absolute
+        case 0x6C: // JMP (Absolute)
+        case 0x7C: // JMP (Absolute,X)
+            {
+                LogInstruction("%02X: JMP", opcode);
+                AddressModePtr &mode = jmpAddressModes[opcode >> 4];
+                mode->LoadAddress();
+                reg.pc = mode->GetAddress().GetOffset();
+            }
+            break;
+
+        // Long Jumps
+        case 0x5C: // JMP AbsoluteLong
+        case 0xDC: // JMP [Absolute]
+            {
+                LogInstruction("%02X: JMP", opcode);
+                AddressModePtr &mode = jmpAddressModes[opcode >> 4];
+                mode->LoadAddress();
+                reg.pb = mode->GetAddress().GetBank();
+                reg.pc = mode->GetAddress().GetOffset();
+            }
+            break;
+
+        // Jump to Subroutine
+        case 0x20: // JSR Absolute
+        case 0xFC: // JSR (Absolute,X)
+            {
+                AddressModePtr &mode = jmpAddressModes[opcode >> 4];
+                mode->LoadAddress();
+                Push16Bit(reg.pc - 1);
+                reg.pc = mode->GetAddress().GetOffset();
+            }
+            break;
+
+        // Jump to Subroutine Long
+        case 0x22: // JSL AbsoluteLong
+            {
+                AddressModeAbsoluteLong mode(this, memory);
+                mode.LoadAddress();
+                Push8Bit(reg.pb);
+                Push16Bit(reg.pc - 1);
+                reg.pb = mode.GetAddress().GetBank();
+                reg.pc = mode.GetAddress().GetOffset();
+            }
+            break;
+
         case 0x00: NotYetImplemented(0x00); break;
         case 0x02: NotYetImplemented(0x02); break;
 
         case 0x18: NotYetImplemented(0x18); break;
-
-        case 0x20: NotYetImplemented(0x20); break;
-        case 0x22: NotYetImplemented(0x22); break;
 
         case 0x38: NotYetImplemented(0x38); break;
 
         case 0x40: NotYetImplemented(0x40); break;
         case 0x42: NotYetImplemented(0x42); break;
         case 0x44: NotYetImplemented(0x44); break;
-        case 0x4C: NotYetImplemented(0x4C); break;
 
         case 0x54: NotYetImplemented(0x54); break;
         case 0x58: NotYetImplemented(0x58); break;
-        case 0x5C: NotYetImplemented(0x5C); break;
 
         case 0x60: NotYetImplemented(0x60); break;
         case 0x6B: NotYetImplemented(0x6B); break;
-        case 0x6C: NotYetImplemented(0x6C); break;
 
         case 0x78: NotYetImplemented(0x78); break;
-        case 0x7C: NotYetImplemented(0x7C); break;
 
         case 0x93: NotYetImplemented(0x93); break;
 
@@ -1328,7 +1382,6 @@ void Cpu::ProcessOpCode()
 
         case 0xD8: NotYetImplemented(0xD8); break;
         case 0xDB: NotYetImplemented(0xDB); break;
-        case 0xDC: NotYetImplemented(0xDC); break;
 
         case 0xE2: NotYetImplemented(0xE2); break;
         case 0xEA: NotYetImplemented(0xEA); break;
@@ -1336,7 +1389,6 @@ void Cpu::ProcessOpCode()
 
         case 0xF8: NotYetImplemented(0xF8); break;
         case 0xFB: NotYetImplemented(0xFB); break;
-        case 0xFC: NotYetImplemented(0xFC); break;
     }
 }
 

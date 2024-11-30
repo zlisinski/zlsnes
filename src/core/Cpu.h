@@ -258,6 +258,7 @@ private:
     using AddressModePtr = std::unique_ptr<AbsAddressMode>;
     AddressModePtr addressModes[32];
     AddressModePtr addressModeAlternate[32];
+    AddressModePtr jmpAddressModes[16];
 
     friend class CpuTest;
 };

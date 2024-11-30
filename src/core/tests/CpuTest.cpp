@@ -1638,3 +1638,53 @@ TEST_F(CpuTest, TEST_BEQ)
     this->RunInstructionTest(this->test_info_->name(), "F0", false);
     //this->RunInstructionTest(this->test_info_->name(), "F0", true);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_JMP_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "4C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "4C", true);
+}
+
+TEST_F(CpuTest, TEST_JMP_AbsoluteLong)
+{
+    this->RunInstructionTest(this->test_info_->name(), "5C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "5C", true);
+}
+
+TEST_F(CpuTest, TEST_JMP_AbsoluteIndirect)
+{
+    this->RunInstructionTest(this->test_info_->name(), "6C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "6C", true);
+}
+
+TEST_F(CpuTest, TEST_JMP_AbsoluteIndexedIndirect)
+{
+    this->RunInstructionTest(this->test_info_->name(), "7C", false);
+    //this->RunInstructionTest(this->test_info_->name(), "7C", true);
+}
+
+TEST_F(CpuTest, TEST_JMP_AbsoluteIndirectLong)
+{
+    this->RunInstructionTest(this->test_info_->name(), "DC", false);
+    //this->RunInstructionTest(this->test_info_->name(), "DC", true);
+}
+
+TEST_F(CpuTest, TEST_JSR_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "20", false);
+    //this->RunInstructionTest(this->test_info_->name(), "20", true);
+}
+
+TEST_F(CpuTest, TEST_JSR_AbsoluteIndexedIndirect)
+{
+    this->RunInstructionTest(this->test_info_->name(), "FC", false);
+    //this->RunInstructionTest(this->test_info_->name(), "FC", true);
+}
+
+TEST_F(CpuTest, TEST_JSL_AbsoluteLong)
+{
+    this->RunInstructionTest(this->test_info_->name(), "22", false);
+    //this->RunInstructionTest(this->test_info_->name(), "22", true);
+}
