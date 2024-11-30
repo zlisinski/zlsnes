@@ -252,6 +252,7 @@ private:
     ///////////////////////////////////////////////////////////////////////////
 
     void SetEmulationMode(bool value);
+    void UpdateRegistersAfterFlagChange();
 
     void NotYetImplemented(uint8_t opcode);
 

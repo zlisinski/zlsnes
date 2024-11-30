@@ -113,13 +113,23 @@ void Cpu::SetEmulationMode(bool value)
 {
     reg.emulationMode = value;
 
+    UpdateRegistersAfterFlagChange();
+}
+
+
+void Cpu::UpdateRegistersAfterFlagChange()
+{
     if (reg.emulationMode)
     {
         reg.flags.m = 1;
         reg.flags.x = 1;
+        reg.sh = 1;
+    }
+
+    if (IsIndex8Bit())
+    {
         reg.xh = 0;
         reg.yh = 0;
-        reg.sh = 1;
     }
 }
 
@@ -1403,7 +1413,8 @@ void Cpu::ProcessOpCode()
         case 0x00: // BRK - Breakpoint
         case 0x02: // COP - Coprocessor
             {
-                LogInstruction("%02X: BRK", opcode);
+                const char *names[] = {"BRK", "COP"};
+                LogInstruction("%02X: %s", opcode, names[opcode >> 1]);
 
                 if (reg.emulationMode)
                 {
@@ -1429,11 +1440,22 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        case 0x40: // RTI - Return from interrupt
+            {
+                LogInstruction("%02X: RTI", opcode);
+
+                reg.p = Pop8Bit();
+                UpdateRegistersAfterFlagChange();
+                reg.pc = Pop16Bit();
+                if (!reg.emulationMode)
+                    reg.pb = Pop8Bit();
+            }
+            break;
+
         case 0x18: NotYetImplemented(0x18); break;
 
         case 0x38: NotYetImplemented(0x38); break;
 
-        case 0x40: NotYetImplemented(0x40); break;
         case 0x42: NotYetImplemented(0x42); break;
         case 0x44: NotYetImplemented(0x44); break;
 

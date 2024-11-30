@@ -369,6 +369,57 @@ TEST_F(CpuTest, TEST_Pop8Bit)
     ASSERT_EQ(value, 0xAB);
 }
 
+TEST_F(CpuTest, TEST_UpdateRegistersAfterFlagChange)
+{
+    // Native mode and 16-bit index mode makes no changes.
+    cpu->reg.emulationMode = false;
+    cpu->reg.flags.x = 0;
+    UpdateRegistersAfterFlagChange();
+    EXPECT_EQ(cpu->reg.p, P_VALUE);
+    EXPECT_EQ(cpu->reg.x, X_VALUE);
+    EXPECT_EQ(cpu->reg.y, Y_VALUE);
+    EXPECT_EQ(cpu->reg.sp, SP_VALUE);
+
+    // Native mode and 8-bit index mode clears xh and yh.
+    ResetState();
+    cpu->reg.emulationMode = false;
+    cpu->reg.flags.x = 1;
+    UpdateRegistersAfterFlagChange();
+    EXPECT_EQ(cpu->reg.p, 0x10);
+    EXPECT_EQ(cpu->reg.x, X_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.y, Y_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.sp, SP_VALUE);
+
+    // Emulation mode forces x and m flags and sets sh to 1.
+    ResetState();
+    cpu->reg.emulationMode = true;
+    UpdateRegistersAfterFlagChange();
+    EXPECT_EQ(cpu->reg.p, 0x30);
+    EXPECT_EQ(cpu->reg.x, X_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.y, Y_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.sp, (SP_VALUE & 0x00FF) | 0x0100);
+}
+
+TEST_F(CpuTest, TEST_SetEmulationMode)
+{
+    // Native mode makes no changes.
+    SetEmulationMode(false);
+    EXPECT_EQ(cpu->reg.emulationMode, false);
+    EXPECT_EQ(cpu->reg.p, P_VALUE);
+    EXPECT_EQ(cpu->reg.x, X_VALUE);
+    EXPECT_EQ(cpu->reg.y, Y_VALUE);
+    EXPECT_EQ(cpu->reg.sp, SP_VALUE);
+
+    // Emulation mode forces x and m flags and sets sh to 1.
+    ResetState();
+    SetEmulationMode(true);
+    EXPECT_EQ(cpu->reg.emulationMode, true);
+    EXPECT_EQ(cpu->reg.p, 0x30);
+    EXPECT_EQ(cpu->reg.x, X_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.y, Y_VALUE & 0x00FF);
+    EXPECT_EQ(cpu->reg.sp, (SP_VALUE & 0x00FF) | 0x0100);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST_F(CpuTest, TEST_TAX)
@@ -1715,4 +1766,10 @@ TEST_F(CpuTest, TEST_COP)
 {
     this->RunInstructionTest(this->test_info_->name(), "02", false);
     this->RunInstructionTest(this->test_info_->name(), "02", true);
+}
+
+TEST_F(CpuTest, TEST_RTI)
+{
+    this->RunInstructionTest(this->test_info_->name(), "40", false);
+    this->RunInstructionTest(this->test_info_->name(), "40", true);
 }
