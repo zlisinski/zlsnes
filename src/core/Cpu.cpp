@@ -1335,6 +1335,7 @@ void Cpu::ProcessOpCode()
         case 0x20: // JSR Absolute
         case 0xFC: // JSR (Absolute,X)
             {
+                LogInstruction("%02X: JSR", opcode);
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
                 Push16Bit(reg.pc - 1);
@@ -1345,12 +1346,36 @@ void Cpu::ProcessOpCode()
         // Jump to Subroutine Long
         case 0x22: // JSL AbsoluteLong
             {
+                LogInstruction("%02X: JSL", opcode);
                 AddressModeAbsoluteLong mode(this, memory);
                 mode.LoadAddress();
                 Push8Bit(reg.pb);
                 Push16Bit(reg.pc - 1);
                 reg.pb = mode.GetAddress().GetBank();
                 reg.pc = mode.GetAddress().GetOffset();
+            }
+            break;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Return opcodes                                                                                                    //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // RTS - Return from subroutine
+        case 0x60:
+            {
+                LogInstruction("%02X: RTS", opcode);
+                reg.pc = Pop16Bit() + 1;
+            }
+            break;
+
+        // RTL - Return from subroutine long
+        case 0x6B:
+            {
+                LogInstruction("%02X: RTL", opcode);
+                reg.pc = Pop16Bit() + 1;
+                reg.pb = Pop8Bit();
             }
             break;
 
@@ -1367,9 +1392,6 @@ void Cpu::ProcessOpCode()
 
         case 0x54: NotYetImplemented(0x54); break;
         case 0x58: NotYetImplemented(0x58); break;
-
-        case 0x60: NotYetImplemented(0x60); break;
-        case 0x6B: NotYetImplemented(0x6B); break;
 
         case 0x78: NotYetImplemented(0x78); break;
 

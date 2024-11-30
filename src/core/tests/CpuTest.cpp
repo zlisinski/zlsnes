@@ -1688,3 +1688,15 @@ TEST_F(CpuTest, TEST_JSL_AbsoluteLong)
     this->RunInstructionTest(this->test_info_->name(), "22", false);
     //this->RunInstructionTest(this->test_info_->name(), "22", true);
 }
+
+TEST_F(CpuTest, TEST_RTS)
+{
+    this->RunInstructionTest(this->test_info_->name(), "60", false);
+    //this->RunInstructionTest(this->test_info_->name(), "60", true);
+}
+
+TEST_F(CpuTest, TEST_RTL)
+{
+    this->RunInstructionTest(this->test_info_->name(), "6B", false);
+    //this->RunInstructionTest(this->test_info_->name(), "6B", true);
+}
