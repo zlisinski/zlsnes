@@ -251,6 +251,8 @@ private:
 
     ///////////////////////////////////////////////////////////////////////////
 
+    void SetEmulationMode(bool value);
+
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;

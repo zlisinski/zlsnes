@@ -31,6 +31,7 @@ protected:
     template <typename T> void LoadRegister(T *dest, T value) {cpu->LoadRegister(dest, value);}
     void Push8Bit(uint8_t value) {cpu->Push8Bit(value);}
     uint8_t Pop8Bit() {return cpu->Pop8Bit();}
+    void SetEmulationMode(bool value) {cpu->SetEmulationMode(value);}
 
     Cpu *cpu;
     Memory *memory_;

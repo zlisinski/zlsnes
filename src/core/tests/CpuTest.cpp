@@ -89,7 +89,7 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
         cpu->reg.pb = initial["pbr"].toInt();
         cpu->reg.sp = initial["s"].toInt();
         cpu->reg.pc = initial["pc"].toInt();
-        cpu->reg.emulationMode = emulationMode;
+        SetEmulationMode(emulationMode);
 
         if (cpu->reg.flags.d == 1 && (opcodeName.startsWith("TEST_ADC_") || opcodeName.startsWith("TEST_SBC_")))
         {
@@ -1689,6 +1689,8 @@ TEST_F(CpuTest, TEST_JSL_AbsoluteLong)
     //this->RunInstructionTest(this->test_info_->name(), "22", true);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 TEST_F(CpuTest, TEST_RTS)
 {
     this->RunInstructionTest(this->test_info_->name(), "60", false);
@@ -1699,4 +1701,18 @@ TEST_F(CpuTest, TEST_RTL)
 {
     this->RunInstructionTest(this->test_info_->name(), "6B", false);
     //this->RunInstructionTest(this->test_info_->name(), "6B", true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_BRK)
+{
+    this->RunInstructionTest(this->test_info_->name(), "00", false);
+    this->RunInstructionTest(this->test_info_->name(), "00", true);
+}
+
+TEST_F(CpuTest, TEST_COP)
+{
+    this->RunInstructionTest(this->test_info_->name(), "02", false);
+    this->RunInstructionTest(this->test_info_->name(), "02", true);
 }

@@ -109,6 +109,21 @@ uint32_t Cpu::ReadPC24Bit()
 }
 
 
+void Cpu::SetEmulationMode(bool value)
+{
+    reg.emulationMode = value;
+
+    if (reg.emulationMode)
+    {
+        reg.flags.m = 1;
+        reg.flags.x = 1;
+        reg.xh = 0;
+        reg.yh = 0;
+        reg.sh = 1;
+    }
+}
+
+
 void Cpu::ProcessOpCode()
 {
     uint8_t opcode = ReadPC8Bit();
@@ -1379,8 +1394,40 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x00: NotYetImplemented(0x00); break;
-        case 0x02: NotYetImplemented(0x02); break;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Software interrupts                                                                                               //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        case 0x00: // BRK - Breakpoint
+        case 0x02: // COP - Coprocessor
+            {
+                LogInstruction("%02X: BRK", opcode);
+
+                if (reg.emulationMode)
+                {
+                    const uint32_t vectors[] = {0xFFFE, 0xFFF4};
+                    Push16Bit(reg.pc + 1);
+                    Push8Bit(reg.p | 0x10);
+                    reg.pb = 0;
+                    reg.pc = memory->Read16Bit(vectors[opcode >> 1]);
+                    reg.flags.i = 1;
+                    reg.flags.d = 0;
+                }
+                else
+                {
+                    const uint32_t vectors[] = {0xFFE6, 0xFFE4};
+                    Push8Bit(reg.pb);
+                    Push16Bit(reg.pc + 1);
+                    Push8Bit(reg.p);
+                    reg.pb = 0;
+                    reg.pc = memory->Read16Bit(vectors[opcode >> 1]);
+                    reg.flags.i = 1;
+                    reg.flags.d = 0;
+                }
+            }
+            break;
 
         case 0x18: NotYetImplemented(0x18); break;
 
