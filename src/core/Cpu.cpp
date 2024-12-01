@@ -1555,9 +1555,71 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Memory Move Opcodes                                                                                               //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // MVP - Move Memory Positive
+        case 0x44:
+            {
+                LogInstruction("%02X: MVP", opcode);
+                // Technically this instruction uses its own address mode, but Immediate works too.
+                AddressModeImmediate mode(this, memory);
+                uint8_t dstBank = mode.Read8Bit();
+                uint8_t srcBank = mode.Read8Bit();
+                Address dst(dstBank, reg.y);
+                Address src(srcBank, reg.x);
+
+                memory->Write8Bit(dst, memory->Read8Bit(src));
+
+                reg.db = dstBank;
+                reg.a--;
+                reg.x--;
+                reg.y--;
+                if (IsIndex8Bit())
+                {
+                    reg.x &= 0x00FF;
+                    reg.y &= 0x00FF;
+                }
+
+                // Loop until reg.a underflows.
+                if (reg.a != 0xFFFF)
+                    reg.pc -= 3;
+            }
+            break;
+
+        // MVN - Move Memory Negative
+        case 0x54:
+            {
+                LogInstruction("%02X: MVN", opcode);
+                // Technically this instruction uses its own address mode, but Immediate works too.
+                AddressModeImmediate mode(this, memory);
+                uint8_t dstBank = mode.Read8Bit();
+                uint8_t srcBank = mode.Read8Bit();
+                Address dst(dstBank, reg.y);
+                Address src(srcBank, reg.x);
+
+                memory->Write8Bit(dst, memory->Read8Bit(src));
+
+                reg.db = dstBank;
+                reg.a--;
+                reg.x++;
+                reg.y++;
+                if (IsIndex8Bit())
+                {
+                    reg.x &= 0x00FF;
+                    reg.y &= 0x00FF;
+                }
+
+                // Loop until reg.a underflows.
+                if (reg.a != 0xFFFF)
+                    reg.pc -= 3;
+            }
+            break;
+
         case 0x42: NotYetImplemented(0x42); break; // WDM
-        case 0x44: NotYetImplemented(0x44); break; // MVP
-        case 0x54: NotYetImplemented(0x54); break; // MVN
         case 0xCB: NotYetImplemented(0xCB); break; // WAI
         case 0xDB: NotYetImplemented(0xDB); break; // STP
         case 0xEA: NotYetImplemented(0xEA); break; // NOP
