@@ -494,6 +494,12 @@ TEST_F(CpuTest, TEST_TSC)
     //this->RunInstructionTest(this->test_info_->name(), "3B", true);
 }
 
+TEST_F(CpuTest, TEST_XBA)
+{
+    this->RunInstructionTest(this->test_info_->name(), "EB", false);
+    this->RunInstructionTest(this->test_info_->name(), "EB", true);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 TEST_F(CpuTest, TEST_LDA_DirectIndexedIndirect)
@@ -694,6 +700,12 @@ TEST_F(CpuTest, TEST_STA_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "92", false);
     //this->RunInstructionTest(this->test_info_->name(), "92", true);
+}
+
+TEST_F(CpuTest, TEST_STA_StackRelativeIndirectIndexed)
+{
+    this->RunInstructionTest(this->test_info_->name(), "93", false);
+    this->RunInstructionTest(this->test_info_->name(), "93", true);
 }
 
 TEST_F(CpuTest, TEST_STA_DirectIndexedX)
@@ -1828,4 +1840,10 @@ TEST_F(CpuTest, TEST_SEP)
 {
     this->RunInstructionTest(this->test_info_->name(), "E2", false);
     this->RunInstructionTest(this->test_info_->name(), "E2", true);
+}
+
+TEST_F(CpuTest, TEST_XCE)
+{
+    this->RunInstructionTest(this->test_info_->name(), "FB", false);
+    this->RunInstructionTest(this->test_info_->name(), "FB", true);
 }

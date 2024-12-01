@@ -262,6 +262,15 @@ void Cpu::ProcessOpCode()
             }
             break;
 
+        case 0xEB: // XBA - Swap al and ah
+            {
+                LogInstruction("%02X: XBA", opcode);
+                std::swap(reg.ah, reg.al);
+                SetNFlag(reg.al);
+                SetZFlag(reg.al);
+            }
+            break;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                   //
 // Load opcodes                                                                                                      //
@@ -342,6 +351,7 @@ void Cpu::ProcessOpCode()
         case 0x8F: // STA Long
         case 0x91: // STA (Direct),Y
         case 0x92: // STA (Direct)
+        case 0x93: // STA (Stack,S),Y
         case 0x95: // STA Direct,X
         case 0x97: // STA [Direct],Y
         case 0x99: // STA Absolute,Y
@@ -1534,21 +1544,23 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x42: NotYetImplemented(0x42); break;
-        case 0x44: NotYetImplemented(0x44); break;
+        // XCE - Exchange c and e
+        case 0xFB:
+            {
+                LogInstruction("%02X: XCE", opcode);
+                uint8_t carry = reg.flags.c;
+                reg.flags.c = reg.emulationMode;
+                reg.emulationMode = carry;
+                UpdateRegistersAfterFlagChange();
+            }
+            break;
 
-        case 0x54: NotYetImplemented(0x54); break;
-
-        case 0x93: NotYetImplemented(0x93); break;
-
-        case 0xCB: NotYetImplemented(0xCB); break;
-
-        case 0xDB: NotYetImplemented(0xDB); break;
-
-        case 0xEA: NotYetImplemented(0xEA); break;
-        case 0xEB: NotYetImplemented(0xEB); break;
-
-        case 0xFB: NotYetImplemented(0xFB); break;
+        case 0x42: NotYetImplemented(0x42); break; // WDM
+        case 0x44: NotYetImplemented(0x44); break; // MVP
+        case 0x54: NotYetImplemented(0x54); break; // MVN
+        case 0xCB: NotYetImplemented(0xCB); break; // WAI
+        case 0xDB: NotYetImplemented(0xDB); break; // STP
+        case 0xEA: NotYetImplemented(0xEA); break; // NOP
     }
 }
 
