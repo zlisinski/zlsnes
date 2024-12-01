@@ -1619,10 +1619,37 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x42: NotYetImplemented(0x42); break; // WDM
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Nop Opcodes                                                                                                       //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // NOP
+        case 0xEA:
+            {
+                LogInstruction("%02X: NOP", opcode);
+            }
+            break;
+
+        // WDM - 2 byte NOP
+        case 0x42:
+            {
+                LogInstruction("%02X: WDM", opcode);
+                AddressModeImmediate mode(this, memory);
+                uint8_t nopData = mode.Read8Bit();
+                (void)nopData;
+            }
+            break;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Stop/Wait Opcodes                                                                                                 //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         case 0xCB: NotYetImplemented(0xCB); break; // WAI
         case 0xDB: NotYetImplemented(0xDB); break; // STP
-        case 0xEA: NotYetImplemented(0xEA); break; // NOP
     }
 }
 

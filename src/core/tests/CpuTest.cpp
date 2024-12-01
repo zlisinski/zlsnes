@@ -1892,3 +1892,15 @@ TEST_F(CpuTest, TEST_MVN)
     this->RunInstructionTest(this->test_info_->name(), "54", false);
     this->RunInstructionTest(this->test_info_->name(), "54", true);
 }
+
+TEST_F(CpuTest, TEST_NOP)
+{
+    this->RunInstructionTest(this->test_info_->name(), "EA", false);
+    this->RunInstructionTest(this->test_info_->name(), "EA", true);
+}
+
+TEST_F(CpuTest, TEST_WDM)
+{
+    this->RunInstructionTest(this->test_info_->name(), "42", false);
+    this->RunInstructionTest(this->test_info_->name(), "42", true);
+}
