@@ -1773,3 +1773,59 @@ TEST_F(CpuTest, TEST_RTI)
     this->RunInstructionTest(this->test_info_->name(), "40", false);
     this->RunInstructionTest(this->test_info_->name(), "40", true);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_CLC)
+{
+    this->RunInstructionTest(this->test_info_->name(), "18", false);
+    this->RunInstructionTest(this->test_info_->name(), "18", true);
+}
+
+TEST_F(CpuTest, TEST_SEC)
+{
+    this->RunInstructionTest(this->test_info_->name(), "38", false);
+    this->RunInstructionTest(this->test_info_->name(), "38", true);
+}
+
+TEST_F(CpuTest, TEST_CLI)
+{
+    this->RunInstructionTest(this->test_info_->name(), "58", false);
+    this->RunInstructionTest(this->test_info_->name(), "58", true);
+}
+
+TEST_F(CpuTest, TEST_SEI)
+{
+    this->RunInstructionTest(this->test_info_->name(), "78", false);
+    this->RunInstructionTest(this->test_info_->name(), "78", true);
+}
+
+TEST_F(CpuTest, TEST_CLV)
+{
+    this->RunInstructionTest(this->test_info_->name(), "B8", false);
+    this->RunInstructionTest(this->test_info_->name(), "B8", true);
+}
+
+TEST_F(CpuTest, TEST_CLD)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D8", false);
+    this->RunInstructionTest(this->test_info_->name(), "D8", true);
+}
+
+TEST_F(CpuTest, TEST_SED)
+{
+    this->RunInstructionTest(this->test_info_->name(), "F8", false);
+    this->RunInstructionTest(this->test_info_->name(), "F8", true);
+}
+
+TEST_F(CpuTest, TEST_REP)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C2", false);
+    this->RunInstructionTest(this->test_info_->name(), "C2", true);
+}
+
+TEST_F(CpuTest, TEST_SEP)
+{
+    this->RunInstructionTest(this->test_info_->name(), "E2", false);
+    this->RunInstructionTest(this->test_info_->name(), "E2", true);
+}

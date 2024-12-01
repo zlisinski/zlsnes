@@ -1452,33 +1452,102 @@ void Cpu::ProcessOpCode()
             }
             break;
 
-        case 0x18: NotYetImplemented(0x18); break;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                   //
+// Flag Set/Clear Opcodes                                                                                            //
+//                                                                                                                   //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        case 0x38: NotYetImplemented(0x38); break;
+        // CLC - Clear Carry
+        case 0x18:
+            {
+                LogInstruction("%02X: CLC", opcode);
+                reg.flags.c = 0;
+            }
+            break;
+
+        // SEC - Set Carry
+        case 0x38:
+            {
+                LogInstruction("%02X: SEC", opcode);
+                reg.flags.c = 1;
+            }
+            break;
+
+        // CLI - Clear Interrupt Disable
+        case 0x58:
+            {
+                LogInstruction("%02X: CLI", opcode);
+                reg.flags.i = 0;
+            }
+            break;
+
+        // SEI - Set Interrupt Disable
+        case 0x78:
+            {
+                LogInstruction("%02X: SEI", opcode);
+                reg.flags.i = 1;
+            }
+            break;
+
+        // CLV - Clear Overflow
+        case 0xB8:
+            {
+                LogInstruction("%02X: CLV", opcode);
+                reg.flags.v = 0;
+            }
+            break;
+
+        // CLD - Clear Decimal
+        case 0xD8:
+            {
+                LogInstruction("%02X: CLD", opcode);
+                reg.flags.d = 0;
+            }
+            break;
+
+        // SED - Set Decimal
+        case 0xF8:
+            {
+                LogInstruction("%02X: SED", opcode);
+                reg.flags.d = 1;
+            }
+            break;
+
+        // REP - Reset P flag
+        case 0xC2:
+            {
+                LogInstruction("%02X: REP", opcode);
+                AddressModeImmediate mode(this, memory);
+                reg.p &= ~mode.Read8Bit();
+                UpdateRegistersAfterFlagChange();
+            }
+            break;
+
+        // SEP - Set P flag
+        case 0xE2:
+            {
+                LogInstruction("%02X: SEP", opcode);
+                AddressModeImmediate mode(this, memory);
+                reg.p |= mode.Read8Bit();
+                UpdateRegistersAfterFlagChange();
+            }
+            break;
 
         case 0x42: NotYetImplemented(0x42); break;
         case 0x44: NotYetImplemented(0x44); break;
 
         case 0x54: NotYetImplemented(0x54); break;
-        case 0x58: NotYetImplemented(0x58); break;
-
-        case 0x78: NotYetImplemented(0x78); break;
 
         case 0x93: NotYetImplemented(0x93); break;
 
-        case 0xB8: NotYetImplemented(0xB8); break;
-
-        case 0xC2: NotYetImplemented(0xC2); break;
         case 0xCB: NotYetImplemented(0xCB); break;
 
-        case 0xD8: NotYetImplemented(0xD8); break;
         case 0xDB: NotYetImplemented(0xDB); break;
 
-        case 0xE2: NotYetImplemented(0xE2); break;
         case 0xEA: NotYetImplemented(0xEA); break;
         case 0xEB: NotYetImplemented(0xEB); break;
 
-        case 0xF8: NotYetImplemented(0xF8); break;
         case 0xFB: NotYetImplemented(0xFB); break;
     }
 }
