@@ -1676,61 +1676,61 @@ TEST_F(CpuTest, TEST_ROR_AbsoluteIndexedX)
 TEST_F(CpuTest, TEST_BRA)
 {
     this->RunInstructionTest(this->test_info_->name(), "10", false);
-    //this->RunInstructionTest(this->test_info_->name(), "10", true);
+    this->RunInstructionTest(this->test_info_->name(), "10", true);
 }
 
 TEST_F(CpuTest, TEST_BRL)
 {
     this->RunInstructionTest(this->test_info_->name(), "82", false);
-    //this->RunInstructionTest(this->test_info_->name(), "82", true);
+    this->RunInstructionTest(this->test_info_->name(), "82", true);
 }
 
 TEST_F(CpuTest, TEST_BPL)
 {
-    this->RunInstructionTest(this->test_info_->name(), "30", false);
-    //this->RunInstructionTest(this->test_info_->name(), "30", true);
+    this->RunInstructionTest(this->test_info_->name(), "10", false);
+    this->RunInstructionTest(this->test_info_->name(), "10", true);
 }
 
 TEST_F(CpuTest, TEST_BMI)
 {
-    this->RunInstructionTest(this->test_info_->name(), "50", false);
-    //this->RunInstructionTest(this->test_info_->name(), "50", true);
+    this->RunInstructionTest(this->test_info_->name(), "30", false);
+    this->RunInstructionTest(this->test_info_->name(), "30", true);
 }
 
 TEST_F(CpuTest, TEST_BVC)
 {
-    this->RunInstructionTest(this->test_info_->name(), "70", false);
-    //this->RunInstructionTest(this->test_info_->name(), "70", true);
+    this->RunInstructionTest(this->test_info_->name(), "50", false);
+    this->RunInstructionTest(this->test_info_->name(), "50", true);
 }
 
 TEST_F(CpuTest, TEST_BVS)
 {
-    this->RunInstructionTest(this->test_info_->name(), "90", false);
-    //this->RunInstructionTest(this->test_info_->name(), "90", true);
+    this->RunInstructionTest(this->test_info_->name(), "70", false);
+    this->RunInstructionTest(this->test_info_->name(), "70", true);
 }
 
 TEST_F(CpuTest, TEST_BCC)
 {
-    this->RunInstructionTest(this->test_info_->name(), "B0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B0", true);
+    this->RunInstructionTest(this->test_info_->name(), "90", false);
+    this->RunInstructionTest(this->test_info_->name(), "90", true);
 }
 
 TEST_F(CpuTest, TEST_BCS)
 {
-    this->RunInstructionTest(this->test_info_->name(), "D0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D0", true);
+    this->RunInstructionTest(this->test_info_->name(), "B0", false);
+    this->RunInstructionTest(this->test_info_->name(), "B0", true);
 }
 
 TEST_F(CpuTest, TEST_BNE)
 {
-    this->RunInstructionTest(this->test_info_->name(), "F0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F0", true);
+    this->RunInstructionTest(this->test_info_->name(), "D0", false);
+    this->RunInstructionTest(this->test_info_->name(), "D0", true);
 }
 
 TEST_F(CpuTest, TEST_BEQ)
 {
     this->RunInstructionTest(this->test_info_->name(), "F0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F0", true);
+    this->RunInstructionTest(this->test_info_->name(), "F0", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
