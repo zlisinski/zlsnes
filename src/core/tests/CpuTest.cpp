@@ -456,25 +456,25 @@ TEST_F(CpuTest, TEST_SetEmulationMode)
 TEST_F(CpuTest, TEST_TAX)
 {
     this->RunInstructionTest(this->test_info_->name(), "AA", false);
-    //this->RunInstructionTest(this->test_info_->name(), "AA", true);
+    this->RunInstructionTest(this->test_info_->name(), "AA", true);
 }
 
 TEST_F(CpuTest, TEST_TAY)
 {
     this->RunInstructionTest(this->test_info_->name(), "A8", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A8", true);
+    this->RunInstructionTest(this->test_info_->name(), "A8", true);
 }
 
 TEST_F(CpuTest, TEST_TSX)
 {
     this->RunInstructionTest(this->test_info_->name(), "BA", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BA", true);
+    this->RunInstructionTest(this->test_info_->name(), "BA", true);
 }
 
 TEST_F(CpuTest, TEST_TXA)
 {
     this->RunInstructionTest(this->test_info_->name(), "8A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8A", true);
+    this->RunInstructionTest(this->test_info_->name(), "8A", true);
 }
 
 TEST_F(CpuTest, TEST_TXS)
@@ -486,25 +486,25 @@ TEST_F(CpuTest, TEST_TXS)
 TEST_F(CpuTest, TEST_TXY)
 {
     this->RunInstructionTest(this->test_info_->name(), "9B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "9B", true);
+    this->RunInstructionTest(this->test_info_->name(), "9B", true);
 }
 
 TEST_F(CpuTest, TEST_TYA)
 {
     this->RunInstructionTest(this->test_info_->name(), "98", false);
-    //this->RunInstructionTest(this->test_info_->name(), "98", true);
+    this->RunInstructionTest(this->test_info_->name(), "98", true);
 }
 
 TEST_F(CpuTest, TEST_TYX)
 {
     this->RunInstructionTest(this->test_info_->name(), "BB", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BB", true);
+    this->RunInstructionTest(this->test_info_->name(), "BB", true);
 }
 
 TEST_F(CpuTest, TEST_TCD)
 {
     this->RunInstructionTest(this->test_info_->name(), "5B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5B", true);
+    this->RunInstructionTest(this->test_info_->name(), "5B", true);
 }
 
 TEST_F(CpuTest, TEST_TCS)
@@ -516,13 +516,13 @@ TEST_F(CpuTest, TEST_TCS)
 TEST_F(CpuTest, TEST_TDC)
 {
     this->RunInstructionTest(this->test_info_->name(), "7B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7B", true);
+    this->RunInstructionTest(this->test_info_->name(), "7B", true);
 }
 
 TEST_F(CpuTest, TEST_TSC)
 {
     this->RunInstructionTest(this->test_info_->name(), "3B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3B", true);
+    this->RunInstructionTest(this->test_info_->name(), "3B", true);
 }
 
 TEST_F(CpuTest, TEST_XBA)
@@ -536,151 +536,151 @@ TEST_F(CpuTest, TEST_XBA)
 TEST_F(CpuTest, TEST_LDA_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "A1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A1", true);
+    this->RunInstructionTest(this->test_info_->name(), "A1", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "A3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A3", true);
+    this->RunInstructionTest(this->test_info_->name(), "A3", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "A5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A5", true);
+    this->RunInstructionTest(this->test_info_->name(), "A5", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "A7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A7", true);
+    this->RunInstructionTest(this->test_info_->name(), "A7", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "A9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A9", true);
+    this->RunInstructionTest(this->test_info_->name(), "A9", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "AD", false);
-    //this->RunInstructionTest(this->test_info_->name(), "AD", true);
+    this->RunInstructionTest(this->test_info_->name(), "AD", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "AF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "AF", true);
+    this->RunInstructionTest(this->test_info_->name(), "AF", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "B1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B1", true);
+    this->RunInstructionTest(this->test_info_->name(), "B1", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "B2", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B2", true);
+    this->RunInstructionTest(this->test_info_->name(), "B2", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "B3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B3", true);
+    this->RunInstructionTest(this->test_info_->name(), "B3", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "B5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B5", true);
+    this->RunInstructionTest(this->test_info_->name(), "B5", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "B7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B7", true);
+    this->RunInstructionTest(this->test_info_->name(), "B7", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "B9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B9", true);
+    this->RunInstructionTest(this->test_info_->name(), "B9", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "BD", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BD", true);
+    this->RunInstructionTest(this->test_info_->name(), "BD", true);
 }
 
 TEST_F(CpuTest, TEST_LDA_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "BF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BF", true);
+    this->RunInstructionTest(this->test_info_->name(), "BF", true);
 }
 
 TEST_F(CpuTest, TEST_LDX_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "A2", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A2", true);
+    this->RunInstructionTest(this->test_info_->name(), "A2", true);
 }
 
 TEST_F(CpuTest, TEST_LDX_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "A6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A6", true);
+    this->RunInstructionTest(this->test_info_->name(), "A6", true);
 }
 
 TEST_F(CpuTest, TEST_LDX_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "AE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "AE", true);
+    this->RunInstructionTest(this->test_info_->name(), "AE", true);
 }
 
 TEST_F(CpuTest, TEST_LDX_DirectIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "B6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B6", true);
+    this->RunInstructionTest(this->test_info_->name(), "B6", true);
 }
 
 TEST_F(CpuTest, TEST_LDX_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "BE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BE", true);
+    this->RunInstructionTest(this->test_info_->name(), "BE", true);
 }
 
 TEST_F(CpuTest, TEST_LDY_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "A0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A0", true);
+    this->RunInstructionTest(this->test_info_->name(), "A0", true);
 }
 
 TEST_F(CpuTest, TEST_LDY_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "A4", false);
-    //this->RunInstructionTest(this->test_info_->name(), "A4", true);
+    this->RunInstructionTest(this->test_info_->name(), "A4", true);
 }
 
 TEST_F(CpuTest, TEST_LDY_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "AC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "AC", true);
+    this->RunInstructionTest(this->test_info_->name(), "AC", true);
 }
 
 TEST_F(CpuTest, TEST_LDY_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "B4", false);
-    //this->RunInstructionTest(this->test_info_->name(), "B4", true);
+    this->RunInstructionTest(this->test_info_->name(), "B4", true);
 }
 
 TEST_F(CpuTest, TEST_LDY_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "BC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "BC", true);
+    this->RunInstructionTest(this->test_info_->name(), "BC", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -688,49 +688,49 @@ TEST_F(CpuTest, TEST_LDY_AbsoluteIndexedX)
 TEST_F(CpuTest, TEST_STA_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "81", false);
-    //this->RunInstructionTest(this->test_info_->name(), "81", true);
+    this->RunInstructionTest(this->test_info_->name(), "81", true);
 }
 
 TEST_F(CpuTest, TEST_STA_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "83", false);
-    //this->RunInstructionTest(this->test_info_->name(), "83", true);
+    this->RunInstructionTest(this->test_info_->name(), "83", true);
 }
 
 TEST_F(CpuTest, TEST_STA_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "85", false);
-    //this->RunInstructionTest(this->test_info_->name(), "85", true);
+    this->RunInstructionTest(this->test_info_->name(), "85", true);
 }
 
 TEST_F(CpuTest, TEST_STA_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "87", false);
-    //this->RunInstructionTest(this->test_info_->name(), "87", true);
+    this->RunInstructionTest(this->test_info_->name(), "87", true);
 }
 
 TEST_F(CpuTest, TEST_STA_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "8D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8D", true);
+    this->RunInstructionTest(this->test_info_->name(), "8D", true);
 }
 
 TEST_F(CpuTest, TEST_STA_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "8F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8F", true);
+    this->RunInstructionTest(this->test_info_->name(), "8F", true);
 }
 
 TEST_F(CpuTest, TEST_STA_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "91", false);
-    //this->RunInstructionTest(this->test_info_->name(), "91", true);
+    this->RunInstructionTest(this->test_info_->name(), "91", true);
 }
 
 TEST_F(CpuTest, TEST_STA_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "92", false);
-    //this->RunInstructionTest(this->test_info_->name(), "92", true);
+    this->RunInstructionTest(this->test_info_->name(), "92", true);
 }
 
 TEST_F(CpuTest, TEST_STA_StackRelativeIndirectIndexed)
@@ -742,91 +742,91 @@ TEST_F(CpuTest, TEST_STA_StackRelativeIndirectIndexed)
 TEST_F(CpuTest, TEST_STA_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "95", false);
-    //this->RunInstructionTest(this->test_info_->name(), "95", true);
+    this->RunInstructionTest(this->test_info_->name(), "95", true);
 }
 
 TEST_F(CpuTest, TEST_STA_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "97", false);
-    //this->RunInstructionTest(this->test_info_->name(), "97", true);
+    this->RunInstructionTest(this->test_info_->name(), "97", true);
 }
 
 TEST_F(CpuTest, TEST_STA_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "99", false);
-    //this->RunInstructionTest(this->test_info_->name(), "99", true);
+    this->RunInstructionTest(this->test_info_->name(), "99", true);
 }
 
 TEST_F(CpuTest, TEST_STA_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "9D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "9D", true);
+    this->RunInstructionTest(this->test_info_->name(), "9D", true);
 }
 
 TEST_F(CpuTest, TEST_STA_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "9F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "9F", true);
+    this->RunInstructionTest(this->test_info_->name(), "9F", true);
 }
 
 TEST_F(CpuTest, TEST_STX_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "86", false);
-    //this->RunInstructionTest(this->test_info_->name(), "86", true);
+    this->RunInstructionTest(this->test_info_->name(), "86", true);
 }
 
 TEST_F(CpuTest, TEST_STX_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "8E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8E", true);
+    this->RunInstructionTest(this->test_info_->name(), "8E", true);
 }
 
 TEST_F(CpuTest, TEST_STX_DirectIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "96", false);
-    //this->RunInstructionTest(this->test_info_->name(), "96", true);
+    this->RunInstructionTest(this->test_info_->name(), "96", true);
 }
 
 TEST_F(CpuTest, TEST_STY_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "84", false);
-    //this->RunInstructionTest(this->test_info_->name(), "84", true);
+    this->RunInstructionTest(this->test_info_->name(), "84", true);
 }
 
 TEST_F(CpuTest, TEST_STY_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "8C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8C", true);
+    this->RunInstructionTest(this->test_info_->name(), "8C", true);
 }
 
 TEST_F(CpuTest, TEST_STY_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "94", false);
-    //this->RunInstructionTest(this->test_info_->name(), "94", true);
+    this->RunInstructionTest(this->test_info_->name(), "94", true);
 }
 
 TEST_F(CpuTest, TEST_STZ_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "64", false);
-    //this->RunInstructionTest(this->test_info_->name(), "64", true);
+    this->RunInstructionTest(this->test_info_->name(), "64", true);
 }
 
 TEST_F(CpuTest, TEST_STZ_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "74", false);
-    //this->RunInstructionTest(this->test_info_->name(), "74", true);
+    this->RunInstructionTest(this->test_info_->name(), "74", true);
 }
 
 TEST_F(CpuTest, TEST_STZ_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "9C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "9C", true);
+    this->RunInstructionTest(this->test_info_->name(), "9C", true);
 }
 
 TEST_F(CpuTest, TEST_STZ_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "9E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "9E", true);
+    this->RunInstructionTest(this->test_info_->name(), "9E", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -834,25 +834,25 @@ TEST_F(CpuTest, TEST_STZ_AbsoluteIndexedX)
 TEST_F(CpuTest, TEST_PHA)
 {
     this->RunInstructionTest(this->test_info_->name(), "48", false);
-    //this->RunInstructionTest(this->test_info_->name(), "48", true);
+    this->RunInstructionTest(this->test_info_->name(), "48", true);
 }
 
 TEST_F(CpuTest, TEST_PHX)
 {
     this->RunInstructionTest(this->test_info_->name(), "DA", false);
-    //this->RunInstructionTest(this->test_info_->name(), "DA", true);
+    this->RunInstructionTest(this->test_info_->name(), "DA", true);
 }
 
 TEST_F(CpuTest, TEST_PHY)
 {
     this->RunInstructionTest(this->test_info_->name(), "5A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5A", true);
+    this->RunInstructionTest(this->test_info_->name(), "5A", true);
 }
 
 TEST_F(CpuTest, TEST_PHB)
 {
     this->RunInstructionTest(this->test_info_->name(), "8B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "8B", true);
+    this->RunInstructionTest(this->test_info_->name(), "8B", true);
 }
 
 TEST_F(CpuTest, TEST_PHD)
@@ -864,13 +864,13 @@ TEST_F(CpuTest, TEST_PHD)
 TEST_F(CpuTest, TEST_PHK)
 {
     this->RunInstructionTest(this->test_info_->name(), "4B", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4B", true);
+    this->RunInstructionTest(this->test_info_->name(), "4B", true);
 }
 
 TEST_F(CpuTest, TEST_PHP)
 {
     this->RunInstructionTest(this->test_info_->name(), "08", false);
-    //this->RunInstructionTest(this->test_info_->name(), "08", true);
+    this->RunInstructionTest(this->test_info_->name(), "08", true);
 }
 
 TEST_F(CpuTest, TEST_PEA)
@@ -894,19 +894,19 @@ TEST_F(CpuTest, TEST_PER)
 TEST_F(CpuTest, TEST_PLA)
 {
     this->RunInstructionTest(this->test_info_->name(), "68", false);
-    //this->RunInstructionTest(this->test_info_->name(), "68", true);
+    this->RunInstructionTest(this->test_info_->name(), "68", true);
 }
 
 TEST_F(CpuTest, TEST_PLX)
 {
     this->RunInstructionTest(this->test_info_->name(), "FA", false);
-    //this->RunInstructionTest(this->test_info_->name(), "FA", true);
+    this->RunInstructionTest(this->test_info_->name(), "FA", true);
 }
 
 TEST_F(CpuTest, TEST_PLY)
 {
     this->RunInstructionTest(this->test_info_->name(), "7A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7A", true);
+    this->RunInstructionTest(this->test_info_->name(), "7A", true);
 }
 
 TEST_F(CpuTest, TEST_PLB)
@@ -932,91 +932,91 @@ TEST_F(CpuTest, TEST_PLP)
 TEST_F(CpuTest, TEST_AND_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "21", false);
-    //this->RunInstructionTest(this->test_info_->name(), "21", true);
+    this->RunInstructionTest(this->test_info_->name(), "21", true);
 }
 
 TEST_F(CpuTest, TEST_AND_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "23", false);
-    //this->RunInstructionTest(this->test_info_->name(), "23", true);
+    this->RunInstructionTest(this->test_info_->name(), "23", true);
 }
 
 TEST_F(CpuTest, TEST_AND_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "25", false);
-    //this->RunInstructionTest(this->test_info_->name(), "25", true);
+    this->RunInstructionTest(this->test_info_->name(), "25", true);
 }
 
 TEST_F(CpuTest, TEST_AND_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "27", false);
-    //this->RunInstructionTest(this->test_info_->name(), "27", true);
+    this->RunInstructionTest(this->test_info_->name(), "27", true);
 }
 
 TEST_F(CpuTest, TEST_AND_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "29", false);
-    //this->RunInstructionTest(this->test_info_->name(), ""29, true);
+    this->RunInstructionTest(this->test_info_->name(), "29", true);
 }
 
 TEST_F(CpuTest, TEST_AND_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "2D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "2D", true);
+    this->RunInstructionTest(this->test_info_->name(), "2D", true);
 }
 
 TEST_F(CpuTest, TEST_AND_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "2F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "2F", true);
+    this->RunInstructionTest(this->test_info_->name(), "2F", true);
 }
 
 TEST_F(CpuTest, TEST_AND_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "31", false);
-    //this->RunInstructionTest(this->test_info_->name(), "31", true);
+    this->RunInstructionTest(this->test_info_->name(), "31", true);
 }
 
 TEST_F(CpuTest, TEST_AND_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "32", false);
-    //this->RunInstructionTest(this->test_info_->name(), "32", true);
+    this->RunInstructionTest(this->test_info_->name(), "32", true);
 }
 
 TEST_F(CpuTest, TEST_AND_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "33", false);
-    //this->RunInstructionTest(this->test_info_->name(), "33", true);
+    this->RunInstructionTest(this->test_info_->name(), "33", true);
 }
 
 TEST_F(CpuTest, TEST_AND_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "35", false);
-    //this->RunInstructionTest(this->test_info_->name(), "35", true);
+    this->RunInstructionTest(this->test_info_->name(), "35", true);
 }
 
 TEST_F(CpuTest, TEST_AND_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "37", false);
-    //this->RunInstructionTest(this->test_info_->name(), "37", true);
+    this->RunInstructionTest(this->test_info_->name(), "37", true);
 }
 
 TEST_F(CpuTest, TEST_AND_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "39", false);
-    //this->RunInstructionTest(this->test_info_->name(), "39", true);
+    this->RunInstructionTest(this->test_info_->name(), "39", true);
 }
 
 TEST_F(CpuTest, TEST_AND_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "3D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3D", true);
+    this->RunInstructionTest(this->test_info_->name(), "3D", true);
 }
 
 TEST_F(CpuTest, TEST_AND_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "3F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3F", true);
+    this->RunInstructionTest(this->test_info_->name(), "3F", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1024,91 +1024,91 @@ TEST_F(CpuTest, TEST_AND_AbsoluteLongIndexedX)
 TEST_F(CpuTest, TEST_EOR_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "41", false);
-    //this->RunInstructionTest(this->test_info_->name(), "41", true);
+    this->RunInstructionTest(this->test_info_->name(), "41", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "43", false);
-    //this->RunInstructionTest(this->test_info_->name(), "43", true);
+    this->RunInstructionTest(this->test_info_->name(), "43", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "45", false);
-    //this->RunInstructionTest(this->test_info_->name(), "45", true);
+    this->RunInstructionTest(this->test_info_->name(), "45", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "47", false);
-    //this->RunInstructionTest(this->test_info_->name(), "47", true);
+    this->RunInstructionTest(this->test_info_->name(), "47", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "49", false);
-    //this->RunInstructionTest(this->test_info_->name(), "49", true);
+    this->RunInstructionTest(this->test_info_->name(), "49", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "4D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4D", true);
+    this->RunInstructionTest(this->test_info_->name(), "4D", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "4F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4F", true);
+    this->RunInstructionTest(this->test_info_->name(), "4F", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "51", false);
-    //this->RunInstructionTest(this->test_info_->name(), "51", true);
+    this->RunInstructionTest(this->test_info_->name(), "51", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "52", false);
-    //this->RunInstructionTest(this->test_info_->name(), "52", true);
+    this->RunInstructionTest(this->test_info_->name(), "52", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "53", false);
-    //this->RunInstructionTest(this->test_info_->name(), "53", true);
+    this->RunInstructionTest(this->test_info_->name(), "53", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "55", false);
-    //this->RunInstructionTest(this->test_info_->name(), "55", true);
+    this->RunInstructionTest(this->test_info_->name(), "55", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "57", false);
-    //this->RunInstructionTest(this->test_info_->name(), "57", true);
+    this->RunInstructionTest(this->test_info_->name(), "57", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "59", false);
-    //this->RunInstructionTest(this->test_info_->name(), "59", true);
+    this->RunInstructionTest(this->test_info_->name(), "59", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "5D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5D", true);
+    this->RunInstructionTest(this->test_info_->name(), "5D", true);
 }
 
 TEST_F(CpuTest, TEST_EOR_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "5F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5F", true);
+    this->RunInstructionTest(this->test_info_->name(), "5F", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1116,91 +1116,91 @@ TEST_F(CpuTest, TEST_EOR_AbsoluteLongIndexedX)
 TEST_F(CpuTest, TEST_ORA_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "01", false);
-    //this->RunInstructionTest(this->test_info_->name(), "01", true);
+    this->RunInstructionTest(this->test_info_->name(), "01", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "03", false);
-    //this->RunInstructionTest(this->test_info_->name(), "03", true);
+    this->RunInstructionTest(this->test_info_->name(), "03", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "05", false);
-    //this->RunInstructionTest(this->test_info_->name(), "05", true);
+    this->RunInstructionTest(this->test_info_->name(), "05", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "07", false);
-    //this->RunInstructionTest(this->test_info_->name(), "07", true);
+    this->RunInstructionTest(this->test_info_->name(), "07", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "09", false);
-    //this->RunInstructionTest(this->test_info_->name(), "09", true);
+    this->RunInstructionTest(this->test_info_->name(), "09", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "0D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "0D", true);
+    this->RunInstructionTest(this->test_info_->name(), "0D", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "0F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "0F", true);
+    this->RunInstructionTest(this->test_info_->name(), "0F", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "11", false);
-    //this->RunInstructionTest(this->test_info_->name(), "11", true);
+    this->RunInstructionTest(this->test_info_->name(), "11", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "12", false);
-    //this->RunInstructionTest(this->test_info_->name(), "12", true);
+    this->RunInstructionTest(this->test_info_->name(), "12", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "13", false);
-    //this->RunInstructionTest(this->test_info_->name(), "13", true);
+    this->RunInstructionTest(this->test_info_->name(), "13", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "15", false);
-    //this->RunInstructionTest(this->test_info_->name(), "15", true);
+    this->RunInstructionTest(this->test_info_->name(), "15", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "17", false);
-    //this->RunInstructionTest(this->test_info_->name(), "17", true);
+    this->RunInstructionTest(this->test_info_->name(), "17", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "19", false);
-    //this->RunInstructionTest(this->test_info_->name(), "19", true);
+    this->RunInstructionTest(this->test_info_->name(), "19", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "1D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "1D", true);
+    this->RunInstructionTest(this->test_info_->name(), "1D", true);
 }
 
 TEST_F(CpuTest, TEST_ORA_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "1F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "1F", true);
+    this->RunInstructionTest(this->test_info_->name(), "1F", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1208,91 +1208,91 @@ TEST_F(CpuTest, TEST_ORA_AbsoluteLongIndexedX)
 TEST_F(CpuTest, TEST_ADC_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "61", false);
-    //this->RunInstructionTest(this->test_info_->name(), "61", true);
+    this->RunInstructionTest(this->test_info_->name(), "61", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "63", false);
-    //this->RunInstructionTest(this->test_info_->name(), "63", true);
+    this->RunInstructionTest(this->test_info_->name(), "63", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "65", false);
-    //this->RunInstructionTest(this->test_info_->name(), "65", true);
+    this->RunInstructionTest(this->test_info_->name(), "65", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "67", false);
-    //this->RunInstructionTest(this->test_info_->name(), "67", true);
+    this->RunInstructionTest(this->test_info_->name(), "67", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "69", false);
-    //this->RunInstructionTest(this->test_info_->name(), "69", true);
+    this->RunInstructionTest(this->test_info_->name(), "69", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "6D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "6D", true);
+    this->RunInstructionTest(this->test_info_->name(), "6D", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "6F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "6F", true);
+    this->RunInstructionTest(this->test_info_->name(), "6F", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "71", false);
-    //this->RunInstructionTest(this->test_info_->name(), "71", true);
+    this->RunInstructionTest(this->test_info_->name(), "71", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "72", false);
-    //this->RunInstructionTest(this->test_info_->name(), "72", true);
+    this->RunInstructionTest(this->test_info_->name(), "72", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "73", false);
-    //this->RunInstructionTest(this->test_info_->name(), "73", true);
+    this->RunInstructionTest(this->test_info_->name(), "73", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "75", false);
-    //this->RunInstructionTest(this->test_info_->name(), "75", true);
+    this->RunInstructionTest(this->test_info_->name(), "75", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "77", false);
-    //this->RunInstructionTest(this->test_info_->name(), "77", true);
+    this->RunInstructionTest(this->test_info_->name(), "77", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "79", false);
-    //this->RunInstructionTest(this->test_info_->name(), "79", true);
+    this->RunInstructionTest(this->test_info_->name(), "79", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "7D", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7D", true);
+    this->RunInstructionTest(this->test_info_->name(), "7D", true);
 }
 
 TEST_F(CpuTest, TEST_ADC_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "7F", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7F", true);
+    this->RunInstructionTest(this->test_info_->name(), "7F", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1300,91 +1300,91 @@ TEST_F(CpuTest, TEST_ADC_AbsoluteLongIndexedX)
 TEST_F(CpuTest, TEST_SBC_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "E1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E1", true);
+    this->RunInstructionTest(this->test_info_->name(), "E1", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "E3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E3", true);
+    this->RunInstructionTest(this->test_info_->name(), "E3", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "E5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E5", true);
+    this->RunInstructionTest(this->test_info_->name(), "E5", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "E7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E7", true);
+    this->RunInstructionTest(this->test_info_->name(), "E7", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "E9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E9", true);
+    this->RunInstructionTest(this->test_info_->name(), "E9", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "ED", false);
-    //this->RunInstructionTest(this->test_info_->name(), "ED", true);
+    this->RunInstructionTest(this->test_info_->name(), "ED", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "EF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "EF", true);
+    this->RunInstructionTest(this->test_info_->name(), "EF", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "F1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F1", true);
+    this->RunInstructionTest(this->test_info_->name(), "F1", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "F2", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F2", true);
+    this->RunInstructionTest(this->test_info_->name(), "F2", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "F3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F3", true);
+    this->RunInstructionTest(this->test_info_->name(), "F3", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "F5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F5", true);
+    this->RunInstructionTest(this->test_info_->name(), "F5", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "F7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F7", true);
+    this->RunInstructionTest(this->test_info_->name(), "F7", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "F9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F9", true);
+    this->RunInstructionTest(this->test_info_->name(), "F9", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "FD", false);
-    //this->RunInstructionTest(this->test_info_->name(), "FD", true);
+    this->RunInstructionTest(this->test_info_->name(), "FD", true);
 }
 
 TEST_F(CpuTest, TEST_SBC_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "FF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "FF", true);
+    this->RunInstructionTest(this->test_info_->name(), "FF", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1392,43 +1392,43 @@ TEST_F(CpuTest, TEST_SBC_AbsoluteLongIndexedX)
 TEST_F(CpuTest, TEST_DEC)
 {
     this->RunInstructionTest(this->test_info_->name(), "3A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3A", true);
+    this->RunInstructionTest(this->test_info_->name(), "3A", true);
 }
 
 TEST_F(CpuTest, TEST_DEC_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "C6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C6", true);
+    this->RunInstructionTest(this->test_info_->name(), "C6", true);
 }
 
 TEST_F(CpuTest, TEST_DEC_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "CE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "CE", true);
+    this->RunInstructionTest(this->test_info_->name(), "CE", true);
 }
 
 TEST_F(CpuTest, TEST_DEC_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "D6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D6", true);
+    this->RunInstructionTest(this->test_info_->name(), "D6", true);
 }
 
 TEST_F(CpuTest, TEST_DEC_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "DE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "DE", true);
+    this->RunInstructionTest(this->test_info_->name(), "DE", true);
 }
 
 TEST_F(CpuTest, TEST_DEX)
 {
     this->RunInstructionTest(this->test_info_->name(), "CA", false);
-    //this->RunInstructionTest(this->test_info_->name(), "CA", true);
+    this->RunInstructionTest(this->test_info_->name(), "CA", true);
 }
 
 TEST_F(CpuTest, TEST_DEY)
 {
     this->RunInstructionTest(this->test_info_->name(), "88", false);
-    //this->RunInstructionTest(this->test_info_->name(), "88", true);
+    this->RunInstructionTest(this->test_info_->name(), "88", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1436,43 +1436,43 @@ TEST_F(CpuTest, TEST_DEY)
 TEST_F(CpuTest, TEST_INC)
 {
     this->RunInstructionTest(this->test_info_->name(), "1A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "1A", true);
+    this->RunInstructionTest(this->test_info_->name(), "1A", true);
 }
 
 TEST_F(CpuTest, TEST_INC_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "E6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E6", true);
+    this->RunInstructionTest(this->test_info_->name(), "E6", true);
 }
 
 TEST_F(CpuTest, TEST_INC_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "EE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "EE", true);
+    this->RunInstructionTest(this->test_info_->name(), "EE", true);
 }
 
 TEST_F(CpuTest, TEST_INC_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "F6", false);
-    //this->RunInstructionTest(this->test_info_->name(), "F6", true);
+    this->RunInstructionTest(this->test_info_->name(), "F6", true);
 }
 
 TEST_F(CpuTest, TEST_INC_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "FE", false);
-    //this->RunInstructionTest(this->test_info_->name(), "FE", true);
+    this->RunInstructionTest(this->test_info_->name(), "FE", true);
 }
 
 TEST_F(CpuTest, TEST_INX)
 {
     this->RunInstructionTest(this->test_info_->name(), "E8", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E8", true);
+    this->RunInstructionTest(this->test_info_->name(), "E8", true);
 }
 
 TEST_F(CpuTest, TEST_INY)
 {
     this->RunInstructionTest(this->test_info_->name(), "C8", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C8", true);
+    this->RunInstructionTest(this->test_info_->name(), "C8", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1480,127 +1480,127 @@ TEST_F(CpuTest, TEST_INY)
 TEST_F(CpuTest, TEST_CMP_DirectIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "C1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C1", true);
+    this->RunInstructionTest(this->test_info_->name(), "C1", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_StackRelative)
 {
     this->RunInstructionTest(this->test_info_->name(), "C3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C3", true);
+    this->RunInstructionTest(this->test_info_->name(), "C3", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "C5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C5", true);
+    this->RunInstructionTest(this->test_info_->name(), "C5", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_DirectIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "C7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C7", true);
+    this->RunInstructionTest(this->test_info_->name(), "C7", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "C9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C9", true);
+    this->RunInstructionTest(this->test_info_->name(), "C9", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "CD", false);
-    //this->RunInstructionTest(this->test_info_->name(), "CD", true);
+    this->RunInstructionTest(this->test_info_->name(), "CD", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "CF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "CF", true);
+    this->RunInstructionTest(this->test_info_->name(), "CF", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_DirectIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "D1", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D1", true);
+    this->RunInstructionTest(this->test_info_->name(), "D1", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_DirectIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "D2", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D2", true);
+    this->RunInstructionTest(this->test_info_->name(), "D2", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_StackRelativeIndirectIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "D3", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D3", true);
+    this->RunInstructionTest(this->test_info_->name(), "D3", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "D5", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D5", true);
+    this->RunInstructionTest(this->test_info_->name(), "D5", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_DirectIndirectLongIndexed)
 {
     this->RunInstructionTest(this->test_info_->name(), "D7", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D7", true);
+    this->RunInstructionTest(this->test_info_->name(), "D7", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_AbsoluteIndexedY)
 {
     this->RunInstructionTest(this->test_info_->name(), "D9", false);
-    //this->RunInstructionTest(this->test_info_->name(), "D9", true);
+    this->RunInstructionTest(this->test_info_->name(), "D9", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "DD", false);
-    //this->RunInstructionTest(this->test_info_->name(), "DD", true);
+    this->RunInstructionTest(this->test_info_->name(), "DD", true);
 }
 
 TEST_F(CpuTest, TEST_CMP_AbsoluteLongIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "DF", false);
-    //this->RunInstructionTest(this->test_info_->name(), "DF", true);
+    this->RunInstructionTest(this->test_info_->name(), "DF", true);
 }
 
 TEST_F(CpuTest, TEST_CPX_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "E0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E0", true);
+    this->RunInstructionTest(this->test_info_->name(), "E0", true);
 }
 
 TEST_F(CpuTest, TEST_CPX_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "E4", false);
-    //this->RunInstructionTest(this->test_info_->name(), "E4", true);
+    this->RunInstructionTest(this->test_info_->name(), "E4", true);
 }
 
 TEST_F(CpuTest, TEST_CPX_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "EC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "EC", true);
+    this->RunInstructionTest(this->test_info_->name(), "EC", true);
 }
 
 TEST_F(CpuTest, TEST_CPY_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "C0", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C0", true);
+    this->RunInstructionTest(this->test_info_->name(), "C0", true);
 }
 
 TEST_F(CpuTest, TEST_CPY_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "C4", false);
-    //this->RunInstructionTest(this->test_info_->name(), "C4", true);
+    this->RunInstructionTest(this->test_info_->name(), "C4", true);
 }
 
 TEST_F(CpuTest, TEST_CPY_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "CC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "CC", true);
+    this->RunInstructionTest(this->test_info_->name(), "CC", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1608,55 +1608,55 @@ TEST_F(CpuTest, TEST_CPY_Absolute)
 TEST_F(CpuTest, TEST_BIT_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "24", false);
-    //this->RunInstructionTest(this->test_info_->name(), "24", true);
+    this->RunInstructionTest(this->test_info_->name(), "24", true);
 }
 
 TEST_F(CpuTest, TEST_BIT_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "2C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "2C", true);
+    this->RunInstructionTest(this->test_info_->name(), "2C", true);
 }
 
 TEST_F(CpuTest, TEST_BIT_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "34", false);
-    //this->RunInstructionTest(this->test_info_->name(), "34", true);
+    this->RunInstructionTest(this->test_info_->name(), "34", true);
 }
 
 TEST_F(CpuTest, TEST_BIT_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "3C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3C", true);
+    this->RunInstructionTest(this->test_info_->name(), "3C", true);
 }
 
 TEST_F(CpuTest, TEST_BIT_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "89", false);
-    //this->RunInstructionTest(this->test_info_->name(), "89", true);
+    this->RunInstructionTest(this->test_info_->name(), "89", true);
 }
 
 TEST_F(CpuTest, TEST_TRB_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "14", false);
-    //this->RunInstructionTest(this->test_info_->name(), "14", true);
+    this->RunInstructionTest(this->test_info_->name(), "14", true);
 }
 
 TEST_F(CpuTest, TEST_TRB_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "1C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "1C", true);
+    this->RunInstructionTest(this->test_info_->name(), "1C", true);
 }
 
 TEST_F(CpuTest, TEST_TSB_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "04", false);
-    //this->RunInstructionTest(this->test_info_->name(), "04", true);
+    this->RunInstructionTest(this->test_info_->name(), "04", true);
 }
 
 TEST_F(CpuTest, TEST_TSB_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "0C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "0C", true);
+    this->RunInstructionTest(this->test_info_->name(), "0C", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1664,121 +1664,121 @@ TEST_F(CpuTest, TEST_TSB_Absolute)
 TEST_F(CpuTest, TEST_ASL_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "06", false);
-    //this->RunInstructionTest(this->test_info_->name(), "06", true);
+    this->RunInstructionTest(this->test_info_->name(), "06", true);
 }
 
 TEST_F(CpuTest, TEST_ASL_Accumulator)
 {
     this->RunInstructionTest(this->test_info_->name(), "0A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "0A", true);
+    this->RunInstructionTest(this->test_info_->name(), "0A", true);
 }
 
 TEST_F(CpuTest, TEST_ASL_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "0E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "0E", true);
+    this->RunInstructionTest(this->test_info_->name(), "0E", true);
 }
 
 TEST_F(CpuTest, TEST_ASL_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "16", false);
-    //this->RunInstructionTest(this->test_info_->name(), "16", true);
+    this->RunInstructionTest(this->test_info_->name(), "16", true);
 }
 
 TEST_F(CpuTest, TEST_ASL_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "1E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "1E", true);
+    this->RunInstructionTest(this->test_info_->name(), "1E", true);
 }
 
 TEST_F(CpuTest, TEST_LSR_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "46", false);
-    //this->RunInstructionTest(this->test_info_->name(), "46", true);
+    this->RunInstructionTest(this->test_info_->name(), "46", true);
 }
 
 TEST_F(CpuTest, TEST_LSR_Accumulator)
 {
     this->RunInstructionTest(this->test_info_->name(), "4A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4A", true);
+    this->RunInstructionTest(this->test_info_->name(), "4A", true);
 }
 
 TEST_F(CpuTest, TEST_LSR_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "4E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4E", true);
+    this->RunInstructionTest(this->test_info_->name(), "4E", true);
 }
 
 TEST_F(CpuTest, TEST_LSR_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "56", false);
-    //this->RunInstructionTest(this->test_info_->name(), "56", true);
+    this->RunInstructionTest(this->test_info_->name(), "56", true);
 }
 
 TEST_F(CpuTest, TEST_LSR_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "5E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5E", true);
+    this->RunInstructionTest(this->test_info_->name(), "5E", true);
 }
 
 TEST_F(CpuTest, TEST_ROL_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "26", false);
-    //this->RunInstructionTest(this->test_info_->name(), "26", true);
+    this->RunInstructionTest(this->test_info_->name(), "26", true);
 }
 
 TEST_F(CpuTest, TEST_ROL_Accumulator)
 {
     this->RunInstructionTest(this->test_info_->name(), "2A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "2A", true);
+    this->RunInstructionTest(this->test_info_->name(), "2A", true);
 }
 
 TEST_F(CpuTest, TEST_ROL_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "2E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "2E", true);
+    this->RunInstructionTest(this->test_info_->name(), "2E", true);
 }
 
 TEST_F(CpuTest, TEST_ROL_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "36", false);
-    //this->RunInstructionTest(this->test_info_->name(), "36", true);
+    this->RunInstructionTest(this->test_info_->name(), "36", true);
 }
 
 TEST_F(CpuTest, TEST_ROL_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "3E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "3E", true);
+    this->RunInstructionTest(this->test_info_->name(), "3E", true);
 }
 
 TEST_F(CpuTest, TEST_ROR_Direct)
 {
     this->RunInstructionTest(this->test_info_->name(), "66", false);
-    //this->RunInstructionTest(this->test_info_->name(), "66", true);
+    this->RunInstructionTest(this->test_info_->name(), "66", true);
 }
 
 TEST_F(CpuTest, TEST_ROR_Accumulator)
 {
     this->RunInstructionTest(this->test_info_->name(), "6A", false);
-    //this->RunInstructionTest(this->test_info_->name(), "6A", true);
+    this->RunInstructionTest(this->test_info_->name(), "6A", true);
 }
 
 TEST_F(CpuTest, TEST_ROR_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "6E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "6E", true);
+    this->RunInstructionTest(this->test_info_->name(), "6E", true);
 }
 
 TEST_F(CpuTest, TEST_ROR_DirectIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "76", false);
-    //this->RunInstructionTest(this->test_info_->name(), "76", true);
+    this->RunInstructionTest(this->test_info_->name(), "76", true);
 }
 
 TEST_F(CpuTest, TEST_ROR_AbsoluteIndexedX)
 {
     this->RunInstructionTest(this->test_info_->name(), "7E", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7E", true);
+    this->RunInstructionTest(this->test_info_->name(), "7E", true);
 }
 
 TEST_F(CpuTest, TEST_BRA)
@@ -1846,43 +1846,43 @@ TEST_F(CpuTest, TEST_BEQ)
 TEST_F(CpuTest, TEST_JMP_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "4C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "4C", true);
+    this->RunInstructionTest(this->test_info_->name(), "4C", true);
 }
 
 TEST_F(CpuTest, TEST_JMP_AbsoluteLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "5C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "5C", true);
+    this->RunInstructionTest(this->test_info_->name(), "5C", true);
 }
 
 TEST_F(CpuTest, TEST_JMP_AbsoluteIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "6C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "6C", true);
+    this->RunInstructionTest(this->test_info_->name(), "6C", true);
 }
 
 TEST_F(CpuTest, TEST_JMP_AbsoluteIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "7C", false);
-    //this->RunInstructionTest(this->test_info_->name(), "7C", true);
+    this->RunInstructionTest(this->test_info_->name(), "7C", true);
 }
 
 TEST_F(CpuTest, TEST_JMP_AbsoluteIndirectLong)
 {
     this->RunInstructionTest(this->test_info_->name(), "DC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "DC", true);
+    this->RunInstructionTest(this->test_info_->name(), "DC", true);
 }
 
 TEST_F(CpuTest, TEST_JSR_Absolute)
 {
     this->RunInstructionTest(this->test_info_->name(), "20", false);
-    //this->RunInstructionTest(this->test_info_->name(), "20", true);
+    this->RunInstructionTest(this->test_info_->name(), "20", true);
 }
 
 TEST_F(CpuTest, TEST_JSR_AbsoluteIndexedIndirect)
 {
     this->RunInstructionTest(this->test_info_->name(), "FC", false);
-    //this->RunInstructionTest(this->test_info_->name(), "FC", true);
+    this->RunInstructionTest(this->test_info_->name(), "FC", true);
 }
 
 TEST_F(CpuTest, TEST_JSL_AbsoluteLong)
@@ -1896,7 +1896,7 @@ TEST_F(CpuTest, TEST_JSL_AbsoluteLong)
 TEST_F(CpuTest, TEST_RTS)
 {
     this->RunInstructionTest(this->test_info_->name(), "60", false);
-    //this->RunInstructionTest(this->test_info_->name(), "60", true);
+    this->RunInstructionTest(this->test_info_->name(), "60", true);
 }
 
 TEST_F(CpuTest, TEST_RTL)

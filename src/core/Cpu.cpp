@@ -577,11 +577,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInstruction("%02X: PLP", opcode);
                 reg.p = Pop8Bit();
-                if (IsIndex8Bit())
-                {
-                    reg.x &= 0xFF;
-                    reg.y &= 0xFF;
-                }
+                UpdateRegistersAfterFlagChange();
             }
             break;
 

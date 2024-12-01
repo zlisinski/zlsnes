@@ -229,8 +229,15 @@ public:
 
     virtual void LoadAddress() override
     {
-        // TODO: Handle emulation mode special case.
-        address = Address(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.x);
+        if (cpu->reg.emulationMode && cpu->reg.dl == 0)
+        {
+            // Low byte wraps, only when dl is 0.
+            address = Address(0, Bytes::Make16Bit(cpu->reg.dh, static_cast<uint8_t>(cpu->ReadPC8Bit() + cpu->reg.x)));
+        }
+        else
+        {
+            address = Address(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.x);
+        }
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -248,8 +255,15 @@ public:
 
     virtual void LoadAddress() override
     {
-        // TODO: Handle emulation mode special case.
-        address = Address(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.y);
+        if (cpu->reg.emulationMode && cpu->reg.dl == 0)
+        {
+            // Low byte wraps, only when dl is 0.
+            address = Address(0, Bytes::Make16Bit(cpu->reg.dh, static_cast<uint8_t>(cpu->ReadPC8Bit() + cpu->reg.y)));
+        }
+        else
+        {
+            address = Address(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.y);
+        }
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -299,8 +313,17 @@ public:
 
     virtual void LoadAddress() override
     {
-        // TODO: Handle emulation mode special case.
-        uint16_t addr = memory->Read16BitWrapBank(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.x);
+        uint16_t addr;
+        if (cpu->reg.emulationMode && cpu->reg.dl == 0)
+        {
+            // Low byte wraps, only when dl is 0.
+            addr = memory->Read16BitWrapBank(0, Bytes::Make16Bit(cpu->reg.dh, static_cast<uint8_t>(cpu->ReadPC8Bit() + cpu->reg.x)));
+        }
+        else
+        {
+            addr = memory->Read16BitWrapBank(0, cpu->ReadPC8Bit() + cpu->reg.d + cpu->reg.x);
+        }
+
         address = Address(cpu->reg.db, addr);
     }
 };
