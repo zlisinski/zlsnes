@@ -1477,22 +1477,130 @@ TEST_F(CpuTest, TEST_INY)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-TEST_F(CpuTest, TEST_CMP)
+TEST_F(CpuTest, TEST_CMP_DirectIndexedIndirect)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C1", false);
+    //this->RunInstructionTest(this->test_info_->name(), "C1", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_StackRelative)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C3", false);
+    //this->RunInstructionTest(this->test_info_->name(), "C3", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C5", false);
+    //this->RunInstructionTest(this->test_info_->name(), "C5", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_DirectIndirectLong)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C7", false);
+    //this->RunInstructionTest(this->test_info_->name(), "C7", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "C9", false);
     //this->RunInstructionTest(this->test_info_->name(), "C9", true);
 }
 
-TEST_F(CpuTest, TEST_CPX)
+TEST_F(CpuTest, TEST_CMP_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "CD", false);
+    //this->RunInstructionTest(this->test_info_->name(), "CD", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_AbsoluteLong)
+{
+    this->RunInstructionTest(this->test_info_->name(), "CF", false);
+    //this->RunInstructionTest(this->test_info_->name(), "CF", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_DirectIndirectIndexed)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D1", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D1", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_DirectIndirect)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D2", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D2", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_StackRelativeIndirectIndexed)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D3", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D3", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_DirectIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D5", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D5", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_DirectIndirectLongIndexed)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D7", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D7", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_AbsoluteIndexedY)
+{
+    this->RunInstructionTest(this->test_info_->name(), "D9", false);
+    //this->RunInstructionTest(this->test_info_->name(), "D9", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_AbsoluteIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "DD", false);
+    //this->RunInstructionTest(this->test_info_->name(), "DD", true);
+}
+
+TEST_F(CpuTest, TEST_CMP_AbsoluteLongIndexedX)
+{
+    this->RunInstructionTest(this->test_info_->name(), "DF", false);
+    //this->RunInstructionTest(this->test_info_->name(), "DF", true);
+}
+
+TEST_F(CpuTest, TEST_CPX_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "E0", false);
     //this->RunInstructionTest(this->test_info_->name(), "E0", true);
 }
 
-TEST_F(CpuTest, TEST_CPY)
+TEST_F(CpuTest, TEST_CPX_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "E4", false);
+    //this->RunInstructionTest(this->test_info_->name(), "E4", true);
+}
+
+TEST_F(CpuTest, TEST_CPX_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "EC", false);
+    //this->RunInstructionTest(this->test_info_->name(), "EC", true);
+}
+
+TEST_F(CpuTest, TEST_CPY_Immediate)
 {
     this->RunInstructionTest(this->test_info_->name(), "C0", false);
     //this->RunInstructionTest(this->test_info_->name(), "C0", true);
+}
+
+TEST_F(CpuTest, TEST_CPY_Direct)
+{
+    this->RunInstructionTest(this->test_info_->name(), "C4", false);
+    //this->RunInstructionTest(this->test_info_->name(), "C4", true);
+}
+
+TEST_F(CpuTest, TEST_CPY_Absolute)
+{
+    this->RunInstructionTest(this->test_info_->name(), "CC", false);
+    //this->RunInstructionTest(this->test_info_->name(), "CC", true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
