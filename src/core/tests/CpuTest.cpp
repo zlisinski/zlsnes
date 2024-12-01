@@ -1675,8 +1675,8 @@ TEST_F(CpuTest, TEST_ROR_AbsoluteIndexedX)
 
 TEST_F(CpuTest, TEST_BRA)
 {
-    this->RunInstructionTest(this->test_info_->name(), "10", false);
-    this->RunInstructionTest(this->test_info_->name(), "10", true);
+    this->RunInstructionTest(this->test_info_->name(), "80", false);
+    this->RunInstructionTest(this->test_info_->name(), "80", true);
 }
 
 TEST_F(CpuTest, TEST_BRL)
