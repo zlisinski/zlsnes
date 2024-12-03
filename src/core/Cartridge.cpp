@@ -21,7 +21,7 @@ static const ssize_t GAMECODEID_OFFSET = -0x0E;
 static const ssize_t EXP_FLASH_SIZE_OFFSET = -0x04;
 static const ssize_t EXP_RAM_SIZE_OFFSET = -0x03;
 static const ssize_t SPECIAL_VERSION_OFFSET = -0x02;
-static const ssize_t CHIPSET_SUBTYPE_OFFSET = -0x04;
+static const ssize_t CHIPSET_SUBTYPE_OFFSET = -0x01;
 
 
 static const std::unordered_set<uint8_t> romModeLookup = {
