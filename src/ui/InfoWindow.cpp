@@ -69,6 +69,7 @@ void InfoWindow::UpdateCartridgeInfo(const Cartridge &cartridge)
     ui->labelRamSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.ramSize));
     ui->labelExpansionRamSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.expansionRamSize));
     ui->labelExpansionFlashSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.expansionFlashSize));
+    ui->labelInterleaved->setText(cartridge.isInterleaved ? "True" : "False");
     ui->labelCountry->setText(UiUtils::FormatHex(cartridge.country));
     ui->labelDevId->setText(UiUtils::FormatHex(cartridge.devId));
     ui->labelRomVersion->setText(UiUtils::FormatHex(cartridge.romVersion));
@@ -109,6 +110,7 @@ void InfoWindow::ClearCartridgeInfo()
     ui->labelRamSize->setText("");
     ui->labelExpansionRamSize->setText("");
     ui->labelExpansionFlashSize->setText("");
+    ui->labelInterleaved->setText("");
     ui->labelCountry->setText("");
     ui->labelDevId->setText("");
     ui->labelRomVersion->setText("");

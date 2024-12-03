@@ -21,6 +21,8 @@ public:
 
     bool Validate(std::vector<uint8_t> &data);
 
+    bool isInterleaved = false;
+
     // Standard Header Info.
     char title[22] = {0};
     ERomType romType = ERomType::eLoROM;
@@ -42,4 +44,7 @@ public:
     uint8_t expansionRamSize = 0;
     uint8_t specialVersion = 0;
     uint8_t chipsetSubtype = 0;
+
+private:
+    bool FindHeader(const std::vector<uint8_t> &data, size_t headerOffset);
 };
