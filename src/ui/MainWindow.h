@@ -16,7 +16,7 @@
 //#include "../core/GameSpeedObserver.h"
 
 //class DebuggerWindow;
-//class InfoWindow;
+class InfoWindow;
 class Emulator;
 class LogWindow;
 class QLabel;
@@ -93,8 +93,8 @@ private:
     uint32_t frameBuffer[SCREEN_X * SCREEN_Y];
     int displayScale;
 
-    //InfoWindow *infoWindow;
-    //QAction *displayInfoWindowAction;
+    InfoWindow *infoWindow;
+    QAction *displayInfoWindowAction;
     LogWindow *logWindow;
     QAction *displayLogWindowAction;
     //DebuggerWindow *debuggerWindow;
@@ -123,8 +123,8 @@ private slots:
     void SlotDrawFrame();
     void SlotShowMessageBox(const QString &message);
     void SlotSetDisplayScale();
-    //void SlotSetDisplayInfoWindow(bool checked);
-    //void SlotInfoWindowClosed();
+    void SlotSetDisplayInfoWindow(bool checked);
+    void SlotInfoWindowClosed();
     void SlotSetDisplayLogWindow(bool checked);
     void SlotLogWindowClosed();
     //void SlotSetDisplayDebuggerWindow(bool checked);

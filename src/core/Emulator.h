@@ -12,7 +12,7 @@ class Cpu;
 //class Display;
 class DisplayInterface;
 //class GameSpeedSubject;
-//class InfoInterface;
+class InfoInterface;
 //class Input;
 //class Interrupt;
 class Memory;
@@ -22,11 +22,10 @@ class Memory;
 class Emulator
 {
 public:
-    Emulator(DisplayInterface *displayInterface/*, AudioInterface *audioInterface, InfoInterface *infoInterface,
-                DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/);
+    Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface/*,
+             DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/);
     ~Emulator();
 
-    void LoadBootRom(const std::string &filename);
     bool LoadRom(const std::string &filename);
     void ResetEmulation();
     void PauseEmulation(bool pause);
@@ -45,8 +44,6 @@ private:
     bool paused;
     bool quit;
 
-    bool runBootRom;
-    std::vector<uint8_t> bootRomMemory;
     std::vector<uint8_t> gameRomMemory;
 
     std::string romFilename;
@@ -56,9 +53,9 @@ private:
     std::mutex saveStateMutex;
 
     DisplayInterface *displayInterface;
-    /*AudioInterface *audioInterface;
+    //AudioInterface *audioInterface;
     InfoInterface *infoInterface;
-    DebuggerInterface *debuggerInterface;
+    /*DebuggerInterface *debuggerInterface;
     GameSpeedSubject *gameSpeedSubject;*/
 
     //Audio *audio;

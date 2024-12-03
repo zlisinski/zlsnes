@@ -42,7 +42,7 @@ public:
 class Logger
 {
 public:
-    static inline void Log(LogLevel level, const char *format, ...)
+    static void Log(LogLevel level, const char *format, ...)
     {
         if (level <= logLevel && loggerOutput != NULL)
         {

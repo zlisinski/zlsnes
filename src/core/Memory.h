@@ -8,13 +8,14 @@
 #include "Bytes.h"
 #include "Zlsnes.h"
 
+class InfoInterface;
+
 class Memory
 {
 public:
-    Memory();
+    Memory(InfoInterface *infoInterface = NULL);
     virtual ~Memory();
 
-    void SetRomMemory(std::vector<uint8_t> &bootRomMemory, std::vector<uint8_t> &gameRomMemory);
     void SetRomMemory(std::vector<uint8_t> &gameRomMemory);
 
     uint8_t Read8Bit(uint32_t addr) const;
@@ -78,4 +79,6 @@ public:
 
 private:
     std::array<uint8_t, 0xFFFFFF> memory;
+
+    InfoInterface *infoInterface;
 };

@@ -8,8 +8,15 @@ find_package(Qt5
         Multimedia
         Widgets
 )
+find_package(Qt5
+    OPTIONAL_COMPONENTS
+        Gamepad
+)
+
+include_directories(../)
 
 set(UI_SRC
+    InfoWindow.cpp
     LogWindow.cpp
     MainWindow.cpp
     SettingsConstants.cpp
@@ -25,6 +32,11 @@ target_link_libraries(zlsnes_ui
     Qt5::Widgets
     zlsnes_core
 )
+if (Qt5Gamepad_FOUND)
+    target_link_libraries(zlsnes_ui
+        Qt5::Gamepad
+    )
+endif()
 target_compile_definitions(zlsnes_ui
     PRIVATE QT_DEPRECATED_WARNINGS
 )

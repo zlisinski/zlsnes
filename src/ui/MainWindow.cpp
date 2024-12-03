@@ -3,7 +3,7 @@
 #include <thread>
 
 //#include "Debugger/DebuggerWindow.h"
-//#include "InfoWindow.h"
+#include "InfoWindow.h"
 #include "LogWindow.h"
 #include "MainWindow.h"
 #include "SettingsConstants.h"
@@ -27,9 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
     frameCapSetting(60),
 /*#ifdef QT_GAMEPAD_LIB
     gamepad(NULL),
-#endif
+#endif*/
     infoWindow(NULL),
-    displayInfoWindowAction(NULL),*/
+    displayInfoWindowAction(NULL),
     logWindow(NULL),
     displayLogWindowAction(NULL),
     //debuggerWindow(NULL),
@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<QVector<int>>("QVector<int>");
 
     QSettings settings;
-    displayScale = settings.value(SETTINGS_VIDEO_SCALE, 5).toInt();
+    displayScale = settings.value(SETTINGS_VIDEO_SCALE, 1).toInt();
 
     // Setup logger before anything else.
     Logger::SetLogLevel(static_cast<LogLevel>(settings.value(SETTINGS_LOGGER_LEVEL, 0).toInt()));
@@ -69,18 +69,18 @@ MainWindow::MainWindow(QWidget *parent) :
     QGraphicsScene *scene = new QGraphicsScene(this);
     graphicsView->setScene(scene);
 
-    /*infoWindow = new InfoWindow(this);
+    infoWindow = new InfoWindow(this);
     if (settings.value(SETTINGS_INFOWINDOW_DISPLAY, false).toBool())
         infoWindow->show();
 
-    debuggerWindow = new DebuggerWindow(this);
+    /*debuggerWindow = new DebuggerWindow(this);
     if (settings.value(SETTINGS_DEBUGGERWINDOW_DISPLAY, false).toBool())
         debuggerWindow->show();*/
 
     fpsTimer.start();
     frameCapTimer.start();
 
-    emulator = new Emulator(this/*, this, infoWindow, debuggerWindow, this*/);
+    emulator = new Emulator(this, /*this,*/ infoWindow/*, debuggerWindow, this*/);
 
     if (qApp->arguments().size() >= 2)
     {
@@ -257,10 +257,10 @@ void MainWindow::SetupMenuBar()
     }
 
     // Display | Info Window
-    /*displayInfoWindowAction = displayMenu->addAction("&Info Window");
+    displayInfoWindowAction = displayMenu->addAction("&Info Window");
     displayInfoWindowAction->setCheckable(true);
     displayInfoWindowAction->setChecked(settings.value(SETTINGS_INFOWINDOW_DISPLAY, false).toBool());
-    connect(displayInfoWindowAction, SIGNAL(triggered(bool)), this, SLOT(SlotSetDisplayInfoWindow(bool)));*/
+    connect(displayInfoWindowAction, SIGNAL(triggered(bool)), this, SLOT(SlotSetDisplayInfoWindow(bool)));
 
     // Display | Log Window
     displayLogWindowAction = displayMenu->addAction("&Log Window");
@@ -422,15 +422,14 @@ void MainWindow::OpenRom(const QString &filename)
 
         UpdateRecentFile(filename);
 
-        QSettings settings;
-        if (settings.value(SETTINGS_BOOTROM_ENABLED, false).toBool() && settings.value(SETTINGS_BOOTROM_PATH).toString() != "")
-            emulator->LoadBootRom(settings.value(SETTINGS_BOOTROM_PATH).toString().toStdString());
-        else
-            emulator->LoadBootRom("");
+        if (!emulator->LoadRom(filename.toLatin1().data()))
+        {
+            LogError("Error loading ROM");
+            infoWindow->ClearCartridgeInfo();
+            return;
+        }
 
-        emulator->LoadRom(filename.toLatin1().data());
-
-        setWindowTitle("ZLGB - " + filename);
+        setWindowTitle("ZLSNES - " + filename);
 
         emuSaveStateAction->setEnabled(true);
         emuLoadStateAction->setEnabled(true);
@@ -499,7 +498,7 @@ void MainWindow::SlotOpenRom()
     QSettings settings;
     QString dir = settings.value(SETTINGS_FILES_OPENROMDIR).toString();
 
-    QString filename = QFileDialog::getOpenFileName(this, "Open ROM File", dir, "*.gb");
+    QString filename = QFileDialog::getOpenFileName(this, "Open ROM File", dir);
 
     if (filename != "")
     {
@@ -614,7 +613,7 @@ void MainWindow::SlotSetDisplayScale()
 }
 
 
-/*void MainWindow::SlotSetDisplayInfoWindow(bool checked)
+void MainWindow::SlotSetDisplayInfoWindow(bool checked)
 {
     QSettings settings;
     settings.setValue(SETTINGS_INFOWINDOW_DISPLAY, checked);
@@ -629,7 +628,7 @@ void MainWindow::SlotSetDisplayScale()
 void MainWindow::SlotInfoWindowClosed()
 {
     displayInfoWindowAction->setChecked(false);
-}*/
+}
 
 
 void MainWindow::SlotSetDisplayLogWindow(bool checked)

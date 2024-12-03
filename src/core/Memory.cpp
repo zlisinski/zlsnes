@@ -1,6 +1,10 @@
 #include "Memory.h"
+#include "Cartridge.h"
 
-Memory::Memory()
+
+Memory::Memory(InfoInterface *infoInterface) :
+    memory(),
+    infoInterface(infoInterface)
 {
 
 }
@@ -9,13 +13,6 @@ Memory::Memory()
 Memory::~Memory()
 {
 
-}
-
-
-void Memory::SetRomMemory(std::vector<uint8_t> &bootRomMemory, std::vector<uint8_t> &gameRomMemory)
-{
-    (void)bootRomMemory;
-    (void)gameRomMemory;
 }
 
 

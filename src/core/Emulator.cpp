@@ -4,27 +4,27 @@
 
 #include "Zlsnes.h"
 //#include "Audio.h"
+#include "Cartridge.h"
 #include "Cpu.h"
 //#include "DebuggerInterface.h"
 //#include "Display.h"
 #include "DisplayInterface.h"
 #include "Emulator.h"
-//#include "InfoInterface.h"
+#include "InfoInterface.h"
 //#include "Input.h"
 #include "Memory.h"
 //#include "Serial.h"
 //#include "Timer.h"
 
 
-Emulator::Emulator(DisplayInterface *displayInterface/*, AudioInterface *audioInterface, InfoInterface *infoInterface,
-                         DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/) :
+Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface/*,
+                   DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/) :
     paused(false),
     quit(false),
-    runBootRom(false),
     displayInterface(displayInterface),
-    /*audioInterface(audioInterface),
+    //audioInterface(audioInterface),
     infoInterface(infoInterface),
-    debuggerInterface(debuggerInterface),
+    /*debuggerInterface(debuggerInterface),
     gameSpeedSubject(gameSpeedSubject),
     audio(NULL),
     buttons(),*/
@@ -46,22 +46,6 @@ Emulator::~Emulator()
 }
 
 
-void Emulator::LoadBootRom(const std::string &filename)
-{
-    if (filename != "")
-    {
-        std::ifstream file(filename, std::ios::binary);
-        std::istreambuf_iterator<char> start(file), end;
-        bootRomMemory = std::vector<uint8_t>(start, end);
-        runBootRom = true;
-    }
-    else
-    {
-        runBootRom = false;
-    }
-}
-
-
 bool Emulator::LoadRom(const std::string &filename)
 {
     EndEmulation();
@@ -70,12 +54,21 @@ bool Emulator::LoadRom(const std::string &filename)
     std::istreambuf_iterator<char> start(file), end;
     gameRomMemory = std::vector<uint8_t>(start, end);
 
+    Cartridge cart;
+    if (!cart.Validate(gameRomMemory))
+    {
+        return false;
+    }
+
+    if (infoInterface)
+        infoInterface->UpdateCartridgeInfo(cart);
+
     romFilename = filename;
     ramFilename = romFilename + ".ram";
 
     quit = false;
 
-    memory = new Memory(/*infoInterface, debuggerInterface*/);
+    memory = new Memory(infoInterface/*, debuggerInterface*/);
     /*interrupts = new Interrupt(memory);
     timer = new Timer(memory, interrupts);
     display = new Display(memory, interrupts, displayInterface, timer);
@@ -87,15 +80,8 @@ bool Emulator::LoadRom(const std::string &filename)
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
     //timer->AttachObserver(memory);
 
-    if (runBootRom)
-    {
-        memory->SetRomMemory(bootRomMemory, gameRomMemory);
-    }
-    else
-    {
-        memory->SetRomMemory(gameRomMemory);
-        SetBootState(memory, cpu);
-    }
+    memory->SetRomMemory(gameRomMemory);
+    SetBootState(memory, cpu);
     //memory->LoadRam(ramFilename);
 
     workThread = std::thread(&Emulator::ThreadFunc, this);
@@ -317,12 +303,13 @@ void Emulator::ThreadFunc()
 {
     try
     {
-        /*if (infoInterface)
+        if (infoInterface)
             infoInterface->SetMemory(memory->GetBytePtr(0));
 
-        if (debuggerInterface)
+        /*if (debuggerInterface)
             debuggerInterface->SetEmulatorObjects(memory, cpu, interrupts);*/
 
+        // Immediately quit, for now.
         cpu->PrintState();
         quit = true;
 
@@ -357,9 +344,9 @@ void Emulator::ThreadFunc()
         displayInterface->RequestMessageBox(e.what());
     }
 
-    /*if (infoInterface)
+    if (infoInterface)
         infoInterface->SetMemory(NULL);
-    if (debuggerInterface)
+    /*if (debuggerInterface)
         debuggerInterface->SetEmulatorObjects(NULL, NULL, NULL);*/
 
     //delete audio;
@@ -385,37 +372,4 @@ void Emulator::SetBootState(Memory *memory, Cpu *cpu)
 {
     (void)memory;
     (void)cpu;
-    // Set state to what it would be after running the boot ROM.
-
-    /*cpu->reg.a = 0x01;
-    cpu->reg.f = 0xB0;
-    cpu->reg.bc = 0x0013;
-    cpu->reg.de = 0x00D8;
-    cpu->reg.hl = 0x014D;
-    cpu->reg.sp = 0xFFFE;
-    cpu->reg.pc = 0x0100;
-
-    memory->WriteByte(eRegTIMA, 0x00);
-    memory->WriteByte(eRegTMA, 0x00);
-    memory->WriteByte(eRegTAC, 0x00);
-
-    memory->WriteByte(eRegNR10, 0x80);
-    memory->WriteByte(eRegNR11, 0xBF);
-    memory->WriteByte(eRegNR12, 0xF3);
-    memory->WriteByte(eRegNR14, 0x3F); // This should be 0xBF, but don't set Initialize bit, otherwise a sound will play at startup.
-    memory->WriteByte(eRegNR50, 0x77);
-    memory->WriteByte(eRegNR51, 0xF3);
-    memory->WriteByte(eRegNR52, 0xF1);
-
-    memory->WriteByte(eRegLCDC, 0x91);
-    memory->WriteByte(eRegSCY, 0x00);
-    memory->WriteByte(eRegSCX, 0x00);
-    memory->WriteByte(eRegLYC, 0x00);
-    memory->WriteByte(eRegBGP, 0xFC);
-    memory->WriteByte(eRegOBP0, 0xFF);
-    memory->WriteByte(eRegOBP1, 0xFF);
-    memory->WriteByte(eRegWY, 0x00);
-    memory->WriteByte(eRegWX, 0x00);
-
-    memory->WriteByte(eRegIE, 0x00);*/
 }
