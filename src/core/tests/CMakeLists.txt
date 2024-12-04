@@ -13,6 +13,7 @@ set(TEST_SRC
     BcdTest.cpp
     CpuTest.cpp
     main.cpp
+    MemoryTest.cpp
 )
 
 add_executable(test_zlsnes
