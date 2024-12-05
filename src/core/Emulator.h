@@ -9,15 +9,15 @@
 //class AudioInterface;
 class Cpu;
 //class DebuggerInterface;
-//class Display;
 class DisplayInterface;
 //class GameSpeedSubject;
 class InfoInterface;
 //class Input;
 //class Interrupt;
 class Memory;
+class Ppu;
 //class Serial;
-//class Timer;
+class Timer;
 
 class Emulator
 {
@@ -61,10 +61,10 @@ private:
     //Audio *audio;
     //Buttons buttons;
     Cpu *cpu;
-    //Display *display;
     //Input *input;
     //Interrupt *interrupts;
     Memory *memory;
+    Ppu *ppu;
     //Serial *serial;
-    //Timer *timer;
+    Timer *timer;
 };

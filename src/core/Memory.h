@@ -6,17 +6,22 @@
 
 #include "Address.h"
 #include "Bytes.h"
+#include "IoRegisterProxy.h"
 #include "Zlsnes.h"
 
-class InfoInterface;
 
-class Memory
+class InfoInterface;
+class Timer;
+
+
+class Memory : public IoRegisterSubject
 {
 public:
     Memory(InfoInterface *infoInterface = NULL);
     virtual ~Memory();
 
     void SetRomMemory(std::vector<uint8_t> &gameRomMemory);
+    void SetTimer(Timer *timer);
 
     uint8_t Read8Bit(uint32_t addr) const;
     uint8_t Read8Bit(const Address &addr) const
@@ -109,6 +114,7 @@ private:
     std::array<uint8_t, 0xFFFFFF> memory;
 
     InfoInterface *infoInterface;
+    Timer *timer;
 
     friend class MemoryTest;
 };

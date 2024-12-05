@@ -1,4 +1,5 @@
 #include "AddressModeTest.h"
+#include "../Timer.h"
 
 const uint16_t A_VALUE = 0x1234;
 const uint16_t X_VALUE = 0x5678;
@@ -13,12 +14,15 @@ const uint16_t SP_VALUE = 0xFFFF;
 AddressModeTest::AddressModeTest()
 {
     memory_ = new Memory();
-    cpu = new Cpu(memory_);
+    timer = new Timer();
+    cpu = new Cpu(memory_, timer);
+    memory_->SetTimer(timer);
 }
 
 AddressModeTest::~AddressModeTest()
 {
     delete cpu;
+    delete timer;
     delete memory_;
 }
 

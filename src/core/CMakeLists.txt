@@ -6,6 +6,8 @@ set(CORE_SRC
     Emulator.cpp
     Logger.cpp
     Memory.cpp
+    Ppu.cpp
+    Timer.cpp
 )
 
 add_library(zlsnes_core

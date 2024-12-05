@@ -1,12 +1,16 @@
 #include "MemoryTest.h"
+#include "../Timer.h"
 
 MemoryTest::MemoryTest()
 {
     memory = new Memory();
+    timer = new Timer();
+    memory->SetTimer(timer);
 }
 
 MemoryTest::~MemoryTest()
 {
+    delete timer;
     delete memory;
 }
 

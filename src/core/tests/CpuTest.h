@@ -7,6 +7,7 @@
 class Memory;
 class QString;
 class QJsonObject;
+class Timer;
 
 class CpuTest : public ::testing::Test
 {
@@ -36,6 +37,7 @@ protected:
 
     Cpu *cpu;
     Memory *memory_;
+    Timer *timer;
 
     uint8_t *memory;
 };

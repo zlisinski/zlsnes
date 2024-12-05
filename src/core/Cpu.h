@@ -7,6 +7,7 @@
 #include "Memory.h"
 
 class AbsAddressMode;
+class Timer;
 
 struct Registers
 {
@@ -104,7 +105,7 @@ struct Registers
 class Cpu
 {
 public:
-    Cpu(Memory *memory);
+    Cpu(Memory *memory, Timer *timer);
     ~Cpu();
 
     uint8_t ReadPC8Bit();
@@ -257,6 +258,7 @@ private:
     void NotYetImplemented(uint8_t opcode);
 
     Memory *memory;
+    Timer *timer;
 
     using AddressModePtr = std::unique_ptr<AbsAddressMode>;
     AddressModePtr addressModes[32];

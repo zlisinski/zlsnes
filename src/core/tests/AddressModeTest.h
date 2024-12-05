@@ -6,6 +6,7 @@
 
 class Cpu;
 class Memory;
+class Timer;
 
 class AddressModeTest : public ::testing::Test
 {
@@ -21,6 +22,7 @@ protected:
 
     Cpu *cpu;
     Memory *memory_;
+    Timer *timer;
 
     uint8_t *memory;
 };

@@ -7,14 +7,14 @@
 #include "Cartridge.h"
 #include "Cpu.h"
 //#include "DebuggerInterface.h"
-//#include "Display.h"
 #include "DisplayInterface.h"
 #include "Emulator.h"
 #include "InfoInterface.h"
 //#include "Input.h"
 #include "Memory.h"
+#include "Ppu.h"
 //#include "Serial.h"
-//#include "Timer.h"
+#include "Timer.h"
 
 
 Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface/*,
@@ -29,12 +29,12 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     audio(NULL),
     buttons(),*/
     cpu(NULL),
-    /*display(NULL),
-    input(NULL),
+    /*input(NULL),
     interrupts(NULL),*/
-    memory(NULL)
+    memory(NULL),
+    ppu(NULL),
     //serial(NULL),
-    //timer(NULL)
+    timer(NULL)
 {
 
 }
@@ -69,16 +69,16 @@ bool Emulator::LoadRom(const std::string &filename)
     quit = false;
 
     memory = new Memory(infoInterface/*, debuggerInterface*/);
-    /*interrupts = new Interrupt(memory);
-    timer = new Timer(memory, interrupts);
-    display = new Display(memory, interrupts, displayInterface, timer);
-    input = new Input(memory, interrupts);
+    //interrupts = new Interrupt(memory);
+    timer = new Timer(/*memory, interrupts*/);
+    ppu = new Ppu(memory/*, interrupts, displayInterface, timer*/);
+    /*input = new Input(memory, interrupts);
     serial = new Serial(memory, interrupts, timer);*/
-    cpu = new Cpu(/*interrupts,*/ memory/*, timer*/);
+    cpu = new Cpu(/*interrupts,*/ memory, timer);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
 
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
-    //timer->AttachObserver(memory);
+    memory->SetTimer(timer);
 
     memory->SetRomMemory(gameRomMemory);
     SetBootState(memory, cpu);
@@ -353,16 +353,16 @@ void Emulator::ThreadFunc()
     //audio = NULL;
     delete cpu;
     cpu = NULL;
-    /*delete display;
-    display = NULL;
-    delete input;
+    delete ppu;
+    ppu = NULL;
+    /*delete input;
     input = NULL;
     delete interrupts;
     interrupts = NULL;
     delete serial;
-    serial = NULL;
+    serial = NULL;*/
     delete timer;
-    timer = NULL;*/
+    timer = NULL;
     delete memory;
     memory = NULL;
 }

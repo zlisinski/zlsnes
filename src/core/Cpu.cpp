@@ -4,11 +4,13 @@
 #include "Bcd.h"
 #include "Cpu.h"
 #include "Memory.h"
+#include "Timer.h"
 
 
-Cpu::Cpu(Memory *memory) :
+Cpu::Cpu(Memory *memory, Timer *timer) :
     reg(),
-    memory(memory)
+    memory(memory),
+    timer(timer)
 {
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x01] = std::make_unique<AddressModeDirectIndexedIndirect>(this, memory);
