@@ -1,3 +1,4 @@
+#include <gtest/gtest.h>
 #include <stdint.h>
 #include <QFile>
 #include <QJsonDocument>
@@ -5,10 +6,9 @@
 #include <QJsonArray>
 #include <QString>
 
-#include "CpuTest.h"
-#include "../Memory.h"
-#include "../Timer.h"
-#include "../Zlsnes.h"
+#include "Bytes.h"
+#include "Cpu.h"
+#include "Timer.h"
 
 const uint16_t A_VALUE = 0x1234;
 const uint16_t X_VALUE = 0x5678;
@@ -22,19 +22,50 @@ const uint16_t SP_VALUE = 0xFFFF;
 const QString JSON_PATH = "./test_data/65816/v1/";
 
 
+class CpuTest : public ::testing::Test
+{
+protected:
+    CpuTest();
+    ~CpuTest() override;
+
+    void SetUp() override;
+    void TearDown() override;
+
+    void ResetState();
+    void RunInstructionTest(const QString &opcodeName, const QString &opcode, bool emulationMode);
+    void FormatData(const QJsonObject &obj, QString &str);
+
+    uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
+
+    // Used for testing private methods.
+    bool IsAccumulator8Bit() {return cpu->IsAccumulator8Bit();}
+    bool IsAccumulator16Bit() {return cpu->IsAccumulator16Bit();}
+    bool IsIndex8Bit() {return cpu->IsIndex8Bit();}
+    bool IsIndex16Bit() {return cpu->IsIndex16Bit();}
+    template <typename T> void LoadRegister(T *dest, T value) {cpu->LoadRegister(dest, value);}
+    void Push8Bit(uint8_t value) {cpu->Push8Bit(value);}
+    uint8_t Pop8Bit() {return cpu->Pop8Bit();}
+    void SetEmulationMode(bool value) {cpu->SetEmulationMode(value);}
+    void UpdateRegistersAfterFlagChange() {cpu->UpdateRegistersAfterFlagChange();}
+
+    Cpu *cpu;
+    Memory *memory;
+    Timer *timer;
+};
+
+
 CpuTest::CpuTest()
 {
-    memory_ = new Memory();
+    memory = new Memory();
     timer = new Timer();
-    cpu = new Cpu(memory_, timer);
-    memory_->SetTimer(timer);
+    cpu = new Cpu(memory, timer);
 }
 
 CpuTest::~CpuTest()
 {
     delete cpu;
     delete timer;
-    delete memory_;
+    delete memory;
 }
 
 void CpuTest::SetUp()
@@ -60,8 +91,7 @@ void CpuTest::ResetState()
     cpu->reg.pc = 0;
     cpu->reg.emulationMode = false;
 
-    memory_->ClearMemory();
-    memory = memory_->GetBytePtr(0);
+    memory->ClearMemory();
 }
 
 void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcode, bool emulationMode)
@@ -113,7 +143,7 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
             ASSERT_LE(addr, 0xFFFFFF) << qPrintable(testName);
             ASSERT_GE(val, 0) << qPrintable(testName);
             ASSERT_LE(val, 0xFF) << qPrintable(testName);
-            memory[addr] = val;
+            memory->Write8Bit(addr, val);
         }
 
         // Run the opcode.
@@ -164,7 +194,7 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
             ASSERT_LE(addr, 0xFFFFFF) << qPrintable(testName);
             ASSERT_GE(val, 0) << qPrintable(testName);
             ASSERT_LE(val, 0xFF) << qPrintable(testName);
-            EXPECT_EQ(memory[addr], val) << qPrintable(testName);
+            EXPECT_EQ(memory->Read8Bit(addr), val) << qPrintable(testName);
         }
 
         // If there were errors, stop processing this opcode. We don't want 10000 errors.
@@ -275,7 +305,7 @@ void CpuTest::FormatData(const QJsonObject &obj, QString &str)
     for (int i = 0; i < finalRam.size(); i++)
     {
         QJsonArray pair = finalRam[i].toArray();
-        expectedRamStrings.append(QStringLiteral("\t\t0x%1 = 0x%2").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(memory[pair[0].toInt()], 2, 16, QChar('0')));
+        expectedRamStrings.append(QStringLiteral("\t\t0x%1 = 0x%2").arg(pair[0].toInt(), 6, 16, QChar('0')).arg(memory->Read8Bit(pair[0].toInt()), 2, 16, QChar('0')));
     }
     expectedRamStrings.sort();
     str += expectedRamStrings.join(QChar('\n')) + "\n";
@@ -391,13 +421,13 @@ TEST_F(CpuTest, TEST_Push8Bit)
     cpu->reg.sp = 0x0100;
     Push8Bit(0xAB);
     ASSERT_EQ(cpu->reg.sp, 0x01FF);
-    ASSERT_EQ(memory[0x0100], 0xAB);
+    ASSERT_EQ(memory->Read8Bit(0x0100), 0xAB);
 }
 
 TEST_F(CpuTest, TEST_Pop8Bit)
 {
     cpu->reg.emulationMode = true;
-    memory[0x0100] = 0xAB;
+    memory->Write8Bit(0x0100, 0xAB);
     cpu->reg.sp = 0x01FF;
     uint8_t value = Pop8Bit();
     ASSERT_EQ(cpu->reg.sp, 0x0100);

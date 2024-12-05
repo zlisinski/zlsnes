@@ -1,5 +1,7 @@
-#include "AddressModeTest.h"
-#include "../Timer.h"
+#include <gtest/gtest.h>
+#include "AddressMode.h"
+#include "Bytes.h"
+#include "Timer.h"
 
 const uint16_t A_VALUE = 0x1234;
 const uint16_t X_VALUE = 0x5678;
@@ -9,6 +11,25 @@ const uint8_t P_VALUE = 0x00;
 const uint8_t DB_VALUE = 0x12;
 const uint8_t PB_VALUE = 0x34;
 const uint16_t SP_VALUE = 0xFFFF;
+
+class AddressModeTest : public ::testing::Test
+{
+protected:
+    AddressModeTest();
+    ~AddressModeTest() override;
+
+    void SetUp() override;
+    void TearDown() override;
+
+    void ResetState();
+    uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
+
+    Cpu *cpu;
+    Memory *memory_;
+    Timer *timer;
+
+    uint8_t *memory;
+};
 
 
 AddressModeTest::AddressModeTest()

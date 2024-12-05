@@ -1,9 +1,21 @@
+#include <gtest/gtest.h>
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "BcdTest.h"
-#include "../Bcd.h"
+#include "Bcd.h"
+
+
+class BcdTest : public ::testing::Test
+{
+protected:
+    BcdTest();
+    ~BcdTest() override;
+
+    void SetUp() override;
+    void TearDown() override;
+};
+
 
 BcdTest::BcdTest()
 {

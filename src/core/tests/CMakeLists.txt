@@ -1,28 +1,4 @@
-# Ubuntu repos only include gtest source, not binaries.
-# TODO: Make this also work for distros that include binaries.
-find_package(Threads REQUIRED)
-set(GTEST_SRC "/usr/src/gtest")
-include_directories(${GTEST_SRC})
-add_library(gtest ${GTEST_SRC}/src/gtest-all.cc)
-target_link_libraries(gtest Threads::Threads)
-
-find_package(Qt5 REQUIRED COMPONENTS Core)
-
-set(TEST_SRC
-    AddressModeTest.cpp
-    BcdTest.cpp
-    CpuTest.cpp
-    main.cpp
-    MemoryTest.cpp
-)
-
-add_executable(test_zlsnes
-    ${TEST_SRC}
-)
-target_link_libraries(test_zlsnes
-    gtest
-    Qt5::Core
-    zlsnes_core
-)
-
-add_test(test_zlsnes test_zlsnes)
+add_subdirectory(AddressModeTest)
+add_subdirectory(BcdTest)
+add_subdirectory(CpuTest)
+add_subdirectory(MemoryTest)

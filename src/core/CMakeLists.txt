@@ -17,4 +17,6 @@ target_link_libraries(zlsnes_core
     Threads::Threads
 )
 
+enable_testing()
+
 add_subdirectory(tests)

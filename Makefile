@@ -11,7 +11,7 @@ test_data:
 	git submodule update --init
 
 test: all test_data
-	./test_zlsnes
+	cd build/src/core && GTEST_COLOR=1 ctest -V
 
 clean:
 	rm -rf $(BUILD_DIR) $(BINS)
