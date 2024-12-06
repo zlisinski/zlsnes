@@ -15,6 +15,12 @@ protected:
 
     Memory *memory;
     Timer *timer;
+
+    uint8_t *wram;
+    uint8_t *ioPorts21;
+    uint8_t *ioPorts40;
+    uint8_t *ioPorts42;
+    uint8_t *ioPorts43;
 };
 
 
@@ -23,6 +29,12 @@ MemoryTest::MemoryTest()
     memory = new Memory();
     timer = new Timer();
     memory->SetTimer(timer);
+
+    wram = &memory->wram[0];
+    ioPorts21 = &memory->ioPorts21[0];
+    ioPorts40 = &memory->ioPorts40[0];
+    ioPorts42 = &memory->ioPorts42[0];
+    ioPorts43 = &memory->ioPorts43[0];
 }
 
 MemoryTest::~MemoryTest()
@@ -151,4 +163,87 @@ TEST_F(MemoryTest, TEST_Write16BitWrapBank_Address)
     memory->Write16BitWrapBank(Address(0x7EFFFF), 0x89AB);
     EXPECT_EQ(memory->Read8Bit(0x7EFFFF), 0xAB);
     EXPECT_EQ(memory->Read8Bit(0x7E0000), 0x89);
+}
+
+
+TEST_F(MemoryTest, TEST_WRam_Mirror)
+{
+    // Writes to WRAM should be mirrored into other banks.
+    memory->Write8Bit(0x7E0001, 0x99);
+
+    // Writes to mirrored area should be applied to WRAM.
+    memory->Write8Bit(0x00000A, 0x77);
+
+    EXPECT_EQ(memory->Read8Bit(0x7E0001), 0x99);
+    EXPECT_EQ(memory->Read8Bit(0x7E000A), 0x77);
+    EXPECT_EQ(wram[0x0001], 0x99);
+    EXPECT_EQ(wram[0x000A], 0x77);
+
+    for (int i = 0; i < 0x40; i++)
+    {
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x0001)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x0001)), 0x99) << i + 0x80;
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x000A)), 0x77) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x000A)), 0x77) << i + 0x80;
+    }
+}
+
+
+TEST_F(MemoryTest, TEST_ioPorts21_Mirror)
+{
+    // Writes to 21xx ports should be mirrored into other banks.
+    memory->Write8Bit(0x002184, 0x99);
+
+    EXPECT_EQ(ioPorts21[0x84], 0x99);
+
+    for (int i = 0; i < 0x40; i++)
+    {
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x2184)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x2184)), 0x99) << i + 0x80;
+    }
+}
+
+
+TEST_F(MemoryTest, TEST_ioPorts40_Mirror)
+{
+    // Writes to 40xx ports should be mirrored into other banks.
+    memory->Write8Bit(0x004018, 0x99);
+
+    EXPECT_EQ(ioPorts40[0x18], 0x99);
+
+    for (int i = 0; i < 0x40; i++)
+    {
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x4018)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4018)), 0x99) << i + 0x80;
+    }
+}
+
+
+TEST_F(MemoryTest, TEST_ioPorts42_Mirror)
+{
+    // Writes to 42xx ports should be mirrored into other banks.
+    memory->Write8Bit(0x00420E, 0x99);
+
+    EXPECT_EQ(ioPorts42[0x0E], 0x99);
+
+    for (int i = 0; i < 0x40; i++)
+    {
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x420E)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x420E)), 0x99) << i + 0x80;
+    }
+}
+
+
+TEST_F(MemoryTest, TEST_ioPorts43_Mirror)
+{
+    // Writes to 43xx ports should be mirrored into other banks.
+    memory->Write8Bit(0x004380, 0x99);
+
+    EXPECT_EQ(ioPorts43[0x80], 0x99);
+
+    for (int i = 0; i < 0x40; i++)
+    {
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x4380)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4380)), 0x99) << i + 0x80;
+    }
 }
