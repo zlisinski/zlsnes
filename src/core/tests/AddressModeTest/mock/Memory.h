@@ -1,8 +1,6 @@
 #pragma once
 
 #include <array>
-#include <memory>
-#include <vector>
 
 #include "Address.h"
 #include "Bytes.h"
@@ -10,6 +8,7 @@
 #include "Zlsnes.h"
 
 
+class Cartridge;
 class InfoInterface;
 class Timer;
 
@@ -20,7 +19,7 @@ public:
     Memory(InfoInterface *infoInterface = NULL);
     virtual ~Memory();
 
-    void SetRomMemory(std::vector<uint8_t> &gameRomMemory);
+    void SetCartridge(Cartridge *cart);
     void SetTimer(Timer *timer);
 
     uint8_t Read8Bit(uint32_t addr) const;

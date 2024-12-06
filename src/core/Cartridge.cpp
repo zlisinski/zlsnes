@@ -1,27 +1,13 @@
+#include <fstream>
 #include <unordered_set>
 
-#include "Bytes.h"
-#include "InfoInterface.h"
 #include "Cartridge.h"
 
 static const size_t LOROM_HEADER_OFFSET = 0x7FC0;
 static const size_t HIROM_HEADER_OFFSET = 0xFFC0;
 static const size_t EXHIROM_HEADER_OFFSET = 0x40FFC0;
 
-static const size_t MODE_OFFSET = 0x15;
-static const size_t CHIPSET_OFFSET = 0x16;
-static const size_t ROM_SIZE_OFFSET = 0x17;
-static const size_t RAM_SIZE_OFFSET = 0x18;
-static const size_t COUNTRY_OFFSET = 0x19;
-static const size_t DEVID_OFFSET = 0x1A;
-static const size_t ROM_VERSION_OFFSET = 0x1B;
-static const size_t CHECKSUM_OFFSET = 0x1C;
-static const ssize_t MAKERID_OFFSET = -0x10;
-static const ssize_t GAMECODEID_OFFSET = -0x0E;
-static const ssize_t EXP_FLASH_SIZE_OFFSET = -0x04;
-static const ssize_t EXP_RAM_SIZE_OFFSET = -0x03;
-static const ssize_t SPECIAL_VERSION_OFFSET = -0x02;
-static const ssize_t CHIPSET_SUBTYPE_OFFSET = -0x01;
+static const ssize_t EXTENDED_HEADER_OFSET = -0x10;
 
 
 static const std::unordered_set<uint8_t> romModeLookup = {
@@ -39,18 +25,45 @@ Cartridge::Cartridge()
 }
 
 
-bool Cartridge::Validate(std::vector<uint8_t> &data)
+bool Cartridge::LoadRom(const std::string &filename)
+{
+    std::ifstream file(filename, std::ios::binary);
+    if (!file)
+    {
+        LogError("Unable to open file %s", filename.c_str());
+        return false;
+    }
+    std::istreambuf_iterator<char> start(file), end;
+    rom = std::vector<uint8_t>(start, end);
+
+    return Validate();
+}
+
+
+void Cartridge::Reset()
+{
+    rom.clear();
+    isInterleaved = false;
+    romType = ERomType::eLoROM;
+    isLoRom = true;
+    isFastSpeed = false;
+    standardHeader = StandardHeader();
+    extendedHeader = ExtendedHeader();
+}
+
+
+bool Cartridge::Validate()
 {
     // Check for and strip useless header added by cartridge copying devices.
-    size_t copierHeaderLen = data.size() % 1024;
+    size_t copierHeaderLen = rom.size() % 1024;
     if (copierHeaderLen != 0)
     {
         LogInfo("Detected copier header of length %d", copierHeaderLen);
-        data.erase(data.begin(), data.begin() + copierHeaderLen);
+        rom.erase(rom.begin(), rom.begin() + copierHeaderLen);
     }
 
     // TODO: Replace with actual minimal ROM size. This value will allow checking for both LoROM and HiROM headers.
-    if (data.size() < 0xFFFF)
+    if (rom.size() < 0xFFFF)
     {
         LogError("File is too small");
         return false;
@@ -58,11 +71,11 @@ bool Cartridge::Validate(std::vector<uint8_t> &data)
 
     size_t offset = 0;
 
-    if (FindHeader(data, LOROM_HEADER_OFFSET))
+    if (FindHeader(LOROM_HEADER_OFFSET))
     {
         offset = LOROM_HEADER_OFFSET;
     }
-    else if (FindHeader(data, HIROM_HEADER_OFFSET))
+    else if (FindHeader(HIROM_HEADER_OFFSET))
     {
         offset = HIROM_HEADER_OFFSET;
     }
@@ -73,70 +86,70 @@ bool Cartridge::Validate(std::vector<uint8_t> &data)
         return false;
     }
 
-    std::copy(data.begin() + offset, data.begin() + offset + 21, title);
-    title[21] = 0;
-    LogInfo("Title = %s", title);
+    LogInfo("Title = %.21s", standardHeader.title);
 
-    romType = static_cast<ERomType>(data[offset + MODE_OFFSET] & 0x0F);
+    romType = static_cast<ERomType>(standardHeader.mode & 0x0F);
     isLoRom = (romType == ERomType::eLoROM || romType == ERomType::eLoROMSA1 || romType == ERomType::eLoROMSDD1);
-    isInterleaved = (offset == LOROM_HEADER_OFFSET) && !isLoRom; // Interleaved ROMs can be hiROM, but have the header at the LoROM file offset.
+    isFastSpeed = (standardHeader.mode >> 4) & 1;
+    
+    // Interleaved ROMs can be hiROM, but have the header at the LoROM file offset.
+    isInterleaved = (offset == LOROM_HEADER_OFFSET) && !isLoRom;
     if (isInterleaved)
     {
-        throw NotYetImplementedException("Iterleaved ROM NYI");
+        LogError("Interleaved ROM NYI");
+        return false;
     }
-    fastSpeed = (data[offset + MODE_OFFSET] >> 4) & 1;
-    chipset = data[offset + CHIPSET_OFFSET];
-    romSize = data[offset + ROM_SIZE_OFFSET];
-    ramSize = data[offset + RAM_SIZE_OFFSET];
-    country = data[offset + COUNTRY_OFFSET];
-    devId = data[offset + DEVID_OFFSET];
-    romVersion = data[offset + ROM_VERSION_OFFSET];
-
-    if (devId == 0x33)
+    
+    if (standardHeader.devId == 0x33 || standardHeader.title[20] == 0)
     {
-        std::copy(data.begin() + offset - 0x10, data.begin() + offset - 0x0E, makerCode);
-        makerCode[2] = 0;
-
-        std::copy(data.begin() + offset - 0x0E, data.begin() + offset - 0x0A, gameCode);
-        gameCode[4] = 0;
-
-        expansionFlashSize = data[offset + EXP_FLASH_SIZE_OFFSET];
-        expansionRamSize = data[offset + EXP_RAM_SIZE_OFFSET];
-        specialVersion = data[offset + SPECIAL_VERSION_OFFSET];
-        chipsetSubtype = data[offset + CHIPSET_SUBTYPE_OFFSET];
+        // If the last byte of the title is null, this is an early extended header where only the chip subtype byte is valid.
+        // If devId is 0x33, this is a later extended header where all fields are valid.
+        size_t extOffset = offset + EXTENDED_HEADER_OFSET;
+        memcpy(&extendedHeader, &rom[extOffset], sizeof(ExtendedHeader));
     }
 
     return true;
 }
 
 
-bool Cartridge::FindHeader(const std::vector<uint8_t> &data, size_t headerOffset)
+bool Cartridge::FindHeader(size_t headerOffset)
 {
-    // Check that title field is all ASCII. The last byte can be null, so skip checking it.
+    StandardHeader header;
+    memcpy(&header, &rom[headerOffset], sizeof(StandardHeader));
+
+    LogInfo("Checking for standard header at %04X", headerOffset);
+
+    // Check that title field is all ASCII. The last byte can be null.
     for (int i = 0; i < 20; i++)
     {
-        if (data[headerOffset + i] < 0x20 || data[headerOffset + i] > 0x7E)
+        if (header.title[i] < 0x20 || header.title[i] > 0x7E)
         {
-            LogError("Non-ASCII Title at %04X %d %02X", headerOffset, i, data[headerOffset + i]);
+            LogError("Non-ASCII value (%02X) in Title at %04X", header.title[i], headerOffset + i);
             return false;
         }
     }
+    if ((header.title[20] > 0 && header.title[20] < 0x20) || header.title[20] > 0x7E)
+    {
+        LogError("Non-ASCII value (%02X) in Title at %04X", header.title[20], headerOffset + 20);
+        return false;
+    }
 
     // Look for a mode-like byte. This succeeds at the wrong offset with FF5 which is why the rest of the checks are necesasry.
-    if (romModeLookup.find(data[headerOffset + MODE_OFFSET] & 0x0F) == romModeLookup.end())
+    if (romModeLookup.find(header.mode & 0x0F) == romModeLookup.end())
     {
-        LogError("Bad mode at %02X %04X", data[headerOffset + MODE_OFFSET], headerOffset + MODE_OFFSET);
+        LogError("Bad mode (%02X) at %04X", header.mode, headerOffset + offsetof(StandardHeader, mode));
         return false;
     }
 
     // Check checksums. This doesn't actually verify all ROM data in case this is a hacked ROM.
-    checksumComplement = Bytes::Make16Bit(data[headerOffset + CHECKSUM_OFFSET + 1], data[headerOffset + CHECKSUM_OFFSET]);
-    checksum = Bytes::Make16Bit(data[headerOffset + CHECKSUM_OFFSET + 3], data[headerOffset + CHECKSUM_OFFSET + 2]);
-    if ((checksum ^ checksumComplement) != 0xFFFF)
+    if ((header.checksum ^ header.checksumComplement) != 0xFFFF)
     {
         LogError("Bad checksum at %04X", headerOffset);
         return false;
     }
+
+    LogInfo("Found valid standard header at %04X", headerOffset);
+    standardHeader = header;
 
     return true;
 }

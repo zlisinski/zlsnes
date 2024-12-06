@@ -4,6 +4,7 @@
 #include <thread>
 #include <vector>
 //#include "Buttons.h"
+#include "Cartridge.h"
 
 //class Audio;
 //class AudioInterface;
@@ -44,8 +45,6 @@ private:
     bool paused;
     bool quit;
 
-    std::vector<uint8_t> gameRomMemory;
-
     std::string romFilename;
     std::string ramFilename;
 
@@ -60,6 +59,7 @@ private:
 
     //Audio *audio;
     //Buttons buttons;
+    Cartridge cartridge;
     Cpu *cpu;
     //Input *input;
     //Interrupt *interrupts;

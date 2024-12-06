@@ -17,34 +17,57 @@ public:
         //eHiRomSPC7110 = 0x0A
     };
 
+#pragma pack(1)
+    struct StandardHeader
+    {
+        char title[21] = {0};
+        uint8_t mode = 0;
+        uint8_t chipset = 0;
+        uint8_t romSize = 0;
+        uint8_t ramSize = 0;
+        uint8_t country = 0;
+        uint8_t devId = 0;
+        uint8_t romVersion = 0;
+        uint16_t checksumComplement = 0;
+        uint16_t checksum = 0;
+    };
+
+    struct ExtendedHeader
+    {
+        char makerCode[2] = {0};
+        char gameCode[4] = {0};
+        char reserved[6] = {0};
+        uint8_t expansionFlashSize = 0;
+        uint8_t expansionRamSize = 0;
+        uint8_t specialVersion = 0;
+        uint8_t chipsetSubtype = 0;
+    };
+#pragma pack()
+
     Cartridge();
 
-    bool Validate(std::vector<uint8_t> &data);
+    bool LoadRom(const std::string &filename);
+    void Reset();
 
-    bool isInterleaved = false;
+    const std::vector<uint8_t> &GetRom() const {return rom;}
+    const StandardHeader &GetStandardHeader() const {return standardHeader;}
+    const ExtendedHeader &GetExtendedHeader() const {return extendedHeader;}
+    ERomType GetRomType() const {return romType;}
+    bool IsLoRom() const {return isLoRom;}
+    bool IsFastSpeed() const {return isFastSpeed;}
+    bool IsInterleaved() const {return isInterleaved;}
 
-    // Standard Header Info.
-    char title[22] = {0};
+protected:
+    bool Validate();
+    bool FindHeader(size_t headerOffset);
+
+    std::vector<uint8_t> rom;
+
+    StandardHeader standardHeader;
+    ExtendedHeader extendedHeader;
+
     ERomType romType = ERomType::eLoROM;
     bool isLoRom = true;
-    bool fastSpeed = false;
-    uint8_t chipset = 0;
-    uint8_t romSize = 0;
-    uint8_t ramSize = 0;
-    uint8_t country = 0;
-    uint8_t devId = 0;
-    uint8_t romVersion = 0;
-    uint16_t checksumComplement = 0;
-    uint16_t checksum = 0;
-
-    // Extended Header Info.
-    char makerCode[3] = {0};
-    char gameCode[5] = {0};
-    uint8_t expansionFlashSize = 0;
-    uint8_t expansionRamSize = 0;
-    uint8_t specialVersion = 0;
-    uint8_t chipsetSubtype = 0;
-
-private:
-    bool FindHeader(const std::vector<uint8_t> &data, size_t headerOffset);
+    bool isFastSpeed = false;
+    bool isInterleaved = false;
 };

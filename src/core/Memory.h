@@ -1,8 +1,6 @@
 #pragma once
 
 #include <array>
-#include <memory>
-#include <vector>
 
 #include "Address.h"
 #include "Bytes.h"
@@ -10,6 +8,7 @@
 #include "Zlsnes.h"
 
 
+class Cartridge;
 class InfoInterface;
 class Timer;
 
@@ -20,7 +19,7 @@ public:
     Memory(InfoInterface *infoInterface = NULL);
     virtual ~Memory();
 
-    void SetRomMemory(std::vector<uint8_t> &gameRomMemory);
+    void SetCartridge(Cartridge *cart);
     void SetTimer(Timer *timer);
 
     uint8_t Read8Bit(uint32_t addr) const;
@@ -121,8 +120,7 @@ protected:
     std::array<uint8_t, 0xFF> ioPorts43; // 0x4300-0x43FF. 0x43[0-7][0-B] are used, the rest are unused.
     std::array<uint8_t, 0x2000> expansion; // 0x6000-0x7FFF.
 
-    std::vector<uint8_t> rom;
-
+    Cartridge *cart;
     InfoInterface *infoInterface;
     Timer *timer;
 

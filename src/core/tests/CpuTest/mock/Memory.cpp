@@ -10,9 +10,9 @@ Memory::~Memory()
 
 }
 
-void Memory::SetRomMemory(std::vector<uint8_t> &gameRomMemory)
+void Memory::SetCartridge(Cartridge *cart)
 {
-    (void)gameRomMemory;
+    (void)cart;
 }
 
 void Memory::SetTimer(Timer *timer)

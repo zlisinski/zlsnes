@@ -13,6 +13,7 @@ Memory::Memory(InfoInterface *infoInterface) :
     ioPorts42(),
     ioPorts43(),
     expansion(),
+    cart(NULL),
     infoInterface(infoInterface),
     timer(NULL)
 {
@@ -26,9 +27,9 @@ Memory::~Memory()
 }
 
 
-void Memory::SetRomMemory(std::vector<uint8_t> &gameRomMemory)
+void Memory::SetCartridge(Cartridge *cart)
 {
-    rom = gameRomMemory;
+    this->cart = cart;
 }
 
 
@@ -81,7 +82,7 @@ uint8_t Memory::Read8Bit(uint32_t addr) const
         // Assume LoROM for now.
         // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
         uint32_t mappedAddr = (((addr & 0xFF0000) >> 1) | (addr & 0x7FFF));
-        return rom[mappedAddr];
+        return cart->GetRom()[mappedAddr];
     }
 
     // TODO: Figure out if this is slow or fast

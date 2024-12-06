@@ -40,8 +40,11 @@ InfoWindow::~InfoWindow()
 
 void InfoWindow::UpdateCartridgeInfo(const Cartridge &cartridge)
 {
-    ui->labelTitle->setText(cartridge.title);
-    switch (cartridge.romType)
+    Cartridge::StandardHeader standardHeader = cartridge.GetStandardHeader();
+    Cartridge::ExtendedHeader extendedHeader = cartridge.GetExtendedHeader();
+
+    ui->labelTitle->setText(QString::fromLatin1(standardHeader.title, sizeof(standardHeader.title)));
+    switch (cartridge.GetRomType())
     {
         case Cartridge::ERomType::eLoROM:
             ui->labelRomType->setText("LoROM");
@@ -62,22 +65,22 @@ void InfoWindow::UpdateCartridgeInfo(const Cartridge &cartridge)
             ui->labelRomType->setText("Unknown");
             break;
     }
-    ui->labelRomSpeed->setText(cartridge.fastSpeed ? "Fast" : "Slow");
-    ui->labelChipset->setText(GetChipsetString(cartridge.chipset));
-    ui->labelChipsetSubtype->setText(UiUtils::FormatHex(cartridge.chipsetSubtype));
-    ui->labelRomSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.romSize));
-    ui->labelRamSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.ramSize));
-    ui->labelExpansionRamSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.expansionRamSize));
-    ui->labelExpansionFlashSize->setText(QStringLiteral("%1 KB").arg(1 << cartridge.expansionFlashSize));
-    ui->labelInterleaved->setText(cartridge.isInterleaved ? "True" : "False");
-    ui->labelCountry->setText(UiUtils::FormatHex(cartridge.country));
-    ui->labelDevId->setText(UiUtils::FormatHex(cartridge.devId));
-    ui->labelRomVersion->setText(UiUtils::FormatHex(cartridge.romVersion));
-    ui->labelSpecialVersion->setText(UiUtils::FormatHex(cartridge.specialVersion));
-    ui->labelChecksum1->setText(UiUtils::FormatHex(cartridge.checksum));
-    ui->labelChecksum2->setText(UiUtils::FormatHex(cartridge.checksumComplement));
-    ui->labelMakerCode->setText(cartridge.makerCode);
-    ui->labelGameCode->setText(cartridge.gameCode);
+    ui->labelRomSpeed->setText(cartridge.IsFastSpeed() ? "Fast" : "Slow");
+    ui->labelChipset->setText(GetChipsetString(standardHeader.chipset));
+    ui->labelChipsetSubtype->setText(UiUtils::FormatHex(extendedHeader.chipsetSubtype));
+    ui->labelRomSize->setText(QStringLiteral("%1 KB").arg(1 << standardHeader.romSize));
+    ui->labelRamSize->setText(QStringLiteral("%1 KB").arg(1 << standardHeader.ramSize));
+    ui->labelExpansionRamSize->setText(QStringLiteral("%1 KB").arg(1 << extendedHeader.expansionRamSize));
+    ui->labelExpansionFlashSize->setText(QStringLiteral("%1 KB").arg(1 << extendedHeader.expansionFlashSize));
+    ui->labelInterleaved->setText(cartridge.IsInterleaved() ? "True" : "False");
+    ui->labelCountry->setText(UiUtils::FormatHex(standardHeader.country));
+    ui->labelDevId->setText(UiUtils::FormatHex(standardHeader.devId));
+    ui->labelRomVersion->setText(UiUtils::FormatHex(standardHeader.romVersion));
+    ui->labelSpecialVersion->setText(UiUtils::FormatHex(extendedHeader.specialVersion));
+    ui->labelChecksum1->setText(UiUtils::FormatHex(standardHeader.checksum));
+    ui->labelChecksum2->setText(UiUtils::FormatHex(standardHeader.checksumComplement));
+    ui->labelMakerCode->setText(QString::fromLatin1(extendedHeader.makerCode, sizeof(extendedHeader.makerCode)));
+    ui->labelGameCode->setText(QString::fromLatin1(extendedHeader.gameCode, sizeof(extendedHeader.gameCode)));
 }
 
 

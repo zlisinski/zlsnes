@@ -1,7 +1,3 @@
-#include <iterator>
-#include <fstream>
-#include <unistd.h>
-
 #include "Zlsnes.h"
 //#include "Audio.h"
 #include "Cartridge.h"
@@ -27,6 +23,7 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     gameSpeedSubject(gameSpeedSubject),
     audio(NULL),
     buttons(),*/
+    cartridge(),
     cpu(NULL),
     /*input(NULL),
     interrupts(NULL),*/
@@ -48,18 +45,14 @@ bool Emulator::LoadRom(const std::string &filename)
 {
     EndEmulation();
 
-    std::ifstream file(filename, std::ios::binary);
-    std::istreambuf_iterator<char> start(file), end;
-    gameRomMemory = std::vector<uint8_t>(start, end);
-
-    Cartridge cart;
-    if (!cart.Validate(gameRomMemory))
+    if (!cartridge.LoadRom(filename))
     {
+        displayInterface->RequestMessageBox("Error loading ROM. See log window for details.");
         return false;
     }
 
     if (infoInterface)
-        infoInterface->UpdateCartridgeInfo(cart);
+        infoInterface->UpdateCartridgeInfo(cartridge);
 
     romFilename = filename;
     ramFilename = romFilename + ".ram";
@@ -77,7 +70,7 @@ bool Emulator::LoadRom(const std::string &filename)
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
     memory->SetTimer(timer);
 
-    memory->SetRomMemory(gameRomMemory);
+    memory->SetCartridge(&cartridge);
     SetBootState(memory, cpu);
     //memory->LoadRam(ramFilename);
 
@@ -210,6 +203,7 @@ void Emulator::ThreadFunc()
     timer = NULL;
     delete memory;
     memory = NULL;
+    cartridge.Reset();
 }
 
 
