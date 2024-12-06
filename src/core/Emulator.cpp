@@ -13,7 +13,6 @@
 //#include "Input.h"
 #include "Memory.h"
 #include "Ppu.h"
-//#include "Serial.h"
 #include "Timer.h"
 
 
@@ -33,7 +32,6 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     interrupts(NULL),*/
     memory(NULL),
     ppu(NULL),
-    //serial(NULL),
     timer(NULL)
 {
 
@@ -72,8 +70,7 @@ bool Emulator::LoadRom(const std::string &filename)
     //interrupts = new Interrupt(memory);
     timer = new Timer(/*memory, interrupts*/);
     ppu = new Ppu(memory/*, interrupts, displayInterface, timer*/);
-    /*input = new Input(memory, interrupts);
-    serial = new Serial(memory, interrupts, timer);*/
+    //input = new Input(memory, interrupts);
     cpu = new Cpu(/*interrupts,*/ memory, timer);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
 
@@ -140,162 +137,12 @@ void Emulator::ButtonReleased(Buttons::Button button)
 void Emulator::SaveState(int slot)
 {
     (void)slot;
-    /*// Lock mutex to make the worker thread wait while the state is saved.
-    std::lock_guard<std::mutex> lock(saveStateMutex);
-
-    // Open a temp file so that errors writing don't mess up an existing save file.
-    char tempFilename[] = "tmpsav.XXXXXX";
-    int fd = mkstemp(tempFilename);
-    FILE *file = fdopen(fd, "w");
-    if (file == NULL)
-    {
-        LogError("Error opening save state file %s: %s", tempFilename, strerror(errno));
-        displayInterface->RequestMessageBox("Error opening save state file");
-        return;
-    }
-
-    bool success = true;
-
-    // Write header.
-    if (!fwrite("ZLGB", 4, 1, file))
-        success = false;
-
-    // Write version.
-    const uint16_t version = 2;
-    if (!fwrite(&version, sizeof(version), 1, file))
-        success = false;
-
-    // Write data.
-    success &= memory->SaveState(file);
-    success &= interrupts->SaveState(file);
-    success &= timer->SaveState(file);
-    success &= display->SaveState(file);
-    success &= input->SaveState(file);
-    success &= serial->SaveState(file);
-    success &= cpu->SaveState(file);
-
-    fclose(file);
-
-    if (success == false)
-    {
-        LogError("Error saving state");
-        displayInterface->RequestMessageBox("Error saving state");
-        //unlink(tempFilename);
-        return;
-    }
-
-    std::string saveFilename = romFilename + ".sav" + std::to_string(slot);
-    if (rename(tempFilename, saveFilename.c_str()))
-    {
-        LogError("Error renaming temp save state file %s to %s: %s", tempFilename, saveFilename.c_str(), strerror(errno));
-        displayInterface->RequestMessageBox("Error renaming temp save state file");
-        return;
-    }
-
-    LogError("Saved state to %s", saveFilename.c_str());*/
 }
 
 
 void Emulator::LoadState(int slot)
 {
     (void)slot;
-    /*std::string loadFilename = romFilename + ".sav" + std::to_string(slot);
-    FILE *file = fopen(loadFilename.c_str(), "rb");
-    if (file == NULL)
-    {
-        LogError("Error opening save state file %s: %s", loadFilename.c_str(), strerror(errno));
-        displayInterface->RequestMessageBox("Error opening save state file");
-        return;
-    }
-
-    // Read header.
-    const int headerLen = 4;
-    char header[headerLen + 1] = {0};
-    size_t cnt = fread(header, 1, headerLen, file);
-    if (cnt != headerLen)
-    {
-        LogError("Error reading header from save state file. Only read %u bytes.", cnt);
-        displayInterface->RequestMessageBox("Error reading header from save state file.");
-        fclose(file);
-        return;
-    }
-    if (strcmp(header, "ZLGB"))
-    {
-        LogError("Save state header doesn't match expected value: %s", header);
-        displayInterface->RequestMessageBox("Save state header doesn't match expected value.");
-        fclose(file);
-        return;
-    }
-
-    // Get version.
-    uint16_t version = 0;
-    if (!fread(&version, 2, 1, file))
-    {
-        LogError("Error reading version from state file.");
-        displayInterface->RequestMessageBox("Error reading version from state file.");
-        fclose(file);
-        return;
-    }
-    if (version == 0x3130)
-    {
-        // The first version of the save state format saved the version as ASCII "01".
-        version = 1;
-    }
-
-    // Create new objects so if there is an error loading, the current game doesn't get killed.
-    Memory *newMemory = new Memory(infoInterface, debuggerInterface);
-    Interrupt *newInterrupts = new Interrupt(newMemory);
-    Timer *newTimer = new Timer(newMemory, newInterrupts);
-    Display *newDisplay = new Display(newMemory, newInterrupts, displayInterface, newTimer);
-    Input *newInput = new Input(newMemory, newInterrupts);
-    Serial *newSerial = new Serial(newMemory, newInterrupts, newTimer);
-    Cpu *newCpu = new Cpu(newInterrupts, newMemory, newTimer);
-    Audio *newAudio = new Audio(newMemory, newTimer, audioInterface, gameSpeedSubject);
-
-    // This can't be done in the memory constructor since Timer doesn't exist yet.
-    newTimer->AttachObserver(newMemory);
-
-    newMemory->SetRomMemory(gameRomMemory);
-
-    bool success = true;
-
-    // Load data.
-    success &= newMemory->LoadState(version, file);
-    success &= newInterrupts->LoadState(version, file);
-    success &= newTimer->LoadState(version, file);
-    success &= newDisplay->LoadState(version, file);
-    success &= newInput->LoadState(version, file);
-    success &= newSerial->LoadState(version, file);
-    success &= newCpu->LoadState(version, file);
-
-    fclose(file);
-
-    if (success == false)
-    {
-        LogError("Error loading state");
-        displayInterface->RequestMessageBox("Error loading state");
-        return;
-    }
-
-    // End the current game.
-    EndEmulation();
-
-    // Replace pointers with new objects.
-    memory = newMemory;
-    interrupts = newInterrupts;
-    timer = newTimer;
-    display = newDisplay;
-    input = newInput;
-    serial = newSerial;
-    cpu = newCpu;
-    audio = newAudio;
-
-    // Start emulation.
-    paused = false;
-    quit = false;
-    workThread = std::thread(&Emulator::ThreadFunc, this);
-
-    LogError("Loaded save file %s", loadFilename.c_str());*/
 }
 
 
@@ -358,9 +205,7 @@ void Emulator::ThreadFunc()
     /*delete input;
     input = NULL;
     delete interrupts;
-    interrupts = NULL;
-    delete serial;
-    serial = NULL;*/
+    interrupts = NULL;*/
     delete timer;
     timer = NULL;
     delete memory;
