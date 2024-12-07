@@ -6,6 +6,17 @@
 #include "Memory.h"
 #include "Timer.h"
 
+// Use this for opcodes that don't have an AddressMode or data.
+#define LogInst(name) LogInstruction("%02X: %s", opcode, (name))
+
+// This requires the opcode case to have an AddressMode variable named 'mode'.
+// Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode,Read8Bit() or mode.Read16Bit().
+#define LogInstM(name) LogInstruction("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
+
+// This requires the opcode case to have an AddressMode pointer named 'mode'.
+// Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode->Read8Bit() or mode->Read16Bit().
+#define LogInstMp(name) LogInstruction("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
+
 
 Cpu::Cpu(Memory *memory, Timer *timer) :
     reg(),
@@ -151,125 +162,123 @@ void Cpu::ProcessOpCode()
 
         case 0xAA: // TAX - Transfer A to X.
             {
-                LogInstruction("%02X: TAX", opcode);
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.a);
                 else
                     LoadRegister(&reg.xl, reg.al);
+                LogInst("TAX");
             }
             break;
 
         case 0xA8: // TAY - Transfer A to Y.
             {
-                LogInstruction("%02X: TAY", opcode);
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, reg.a);
                 else
                     LoadRegister(&reg.yl, reg.al);
+                LogInst("TAY");
             }
             break;
 
         case 0xBA: // TSX - Transfer SP to X.
             {
-                LogInstruction("%02X: TSX", opcode);
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.sp);
                 else
                     LoadRegister(&reg.xl, reg.sl);
+                LogInst("TSX");
             }
             break;
 
         case 0x8A: // TXA - Transfer X to A.
             {
-                LogInstruction("%02X: TXA", opcode);
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, reg.x);
                 else
                     LoadRegister(&reg.al, reg.xl);
+                LogInst("TXA");
             }
             break;
 
         case 0x9A: // TXS - Transfer X to SP.
             {
-                LogInstruction("%02X: TXS", opcode);
-
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
                     reg.sp = 0x0100 | reg.xl;
                 else
                     reg.sp = reg.x;
+                LogInst("TXS");
             }
             break;
 
         case 0x9B: // TXY - Transfer X to Y.
             {
-                LogInstruction("%02X: TXY", opcode);
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, reg.x);
                 else
                     LoadRegister(&reg.yl, reg.xl);
+                LogInst("TXY");
             }
             break;
 
         case 0x98: // TYA - Transfer Y to A.
             {
-                LogInstruction("%02X: TYA", opcode);
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, reg.y);
                 else
                     LoadRegister(&reg.al, reg.yl);
+                LogInst("TYA");
             }
             break;
 
         case 0xBB: // TYX - Transfer Y to X.
             {
-                LogInstruction("%02X: TYX", opcode);
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.y);
                 else
                     LoadRegister(&reg.xl, reg.yl);
+                LogInst("TYX");
             }
             break;
 
         case 0x5B: // TCD/TAD - Transfer A to D.
             {
-                LogInstruction("%02X: TCD", opcode);
                 LoadRegister(&reg.d, reg.a);
+                LogInst("TCD");
             }
             break;
 
         case 0x1B: // TCS/TAS - Transfer A to SP.
             {
-                LogInstruction("%02X: TCS", opcode);
-
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
                     reg.sp = 0x0100 | reg.al;
                 else
                     reg.sp = reg.a;
+                LogInst("TCS");
             }
             break;
 
         case 0x7B: // TDC/TDA - Transfer D to A.
             {
-                LogInstruction("%02X: TDC", opcode);
                 LoadRegister(&reg.a, reg.d);
+                LogInst("TDC");
             }
             break;
 
         case 0x3B: // TSC/TSA - Transfer SP to A.
             {
-                LogInstruction("%02X: TSC", opcode);
                 LoadRegister(&reg.a, reg.sp);
+                LogInst("TSC");
             }
             break;
 
         case 0xEB: // XBA - Swap al and ah
             {
-                LogInstruction("%02X: XBA", opcode);
                 std::swap(reg.ah, reg.al);
                 SetNFlag(reg.al);
                 SetZFlag(reg.al);
+                LogInst("XBA");
             }
             break;
 
@@ -302,6 +311,7 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.a, mode->Read16Bit());
                 else
                     LoadRegister(&reg.al, mode->Read8Bit());
+                LogInstMp("LDA");
             }
             break;
 
@@ -319,6 +329,7 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.x, mode->Read16Bit());
                 else
                     LoadRegister(&reg.xl, mode->Read8Bit());
+                LogInstMp("LDX");
             }
             break;
 
@@ -335,6 +346,7 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.y, mode->Read16Bit());
                 else
                     LoadRegister(&reg.yl, mode->Read8Bit());
+                LogInstMp("LDY");
             }
             break;
 
@@ -366,6 +378,7 @@ void Cpu::ProcessOpCode()
                     mode->Write16Bit(reg.a);
                 else
                     mode->Write8Bit(reg.al);
+                LogInstMp("STA");
             }
             break;
 
@@ -381,6 +394,7 @@ void Cpu::ProcessOpCode()
                     mode->Write16Bit(reg.x);
                 else
                     mode->Write8Bit(reg.xl);
+                LogInstMp("STX");
             }
             break;
 
@@ -395,6 +409,7 @@ void Cpu::ProcessOpCode()
                     mode->Write16Bit(reg.y);
                 else
                     mode->Write8Bit(reg.yl);
+                LogInstMp("STY");
             }
             break;
 
@@ -411,6 +426,7 @@ void Cpu::ProcessOpCode()
                     mode->Write16Bit(0);
                 else
                     mode->Write8Bit(0);
+                LogInstMp("STZ");
             }
             break;
 
@@ -422,67 +438,67 @@ void Cpu::ProcessOpCode()
 
         case 0x48: // PHA - Push A
             {
-                LogInstruction("%02X: PHA", opcode);
                 if (IsAccumulator16Bit())
                     Push16Bit(reg.a);
                 else
                     Push8Bit(reg.al);
+                LogInst("PHA");
             }
             break;
 
         case 0xDA: // PHX - Push X
             {
-                LogInstruction("%02X: PHX", opcode);
                 if (IsIndex16Bit())
                     Push16Bit(reg.x);
                 else
                     Push8Bit(reg.xl);
+                LogInst("PHX");
             }
             break;
 
         case 0x5A: // PHY - Push Y
             {
-                LogInstruction("%02X: PHY", opcode);
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
                     Push8Bit(reg.yl);
+                LogInst("PHY");
             }
             break;
 
         case 0x8B: // PHB - Push DB
             {
-                LogInstruction("%02X: PHB", opcode);
                 Push8Bit(reg.db);
+                LogInst("PHB");
             }
             break;
 
         case 0x0B: // PHD - Push D
             {
-                LogInstruction("%02X: PHD", opcode);
                 Push16Bit(reg.d);
+                LogInst("PHD");
             }
             break;
 
         case 0x4B: // PHK - Push PB
             {
-                LogInstruction("%02X: PHK", opcode);
                 Push8Bit(reg.pb);
+                LogInst("PHK");
             }
             break;
 
         case 0x08: // PHP - Push P
             {
-                LogInstruction("%02X: PHP", opcode);
                 Push8Bit(reg.p);
+                LogInst("PHP");
             }
             break;
 
         case 0xF4: // PEA - Push Effective Address
             {
                 uint16_t value = ReadPC16Bit();
-                LogInstruction("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
                 Push16Bit(value);
+                LogInstruction("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
             }
             break;
 
@@ -490,22 +506,21 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeDirect mode(this, memory);
                 mode.LoadAddress();
-                LogInstruction("%02X: PEI", opcode);
                 Push16Bit(mode.Read16Bit());
+                LogInstM("PEI");
             }
             break;
 
         case 0x62: // PER - Push Effective Relative Address
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
-                LogInstruction("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
                 Push16Bit(reg.pc + value);
+                LogInstruction("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
             }
             break;
 
         case 0x68: // PLA - Pull/Pop A
             {
-                LogInstruction("%02X: PLA", opcode);
                 if (IsAccumulator16Bit())
                 {
                     reg.a = Pop16Bit();
@@ -518,12 +533,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInst("PLA");
             }
             break;
 
         case 0xFA: // PLX - Pull/Pop X
             {
-                LogInstruction("%02X: PLX", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.x = Pop16Bit();
@@ -536,12 +551,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
+                LogInst("PLX");
             }
             break;
 
         case 0x7A: // PLY - Pull/Pop Y
             {
-                LogInstruction("%02X: PLY", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.y = Pop16Bit();
@@ -554,32 +569,33 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
+                LogInst("PLY");
             }
             break;
 
         case 0xAB: // PLB - Pull/Pop DB
             {
-                LogInstruction("%02X: PLB", opcode);
                 reg.db = Pop8Bit();
                 SetNFlag(reg.db);
                 SetZFlag(reg.db);
+                LogInst("PLB");
             }
             break;
 
         case 0x2B: // PLD - Pull/Pop D
             {
-                LogInstruction("%02X: PLD", opcode);
                 reg.d = Pop16Bit();
                 SetNFlag(reg.d);
                 SetZFlag(reg.d);
+                LogInst("PLD");
             }
             break;
 
         case 0x28: // PLP - Pull/Pop P
             {
-                LogInstruction("%02X: PLP", opcode);
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
+                LogInst("PLP");
             }
             break;
 
@@ -622,6 +638,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInstMp("AND");
             }
             break;
 
@@ -658,6 +675,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInstMp("EOR");
             }
             break;
 
@@ -694,6 +712,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInstMp("ORA");
             }
             break;
 
@@ -764,6 +783,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInstMp("ADC");
             }
             break;
 
@@ -828,6 +848,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
+                LogInstMp("SBC");
             }
             break;
 
@@ -839,7 +860,6 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstruction("%02X: DEC", opcode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -857,12 +877,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(value);
                     SetZFlag(value);
                 }
+                LogInstMp("DEC");
             }
             break;
 
         case 0xCA: // DEX
             {
-                LogInstruction("%02X: DEX", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.x--;
@@ -875,12 +895,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
+                LogInst("DEX");
             }
             break;
 
         case 0x88: // DEY
             {
-                LogInstruction("%02X: DEY", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.y--;
@@ -893,6 +913,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
+                LogInst("DEY");
             }
             break;
 
@@ -904,7 +925,6 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstruction("%02X: INC", opcode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -922,12 +942,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(value);
                     SetZFlag(value);
                 }
+                LogInstMp("INC");
             }
             break;
 
         case 0xE8: // INX
             {
-                LogInstruction("%02X: INX", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.x++;
@@ -940,12 +960,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
+                LogInst("INX");
             }
             break;
 
         case 0xC8: // INY
             {
-                LogInstruction("%02X: INY", opcode);
                 if (IsIndex16Bit())
                 {
                     reg.y++;
@@ -958,6 +978,7 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
+                LogInst("INY");
             }
             break;
 
@@ -984,7 +1005,6 @@ void Cpu::ProcessOpCode()
         case 0xDD: // CMP Absolute,X
         case 0xDF: // CMP Long,X
             {
-                LogInstruction("%02X: CMP", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -992,6 +1012,8 @@ void Cpu::ProcessOpCode()
                     Compare(reg.a, mode->Read16Bit());
                 else
                     Compare(reg.al, mode->Read8Bit());
+
+                LogInstMp("CMP");
             }
             break;
 
@@ -1000,7 +1022,6 @@ void Cpu::ProcessOpCode()
         case 0xE4: // CPX Direct
         case 0xEC: // CPX Absolute
             {
-                LogInstruction("%02X: CPX", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1008,6 +1029,8 @@ void Cpu::ProcessOpCode()
                     Compare(reg.x, mode->Read16Bit());
                 else
                     Compare(reg.xl, mode->Read8Bit());
+
+                LogInstMp("CPX");
             }
             break;
 
@@ -1016,7 +1039,6 @@ void Cpu::ProcessOpCode()
         case 0xC4: // CPY Direct
         case 0xCC: // CPY Absolute
             {
-                LogInstruction("%02X: CPY", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1024,6 +1046,8 @@ void Cpu::ProcessOpCode()
                     Compare(reg.y, mode->Read16Bit());
                 else
                     Compare(reg.yl, mode->Read8Bit());
+
+                LogInstMp("CPY");
             }
             break;
 
@@ -1063,6 +1087,7 @@ void Cpu::ProcessOpCode()
                     reg.flags.v = (value & 0x40) != 0;
                     SetZFlag(result);
                 }
+                LogInstMp("BIT");
             }
             break;
 
@@ -1086,6 +1111,7 @@ void Cpu::ProcessOpCode()
                     // N and V flags are not changed.
                     SetZFlag(result);
                 }
+                LogInstM("BIT");
             }
             break;
 
@@ -1114,6 +1140,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
                     mode->Write8Bit(result);
                 }
+                LogInstMp("TRB");
             }
             break;
 
@@ -1141,6 +1168,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
                     mode->Write8Bit(result);
                 }
+                LogInstMp("TSB");
             }
             break;
 
@@ -1157,7 +1185,6 @@ void Cpu::ProcessOpCode()
         case 0x16: // ASL Direct,X
         case 0x1E: // ASL Absolute,X
             {
-                LogInstruction("%02X: ASL", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1181,6 +1208,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
+                LogInstMp("ASL");
             }
             break;
 
@@ -1191,7 +1219,6 @@ void Cpu::ProcessOpCode()
         case 0x56: // LSR Direct,X
         case 0x5E: // LSR Absolute,X
             {
-                LogInstruction("%02X: LSR", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1215,6 +1242,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
+                LogInstMp("LSR");
             }
             break;
 
@@ -1225,7 +1253,6 @@ void Cpu::ProcessOpCode()
         case 0x36: // ROL Direct,X
         case 0x3E: // ROL Absolute,X
             {
-                LogInstruction("%02X: ROL", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1249,6 +1276,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
+                LogInstMp("ROL");
             }
             break;
 
@@ -1259,7 +1287,6 @@ void Cpu::ProcessOpCode()
         case 0x76: // ROR Direct,X
         case 0x7E: // ROR Absolute,X
             {
-                LogInstruction("%02X: ROR", opcode);
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
 
@@ -1283,6 +1310,7 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
+                LogInstMp("ROR");
             }
             break;
 
@@ -1294,17 +1322,17 @@ void Cpu::ProcessOpCode()
 
         case 0x80: // BRA - Branch
             {
-                LogInstruction("%02X: BRA", opcode);
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 reg.pc += offset;
+                LogInstruction("%02X %02X: BRA %d", opcode, offset, offset);
             }
             break;
 
         case 0x82: // BRL - Branch Long
             {
-                LogInstruction("%02X: BRL", opcode);
                 int16_t offset = static_cast<int16_t>(ReadPC16Bit());
                 reg.pc += offset;
+                LogInstruction("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
             }
             break;
 
@@ -1317,9 +1345,6 @@ void Cpu::ProcessOpCode()
         case 0xD0: // BNE - Branch if Not Equal (z flag clear)
         case 0xF0: // BEQ - Branch if Equal (z flag set)
             {
-                const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-                LogInstruction("%02X: %s", opcode, names[opcode >> 5]);
-
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
 
                 // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
@@ -1331,6 +1356,9 @@ void Cpu::ProcessOpCode()
                 {
                     reg.pc += offset;
                 }
+
+                const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
+                LogInstruction("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
             }
             break;
 
@@ -1345,10 +1373,10 @@ void Cpu::ProcessOpCode()
         case 0x6C: // JMP (Absolute)
         case 0x7C: // JMP (Absolute,X)
             {
-                LogInstruction("%02X: JMP", opcode);
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
                 reg.pc = mode->GetAddress().GetOffset();
+                LogInstMp("JMP");
             }
             break;
 
@@ -1356,11 +1384,11 @@ void Cpu::ProcessOpCode()
         case 0x5C: // JMP AbsoluteLong
         case 0xDC: // JMP [Absolute]
             {
-                LogInstruction("%02X: JMP", opcode);
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
                 reg.pb = mode->GetAddress().GetBank();
                 reg.pc = mode->GetAddress().GetOffset();
+                LogInstMp("JMP");
             }
             break;
 
@@ -1368,24 +1396,24 @@ void Cpu::ProcessOpCode()
         case 0x20: // JSR Absolute
         case 0xFC: // JSR (Absolute,X)
             {
-                LogInstruction("%02X: JSR", opcode);
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
                 Push16Bit(reg.pc - 1);
                 reg.pc = mode->GetAddress().GetOffset();
+                LogInstMp("JSR");
             }
             break;
 
         // Jump to Subroutine Long
         case 0x22: // JSL AbsoluteLong
             {
-                LogInstruction("%02X: JSL", opcode);
                 AddressModeAbsoluteLong mode(this, memory);
                 mode.LoadAddress();
                 Push8Bit(reg.pb);
                 Push16Bit(reg.pc - 1);
                 reg.pb = mode.GetAddress().GetBank();
                 reg.pc = mode.GetAddress().GetOffset();
+                LogInstM("JSL");
             }
             break;
 
@@ -1398,17 +1426,17 @@ void Cpu::ProcessOpCode()
         // RTS - Return from subroutine
         case 0x60:
             {
-                LogInstruction("%02X: RTS", opcode);
                 reg.pc = Pop16Bit() + 1;
+                LogInst("RTS");
             }
             break;
 
         // RTL - Return from subroutine long
         case 0x6B:
             {
-                LogInstruction("%02X: RTL", opcode);
                 reg.pc = Pop16Bit() + 1;
                 reg.pb = Pop8Bit();
+                LogInst("RTL");
             }
             break;
 
@@ -1421,9 +1449,6 @@ void Cpu::ProcessOpCode()
         case 0x00: // BRK - Breakpoint
         case 0x02: // COP - Coprocessor
             {
-                const char *names[] = {"BRK", "COP"};
-                LogInstruction("%02X: %s", opcode, names[opcode >> 1]);
-
                 if (reg.emulationMode)
                 {
                     const uint32_t vectors[] = {0xFFFE, 0xFFF4};
@@ -1445,18 +1470,20 @@ void Cpu::ProcessOpCode()
                     reg.flags.i = 1;
                     reg.flags.d = 0;
                 }
+
+                const char *names[] = {"BRK", "COP"};
+                LogInst(names[opcode >> 1]);
             }
             break;
 
         case 0x40: // RTI - Return from interrupt
             {
-                LogInstruction("%02X: RTI", opcode);
-
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
                 reg.pc = Pop16Bit();
                 if (!reg.emulationMode)
                     reg.pb = Pop8Bit();
+                LogInst("RTI");
             }
             break;
 
@@ -1469,7 +1496,7 @@ void Cpu::ProcessOpCode()
         // CLC - Clear Carry
         case 0x18:
             {
-                LogInstruction("%02X: CLC", opcode);
+                LogInst("CLC");
                 reg.flags.c = 0;
             }
             break;
@@ -1477,7 +1504,7 @@ void Cpu::ProcessOpCode()
         // SEC - Set Carry
         case 0x38:
             {
-                LogInstruction("%02X: SEC", opcode);
+                LogInst("SEC");
                 reg.flags.c = 1;
             }
             break;
@@ -1485,7 +1512,7 @@ void Cpu::ProcessOpCode()
         // CLI - Clear Interrupt Disable
         case 0x58:
             {
-                LogInstruction("%02X: CLI", opcode);
+                LogInst("CLI");
                 reg.flags.i = 0;
             }
             break;
@@ -1493,7 +1520,7 @@ void Cpu::ProcessOpCode()
         // SEI - Set Interrupt Disable
         case 0x78:
             {
-                LogInstruction("%02X: SEI", opcode);
+                LogInst("SEI");
                 reg.flags.i = 1;
             }
             break;
@@ -1501,7 +1528,7 @@ void Cpu::ProcessOpCode()
         // CLV - Clear Overflow
         case 0xB8:
             {
-                LogInstruction("%02X: CLV", opcode);
+                LogInst("CLV");
                 reg.flags.v = 0;
             }
             break;
@@ -1509,7 +1536,7 @@ void Cpu::ProcessOpCode()
         // CLD - Clear Decimal
         case 0xD8:
             {
-                LogInstruction("%02X: CLD", opcode);
+                LogInst("CLD");
                 reg.flags.d = 0;
             }
             break;
@@ -1517,7 +1544,7 @@ void Cpu::ProcessOpCode()
         // SED - Set Decimal
         case 0xF8:
             {
-                LogInstruction("%02X: SED", opcode);
+                LogInst("SED");
                 reg.flags.d = 1;
             }
             break;
@@ -1525,31 +1552,31 @@ void Cpu::ProcessOpCode()
         // REP - Reset P flag
         case 0xC2:
             {
-                LogInstruction("%02X: REP", opcode);
                 AddressModeImmediate mode(this, memory);
                 reg.p &= ~mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
+                LogInstM("REP");
             }
             break;
 
         // SEP - Set P flag
         case 0xE2:
             {
-                LogInstruction("%02X: SEP", opcode);
                 AddressModeImmediate mode(this, memory);
                 reg.p |= mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
+                LogInstM("SEP");
             }
             break;
 
         // XCE - Exchange c and e
         case 0xFB:
             {
-                LogInstruction("%02X: XCE", opcode);
                 uint8_t carry = reg.flags.c;
                 reg.flags.c = reg.emulationMode;
                 reg.emulationMode = carry;
                 UpdateRegistersAfterFlagChange();
+                LogInst("XCE");
             }
             break;
 
@@ -1565,8 +1592,10 @@ void Cpu::ProcessOpCode()
                 LogInstruction("%02X: MVP", opcode);
                 // Technically this instruction uses its own address mode, but Immediate works too.
                 AddressModeImmediate mode(this, memory);
-                uint8_t dstBank = mode.Read8Bit();
-                uint8_t srcBank = mode.Read8Bit();
+                // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.
+                uint16_t banks = mode.Read16Bit();
+                uint8_t dstBank = Bytes::GetByte<0>(banks);
+                uint8_t srcBank = Bytes::GetByte<1>(banks);
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
 
@@ -1585,6 +1614,8 @@ void Cpu::ProcessOpCode()
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
+
+                LogInstM("MVP");
             }
             break;
 
@@ -1594,8 +1625,10 @@ void Cpu::ProcessOpCode()
                 LogInstruction("%02X: MVN", opcode);
                 // Technically this instruction uses its own address mode, but Immediate works too.
                 AddressModeImmediate mode(this, memory);
-                uint8_t dstBank = mode.Read8Bit();
-                uint8_t srcBank = mode.Read8Bit();
+                // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.
+                uint16_t banks = mode.Read16Bit();
+                uint8_t dstBank = Bytes::GetByte<0>(banks);
+                uint8_t srcBank = Bytes::GetByte<1>(banks);
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
 
@@ -1614,6 +1647,8 @@ void Cpu::ProcessOpCode()
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
+
+                LogInst("MVN");
             }
             break;
 
@@ -1626,17 +1661,17 @@ void Cpu::ProcessOpCode()
         // NOP
         case 0xEA:
             {
-                LogInstruction("%02X: NOP", opcode);
+                LogInst("NOP");
             }
             break;
 
         // WDM - 2 byte NOP
         case 0x42:
             {
-                LogInstruction("%02X: WDM", opcode);
                 AddressModeImmediate mode(this, memory);
                 uint8_t nopData = mode.Read8Bit();
                 (void)nopData;
+                LogInstM("WDM");
             }
             break;
 
