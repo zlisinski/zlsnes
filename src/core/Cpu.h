@@ -16,10 +16,10 @@ struct Registers
         x(0),
         y(0),
         d(0),
-        sp(0x0100),
+        sp(0x01FF),
         db(0),
         pb(0),
-        pc(0),
+        pc(0x8000),
         p(0x34),
         breakFlag(false),
         emulationMode(true)

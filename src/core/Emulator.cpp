@@ -150,8 +150,8 @@ void Emulator::ThreadFunc()
             debuggerInterface->SetEmulatorObjects(memory, cpu, interrupts);*/
 
         // Immediately quit, for now.
-        cpu->PrintState();
-        quit = true;
+        //cpu->PrintState();
+        //quit = true;
 
         while (!quit)
         {
@@ -175,6 +175,8 @@ void Emulator::ThreadFunc()
                     std::this_thread::sleep_for(std::chrono::milliseconds(1));
                 }
             }
+
+            quit = true;
         }
 
         //memory->SaveRam(ramFilename);
