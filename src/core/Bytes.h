@@ -30,6 +30,15 @@ namespace Bytes
     }
 
     template <uint8_t N, typename T>
+    inline uint8_t GetBit(T value)
+    {
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(N < sizeof(T) * 8, "N must be less than sizeof(T) * 8");
+
+        return (value >> N) & 0x01;
+    }
+
+    template <uint8_t N, typename T>
     inline T MaskByte(T value)
     {
         static_assert(std::is_integral<T>::value, "value must be integral type.");
