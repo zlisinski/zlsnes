@@ -11,6 +11,7 @@ add_executable(AddressModeTest
     AddressModeTest.cpp
     ../../Cpu.cpp
     ../../Logger.cpp
+    ../../Utils.cpp
     mock/Memory.cpp
     mock/Timer.cpp
 )
