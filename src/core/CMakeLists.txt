@@ -8,6 +8,7 @@ set(CORE_SRC
     Memory.cpp
     Ppu.cpp
     Timer.cpp
+    Utils.cpp
 )
 
 add_library(zlsnes_core

@@ -104,11 +104,14 @@ public:
     }
 
     // Bypasses checking of reads/writes from/to special addresses. Don't use unless you know what you are doing.
-    const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
-    uint8_t *GetBytePtr(uint32_t addr) {return &memory[addr];}
+    //const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
+    uint8_t *GetBytePtr(uint32_t addr);// {return &memory[addr];}
 
     void ClearMemory();
 
 protected:
+    // Inherited from IoRegisterSubject.
+    uint8_t *GetIoRegisterPtr(EIORegisters ioReg) override;
+    
     std::array<uint8_t, 0xFFFFFF> memory;
 };

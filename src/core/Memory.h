@@ -104,12 +104,18 @@ public:
     }
 
     // Bypasses checking of reads/writes from/to special addresses. Don't use unless you know what you are doing.
-    const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
-    uint8_t *GetBytePtr(uint32_t addr) {return &memory[addr];}
+    // Since there is not a flat memory model, incrementing the pointer could do bad things.
+    //const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
+    uint8_t *GetBytePtr(uint32_t addr);// {return &memory[addr];}
 
     void ClearMemory();
 
 protected:
+    // Inherited from IoRegisterSubject.
+    uint8_t *GetIoRegisterPtr(EIORegisters ioReg) override;
+
+    void RunDma();
+
     std::array<uint8_t, 0xFFFFFF> memory; // This will probably be going away.
     std::array<uint8_t, 0x20000> wram; // 0x7E0000 - 0x7FFFFF
 

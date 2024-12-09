@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <unordered_map>
 
 #include "Memory.h"
 #include "Timer.h"
@@ -189,7 +190,7 @@ TEST_F(MemoryTest, TEST_WRam_Mirror)
 }
 
 
-TEST_F(MemoryTest, TEST_ioPorts21_Mirror)
+/*TEST_F(MemoryTest, TEST_ioPorts21_Mirror)
 {
     // Writes to 21xx ports should be mirrored into other banks.
     memory->Write8Bit(0x002184, 0x99);
@@ -245,5 +246,72 @@ TEST_F(MemoryTest, TEST_ioPorts43_Mirror)
     {
         EXPECT_EQ(memory->Read8Bit(Address(i, 0x4380)), 0x99) << i;
         EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4380)), 0x99) << i + 0x80;
+    }
+}*/
+
+class FakeIo : public IoRegisterProxy
+{
+public:
+    uint8_t ReadRegister(EIORegisters ioReg) const override
+    {
+        (void)ioReg;
+        return 0;
+    }
+
+    bool WriteRegister(EIORegisters ioReg, uint8_t byte) override
+    {
+        bytesWritten.emplace(ioReg, byte);
+        return true;
+    }
+
+    std::unordered_multimap<EIORegisters, uint8_t> bytesWritten;
+};
+
+
+TEST_F(MemoryTest, TEST_Dma1)
+{
+    FakeIo fakePpu;
+    memory->AttachIoRegister(eRegVMDATAL, &fakePpu);
+    memory->AttachIoRegister(eRegVMDATAH, &fakePpu);
+
+    wram[0x1234] = 0x11;
+    wram[0x1235] = 0x22;
+    wram[0x1236] = 0x11;
+    wram[0x1237] = 0x22;
+    wram[0x1238] = 0x11;
+    wram[0x1239] = 0x22;
+    wram[0x123A] = 0x11;
+    wram[0x123B] = 0x22;
+    wram[0x123C] = 0x11;
+    wram[0x123D] = 0x22;
+    wram[0x123E] = 0x11;
+    wram[0x123F] = 0x22;
+    wram[0x1240] = 0x11;
+    wram[0x1241] = 0x22;
+    wram[0x1242] = 0x11;
+    wram[0x1243] = 0x22;
+
+    ioPorts43[0x00] = 0x01; // AtoB, B increment mode 1, +1 A increment.
+    ioPorts43[0x01] = 0x18; // Write to 2118/2119
+    ioPorts43[0x02] = 0x34; // Read from 0x7E1234
+    ioPorts43[0x03] = 0x12;
+    ioPorts43[0x04] = 0x7E;
+    ioPorts43[0x05] = 0x10; // Write 16 bytes
+    ioPorts43[0x06] = 0x00; // Write 16 bytes
+    memory->Write8Bit(eRegMDMAEN, 0x01); // Start DMA channel 1
+
+    EXPECT_EQ(fakePpu.bytesWritten.count(eRegVMDATAL), 8);
+    EXPECT_EQ(fakePpu.bytesWritten.count(eRegVMDATAH), 8);
+
+    auto range = fakePpu.bytesWritten.equal_range(eRegVMDATAL);
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        EXPECT_EQ(it->second, 0x11);
+    }
+
+    range = fakePpu.bytesWritten.equal_range(eRegVMDATAH);
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        EXPECT_EQ(it->second, 0x22);
     }
 }

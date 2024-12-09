@@ -120,19 +120,20 @@ enum EIORegisters
     eRegJOY3H    = 0x421D, //  Joypad 3 (gameport 1, pin 5) (upper 8bit)
     eRegJOY4L    = 0x421E, //  Joypad 4 (gameport 2, pin 5) (lower 8bit)
     eRegJOY4H    = 0x421F, //  Joypad 4 (gameport 2, pin 5) (upper 8bit)
+};
 
-// DMA
-    /*
-    eRegDMAPx    = 0x43x0, //  DMA/HDMA Parameters
-    eRegBBADx    = 0x43x1, //  DMA/HDMA I/O-Bus Address (PPU-Bus aka B-Bus)
-    eRegA1TxL    = 0x43x2, //  HDMA Table Start Address (low)  / DMA Curr Addr (low)
-    eRegA1TxH    = 0x43x3, //  HDMA Table Start Address (high) / DMA Curr Addr (high)
-    eRegA1Bx     = 0x43x4, //  HDMA Table Start Address (bank) / DMA Curr Addr (bank)
-    eRegDASxL    = 0x43x5, //  Indirect HDMA Address (low)  / DMA Byte-Counter (low)
-    eRegDASxH    = 0x43x6, //  Indirect HDMA Address (high) / DMA Byte-Counter (high)
-    eRegDASBx    = 0x43x7, //  Indirect HDMA Address (bank)
-    eRegA2AxL    = 0x43x8, //  HDMA Table Current Address (low)
-    eRegA2AxH    = 0x43x9, //  HDMA Table Current Address (high)
-    eRegNTRLx    = 0x43xA, //  HDMA Line-Counter (from current Table entry)
-    */
+// DMA port offsets. The real address of each port is (0x4300 | (dma_channel << 4) | offset), so BBAD for channel 6 would be 0x4361.
+enum DmaPorts
+{
+    eDma_DMAPx    = 0x00, //  DMA/HDMA Parameters
+    eDma_BBADx    = 0x01, //  DMA/HDMA I/O-Bus Address (PPU-Bus aka B-Bus)
+    eDma_A1TxL    = 0x02, //  HDMA Table Start Address (low)  / DMA Curr Addr (low)
+    eDma_A1TxH    = 0x03, //  HDMA Table Start Address (high) / DMA Curr Addr (high)
+    eDma_A1Bx     = 0x04, //  HDMA Table Start Address (bank) / DMA Curr Addr (bank)
+    eDma_DASxL    = 0x05, //  Indirect HDMA Address (low)  / DMA Byte-Counter (low)
+    eDma_DASxH    = 0x06, //  Indirect HDMA Address (high) / DMA Byte-Counter (high)
+    eDma_DASBx    = 0x07, //  Indirect HDMA Address (bank)
+    eDma_A2AxL    = 0x08, //  HDMA Table Current Address (low)
+    eDma_A2AxH    = 0x09, //  HDMA Table Current Address (high)
+    eDma_NTRLx    = 0x0A, //  HDMA Line-Counter (from current Table entry)
 };

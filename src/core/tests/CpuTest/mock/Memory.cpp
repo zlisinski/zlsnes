@@ -30,7 +30,18 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
     memory[addr] = value;
 }
 
+uint8_t *Memory::GetBytePtr(uint32_t addr)
+{
+    return &memory[addr];
+}
+
 void Memory::ClearMemory()
 {
     memory.fill(0);
+}
+
+uint8_t *Memory::GetIoRegisterPtr(EIORegisters ioReg)
+{
+    (void)ioReg;
+    return nullptr;
 }

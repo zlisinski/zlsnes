@@ -176,7 +176,7 @@ void Emulator::ThreadFunc()
                 }
             }
 
-            quit = true;
+            //quit = true;
         }
 
         //memory->SaveRam(ramFilename);
