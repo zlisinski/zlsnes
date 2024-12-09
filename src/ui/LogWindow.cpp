@@ -33,9 +33,7 @@ LogWindow::LogWindow(QWidget *parent) :
             ui->rbDebug->setChecked(true);
             break;
         case LogLevel::eInstruction:
-            //ui->rbInstruction->setChecked(true);
-            ui->rbDebug->setChecked(true);
-            Logger::SetLogLevel(LogLevel::eDebug);
+            ui->rbInstruction->setChecked(true);
             break;
     }
 
@@ -93,7 +91,10 @@ void LogWindow::SlotOutputMessage()
         tm *now = localtime(&entry->tv.tv_sec);
         strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", now);
         ss << timeBuf << "." << std::setfill('0') << std::setw(6) << entry->tv.tv_usec << ":  " << entry->message;
-        ui->txtOutput->append(ss.str().c_str());
+        if (entry->level == LogLevel::eInstruction)
+            printf("%s\n", ss.str().c_str());
+        else
+            ui->txtOutput->append(ss.str().c_str());
     }
 
     entries.clear();
