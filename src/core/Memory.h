@@ -9,6 +9,7 @@
 
 
 class Cartridge;
+class DebuggerInterface;
 class InfoInterface;
 class Timer;
 
@@ -16,7 +17,7 @@ class Timer;
 class Memory : public IoRegisterSubject
 {
 public:
-    Memory(InfoInterface *infoInterface = NULL);
+    Memory(InfoInterface *infoInterface = nullptr, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Memory();
 
     void SetCartridge(Cartridge *cart);
@@ -127,6 +128,7 @@ protected:
     std::array<uint8_t, 0x2000> expansion; // 0x6000-0x7FFF.
 
     Cartridge *cart;
+    DebuggerInterface *debuggerInterface;
     InfoInterface *infoInterface;
     Timer *timer;
 

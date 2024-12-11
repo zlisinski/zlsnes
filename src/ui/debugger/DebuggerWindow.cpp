@@ -2,7 +2,6 @@
 #include <thread>
 
 #include "core/Cpu.h"
-//#include "core/Interrupt.h"
 #include "core/Memory.h"
 
 #include "../SettingsConstants.h"
@@ -10,6 +9,7 @@
 #include "AddressDialog.h"
 #include "DebuggerWindow.h"
 #include "DisassemblyModel.h"
+#include "IoRegisterModel.h"
 #include "MemoryModel.h"
 #include "ui_DebuggerWindow.h"
 
@@ -22,13 +22,13 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DebuggerWindow),
     cpu(NULL),
-    //interrupt(NULL),
     memory(NULL),
     currentSp(0),
     debuggingEnabled(false),
     singleStep(false),
     runToAddress(INVALID_ADDR),
-    disassemblyModel(new DisassemblyModel(palette(), this))//,
+    disassemblyModel(new DisassemblyModel(palette(), this)),
+    ioRegisterModel(new IoRegisterModel(this))
     //memoryModel(new MemoryModel(this))
 {
     ui->setupUi(this);
@@ -41,12 +41,14 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
 
     qRegisterMetaType<QItemSelection>();
     qRegisterMetaType<Address>("Address");
+    qRegisterMetaType<uint16_t>("uint16_t");
 
     QSettings settings;
     restoreGeometry(settings.value(SETTINGS_DEBUGGERWINDOW_GEOMETRY).toByteArray());
     restoreState(settings.value(SETTINGS_DEBUGGERWINDOW_STATE).toByteArray());
 
     ui->disassemblyView->setModel(disassemblyModel);
+    ui->ioRegistersView->setModel(ioRegisterModel);
     //ui->memoryView->setModel(memoryModel);
 
     //ui->memoryView->resizeColumnsToContents();
@@ -59,7 +61,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
     connect(this, SIGNAL(SignalUpdateReady(Address)), this, SLOT(SlotProcessUpdate(Address)));
     connect(this, SIGNAL(SignalReenableActions()), this, SLOT(SlotReenableActions()));
     connect(this, SIGNAL(SignalObjectsChanged()), this, SLOT(SlotObjectsChanged()));
-    //connect(this, SIGNAL(SignalMemoryChanged(uint16_t, uint16_t)), this, SLOT(SlotMemoryChanged(uint16_t, uint16_t)));
+    connect(this, SIGNAL(SignalMemoryChanged(Address, uint16_t)), this, SLOT(SlotMemoryChanged(Address, uint16_t)));
 }
 
 
@@ -81,22 +83,20 @@ void DebuggerWindow::closeEvent(QCloseEvent *event)
 }
 
 
-void DebuggerWindow::SetEmulatorObjects(Memory *newMemory, Cpu *newCpu/*, Interrupt *newInterrupt*/)
+void DebuggerWindow::SetEmulatorObjects(Memory *newMemory, Cpu *newCpu)
 {
     //This function runs in the thread context of the Emulator worker thread.
 
     // All values should be NULL or not NULL. If only some are NULL, treat them all as NULL.
-    if (newMemory == NULL || newCpu == NULL /*|| newInterrupt == NULL*/)
+    if (newMemory == NULL || newCpu == NULL)
     {
         memory = NULL;
         cpu = NULL;
-        //interrupt = NULL;
     }
     else
     {
         memory = newMemory;
         cpu = newCpu;
-        //interrupt = newInterrupt;
     }
 
     // Run the rest in current thread context.
@@ -138,13 +138,13 @@ void DebuggerWindow::SetCurrentOp(Address pc)
 }
 
 
-/*void DebuggerWindow::MemoryChanged(uint16_t address, uint16_t len)
+void DebuggerWindow::MemoryChanged(Address address, uint16_t len)
 {
     //This function runs in the thread context of the Emulator worker thread.
 
     // Run the rest in current thread context.
     emit SignalMemoryChanged(address, len);
-}*/
+}
 
 
 void DebuggerWindow::UpdateStack()
@@ -210,30 +210,6 @@ void DebuggerWindow::UpdateWidgets(Address pc)
         if (currentSp != cpu->reg.sp)
             UpdateStack();
     }
-
-    /*if (memory != NULL)
-    {
-        ui->txtRegP1->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegP1)));
-        ui->txtRegIE->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegIE)));
-        ui->txtRegIF->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegIF)));
-        ui->txtRegDIV->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegDIV)));
-        ui->txtRegTIMA->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegTIMA)));
-        ui->txtRegTMA->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegTMA)));
-        ui->txtRegTAC->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegTAC)));
-        ui->txtRegLCDC->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegLCDC)));
-        ui->txtRegSTAT->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegSTAT)));
-        ui->txtRegSCX->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegSCX)));
-        ui->txtRegSCY->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegSCY)));
-        ui->txtRegWX->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegWX)));
-        ui->txtRegWY->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegWY)));
-        ui->txtRegLY->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegLY)));
-        ui->txtRegLYC->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegLYC)));
-        ui->txtRegDMA->setText(UiUtils::FormatHexByte(memory->ReadRawByte(eRegDMA)));
-        ui->txtRegCurDMA->setText(UiUtils::FormatHexByte(OAM_RAM_START + memory->GetDmaOffset()));
-    }*/
-
-    /*if (interrupt != NULL)
-        ui->chkRegIME->setChecked(interrupt->Enabled());*/
 }
 
 
@@ -346,6 +322,7 @@ void DebuggerWindow::SlotReenableActions()
 
 void DebuggerWindow::SlotObjectsChanged()
 {
+    ioRegisterModel->SetMemory(memory);
     //memoryModel->SetMemory(memory);
 
     if (cpu != NULL)
@@ -353,7 +330,7 @@ void DebuggerWindow::SlotObjectsChanged()
 }
 
 
-/*void DebuggerWindow::SlotMemoryChanged(uint16_t address, uint16_t len)
+void DebuggerWindow::SlotMemoryChanged(Address address, uint16_t len)
 {
     // Memory has changed, so the disassembled opcodes are no longer valid.
     disassemblyModel->RemoveRows(address, len);
@@ -361,6 +338,7 @@ void DebuggerWindow::SlotObjectsChanged()
     // Only update memory table when debugging to avoid slowing things down.
     if (debuggingEnabled == true)
     {
-        memoryModel->InvalidateMemory(address, len);
+        ioRegisterModel->InvalidateMemory(address, len);
+        //memoryModel->InvalidateMemory(address, len);
     }
-}*/
+}

@@ -59,7 +59,7 @@ bool Emulator::LoadRom(const std::string &filename)
 
     quit = false;
 
-    memory = new Memory(infoInterface/*, debuggerInterface*/);
+    memory = new Memory(infoInterface, debuggerInterface);
     //interrupts = new Interrupt(memory);
     timer = new Timer(/*memory, interrupts*/);
     ppu = new Ppu(memory/*, interrupts, displayInterface, timer*/);
@@ -147,7 +147,7 @@ void Emulator::ThreadFunc()
             infoInterface->SetMemory(memory->GetBytePtr(0));
 
         if (debuggerInterface)
-            debuggerInterface->SetEmulatorObjects(memory, cpu/*, interrupts*/);
+            debuggerInterface->SetEmulatorObjects(memory, cpu);
 
         // Immediately quit, for now.
         //cpu->PrintState();

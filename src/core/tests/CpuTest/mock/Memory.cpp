@@ -1,8 +1,9 @@
 #include "Memory.h"
 
-Memory::Memory(InfoInterface *infoInterface)
+Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterface)
 {
     (void)infoInterface;
+    (void)debuggerInterface;
 }
 
 Memory::~Memory()

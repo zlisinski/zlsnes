@@ -11,7 +11,7 @@ class DebuggerWindow;
 
 class Cpu;
 class DisassemblyModel;
-//class Interrupt;
+class IoRegisterModel;
 class Memory;
 //class MemoryModel;
 
@@ -24,13 +24,13 @@ public:
     explicit DebuggerWindow(QWidget *parent = 0);
     ~DebuggerWindow();
 
-    virtual void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu/*, Interrupt *newInterrupt*/);
+    void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu) override;
 
-    virtual bool GetDebuggingEnabled() {return debuggingEnabled;}
-    virtual bool ShouldRun(Address pc);
-    virtual void SetCurrentOp(Address pc);
+    bool GetDebuggingEnabled() override {return debuggingEnabled;}
+    bool ShouldRun(Address pc) override;
+    void SetCurrentOp(Address pc) override;
 
-    //virtual void MemoryChanged(uint16_t address, uint16_t len);
+    void MemoryChanged(Address address, uint16_t len) override;
 
 protected:
     virtual void closeEvent(QCloseEvent *event);
@@ -42,7 +42,6 @@ private:
     Ui::DebuggerWindow *ui;
 
     Cpu *cpu;
-    //Interrupt *interrupt;
     Memory *memory;
     uint16_t currentSp;
 
@@ -51,6 +50,7 @@ private:
     std::atomic<uint32_t> runToAddress;
 
     DisassemblyModel *disassemblyModel;
+    IoRegisterModel *ioRegisterModel;
     //MemoryModel *memoryModel;
 
 private slots:
@@ -61,12 +61,12 @@ private slots:
     void SlotDisassembleAddress();
     void SlotReenableActions();
     void SlotObjectsChanged();
-    //void SlotMemoryChanged(uint16_t address, uint16_t len);
+    void SlotMemoryChanged(Address address, uint16_t len);
 
 signals:
     void SignalDebuggerWindowClosed();
     void SignalUpdateReady(Address pc);
     void SignalReenableActions();
     void SignalObjectsChanged();
-    void SignalMemoryChanged(uint16_t address, uint16_t len);
+    void SignalMemoryChanged(Address address, uint16_t len);
 };

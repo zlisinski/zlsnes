@@ -1,11 +1,12 @@
 #include "Memory.h"
+#include "DebuggerInterface.h"
 #include "Cartridge.h"
 #include "Timer.h"
 
 static const uint32_t WRAM_OFFSET = 0x7E0000;
 static const uint32_t WRAM_SIZE = 0x20000;
 
-Memory::Memory(InfoInterface *infoInterface) :
+Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterface) :
     memory(),
     wram(),
     ioPorts21(),
@@ -14,6 +15,7 @@ Memory::Memory(InfoInterface *infoInterface) :
     ioPorts43(),
     expansion(),
     cart(NULL),
+    debuggerInterface(debuggerInterface),
     infoInterface(infoInterface),
     timer(NULL)
 {
@@ -110,7 +112,11 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
     {
         // Let observers handle the update. If there are no observers for this address, continue with normal processing.
         if (WriteIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF), value))
+        {
+            if (debuggerInterface != NULL)
+                debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
             return;
+        }
 
         uint8_t page = Bytes::GetByte<1>(addr);
         switch (page)
@@ -121,16 +127,22 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
             case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
                 timer->AddCycle(EClockSpeed::eClockWRam);
                 wram[addr & 0x1FFF] = value;
+                if (debuggerInterface != NULL)
+                    debuggerInterface->MemoryChanged(Address(0x7E, addr & 0x1FFF), 1);
                 return;
             case 0x21:
                 throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
                 //ioPorts21[addr & 0xFF] = value;
+                if (debuggerInterface != NULL)
+                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x40:
                 throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockOther);
                 //ioPorts40[addr & 0xFF] = value;
+                if (debuggerInterface != NULL)
+                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x42:
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
@@ -151,11 +163,15 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
                 //ioPorts42[addr & 0xFF] = value;
+                if (debuggerInterface != NULL)
+                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x43:
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 ioPorts43[addr & 0xFF] = value;
+                if (debuggerInterface != NULL)
+                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             default:
                 LogError("Write to unhandled address %06X", addr);
@@ -168,6 +184,8 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
     {
         timer->AddCycle(EClockSpeed::eClockWRam);
         wram[addr & 0x1FFFF] = value;
+        if (debuggerInterface != NULL)
+            debuggerInterface->MemoryChanged(Address(addr & 0x1FFFF), 1);
         return;
     }
 
