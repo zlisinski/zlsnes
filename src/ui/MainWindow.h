@@ -15,7 +15,7 @@
 #include "../core/DisplayInterface.h"
 //#include "../core/GameSpeedObserver.h"
 
-//class DebuggerWindow;
+class DebuggerWindow;
 class InfoWindow;
 class Emulator;
 class LogWindow;
@@ -97,8 +97,8 @@ private:
     QAction *displayInfoWindowAction;
     LogWindow *logWindow;
     QAction *displayLogWindowAction;
-    //DebuggerWindow *debuggerWindow;
-    //QAction *displayDebuggerWindowAction;
+    DebuggerWindow *debuggerWindow;
+    QAction *displayDebuggerWindowAction;
 
     QAction *emuSaveStateAction;
     QAction *emuLoadStateAction;
@@ -127,8 +127,8 @@ private slots:
     void SlotInfoWindowClosed();
     void SlotSetDisplayLogWindow(bool checked);
     void SlotLogWindowClosed();
-    //void SlotSetDisplayDebuggerWindow(bool checked);
-    //void SlotDebuggerWindowClosed();
+    void SlotSetDisplayDebuggerWindow(bool checked);
+    void SlotDebuggerWindowClosed();
     void SlotSaveState();
     void SlotLoadState();
     /*void SlotOpenSettings();

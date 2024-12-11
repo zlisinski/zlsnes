@@ -28,9 +28,9 @@ public:
         return Read8Bit(addr.ToUint());
     }
     // Bypasses special read code. Only use for Debugger.
-    uint8_t ReadRaw8Bit(uint32_t addr) const
+    uint8_t ReadRaw8Bit(uint32_t addr) //const
     {
-        return memory[addr];
+        return *GetBytePtr(addr);
     }
 
     // Reads that don't wrap at bank boundaries. E.G. Read16Bit(0x12FFFF) will read from 0x12FFFF and 0x130000.

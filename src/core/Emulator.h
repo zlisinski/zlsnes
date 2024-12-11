@@ -9,7 +9,7 @@
 //class Audio;
 //class AudioInterface;
 class Cpu;
-//class DebuggerInterface;
+class DebuggerInterface;
 class DisplayInterface;
 //class GameSpeedSubject;
 class InfoInterface;
@@ -17,14 +17,13 @@ class InfoInterface;
 //class Interrupt;
 class Memory;
 class Ppu;
-//class Serial;
 class Timer;
 
 class Emulator
 {
 public:
-    Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface/*,
-             DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/);
+    Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface,
+             DebuggerInterface *debuggerInterface/*, GameSpeedSubject *gameSpeedSubject*/);
     ~Emulator();
 
     bool LoadRom(const std::string &filename);
@@ -54,8 +53,8 @@ private:
     DisplayInterface *displayInterface;
     //AudioInterface *audioInterface;
     InfoInterface *infoInterface;
-    /*DebuggerInterface *debuggerInterface;
-    GameSpeedSubject *gameSpeedSubject;*/
+    DebuggerInterface *debuggerInterface;
+    //GameSpeedSubject *gameSpeedSubject;
 
     //Audio *audio;
     //Buttons buttons;
@@ -65,6 +64,5 @@ private:
     //Interrupt *interrupts;
     Memory *memory;
     Ppu *ppu;
-    //Serial *serial;
     Timer *timer;
 };

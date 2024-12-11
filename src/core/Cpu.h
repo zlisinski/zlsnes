@@ -121,6 +121,8 @@ public:
                reg.flags.c, reg.flags.z, reg.flags.i, reg.flags.d, reg.flags.x, reg.flags.m, reg.flags.v, reg.flags.n);
     }
 
+    inline Address GetFullPC() const {return Address(reg.pb, reg.pc);}
+
     Registers reg;
 
 private:

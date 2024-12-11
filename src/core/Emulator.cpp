@@ -2,7 +2,7 @@
 //#include "Audio.h"
 #include "Cartridge.h"
 #include "Cpu.h"
-//#include "DebuggerInterface.h"
+#include "DebuggerInterface.h"
 #include "DisplayInterface.h"
 #include "Emulator.h"
 #include "InfoInterface.h"
@@ -12,15 +12,15 @@
 #include "Timer.h"
 
 
-Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface/*,
-                   DebuggerInterface *debuggerInterface, GameSpeedSubject *gameSpeedSubject*/) :
+Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioInterface,*/ InfoInterface *infoInterface,
+                   DebuggerInterface *debuggerInterface/*, GameSpeedSubject *gameSpeedSubject*/) :
     paused(false),
     quit(false),
     displayInterface(displayInterface),
     //audioInterface(audioInterface),
     infoInterface(infoInterface),
-    /*debuggerInterface(debuggerInterface),
-    gameSpeedSubject(gameSpeedSubject),
+    debuggerInterface(debuggerInterface),
+    /*gameSpeedSubject(gameSpeedSubject),
     audio(NULL),
     buttons(),*/
     cartridge(),
@@ -146,8 +146,8 @@ void Emulator::ThreadFunc()
         if (infoInterface)
             infoInterface->SetMemory(memory->GetBytePtr(0));
 
-        /*if (debuggerInterface)
-            debuggerInterface->SetEmulatorObjects(memory, cpu, interrupts);*/
+        if (debuggerInterface)
+            debuggerInterface->SetEmulatorObjects(memory, cpu/*, interrupts*/);
 
         // Immediately quit, for now.
         //cpu->PrintState();
@@ -161,11 +161,11 @@ void Emulator::ThreadFunc()
             // Run multiple instruction per mutex lock to reduce the impact of locking the mutex.
             for (int i = 0; i < 100; i++)
             {
-                if (!paused /*&& debuggerInterface->ShouldRun(cpu->reg.pc)*/)
+                if (!paused && debuggerInterface->ShouldRun(cpu->GetFullPC()))
                 {
                     cpu->ProcessOpCode();
-                    //if (debuggerInterface->GetDebuggingEnabled())
-                    //    debuggerInterface->SetCurrentOp(cpu->reg.pc);
+                    if (debuggerInterface->GetDebuggingEnabled())
+                        debuggerInterface->SetCurrentOp(cpu->GetFullPC());
                     cpu->PrintState();
                     //timer->PrintTimerData();
                 }
@@ -188,8 +188,8 @@ void Emulator::ThreadFunc()
 
     if (infoInterface)
         infoInterface->SetMemory(NULL);
-    /*if (debuggerInterface)
-        debuggerInterface->SetEmulatorObjects(NULL, NULL, NULL);*/
+    if (debuggerInterface)
+        debuggerInterface->SetEmulatorObjects(NULL, NULL/*, NULL*/);
 
     //delete audio;
     //audio = NULL;

@@ -40,3 +40,5 @@ endif()
 target_compile_definitions(zlsnes_ui
     PRIVATE QT_DEPRECATED_WARNINGS
 )
+
+add_subdirectory(debugger)

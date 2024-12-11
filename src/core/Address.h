@@ -21,6 +21,11 @@ public:
         offset(offset)
     {}
 
+    Address(uint8_t bank, uint8_t offsetHigh, uint8_t offsetLow) :
+        bank(bank),
+        offset(Bytes::Make16Bit(offsetHigh, offsetLow))
+    {}
+
     explicit operator uint32_t() const
     {
         return Bytes::Make24Bit(bank, offset);
@@ -50,6 +55,19 @@ public:
     {
         return Address(bank, offset + off);
     }
+
+    bool operator==(const Address &a) const {return (bank == a.bank) && (offset == a.offset);}
+    bool operator!=(const Address &a) const {return (bank != a.bank) || (offset != a.offset);}
+    bool operator<(const Address &a) const {return ToUint() < a.ToUint();}
+    bool operator<=(const Address &a) const {return ToUint() <= a.ToUint();}
+    bool operator>(const Address &a) const {return ToUint() > a.ToUint();}
+    bool operator>=(const Address &a) const {return ToUint() >= a.ToUint();}
+    bool operator==(uint32_t a) const {return ToUint() == a;}
+    bool operator!=(uint32_t a) const {return ToUint() != a;}
+    bool operator<(uint32_t a) const {return ToUint() < a;}
+    bool operator<=(uint32_t a) const {return ToUint() <= a;}
+    bool operator>(uint32_t a) const {return ToUint() > a;}
+    bool operator>=(uint32_t a) const {return ToUint() >= a;}
 
 private:
     uint8_t bank;

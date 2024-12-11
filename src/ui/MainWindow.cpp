@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <thread>
 
-//#include "Debugger/DebuggerWindow.h"
+#include "debugger/DebuggerWindow.h"
 #include "InfoWindow.h"
 #include "LogWindow.h"
 #include "MainWindow.h"
@@ -32,8 +32,8 @@ MainWindow::MainWindow(QWidget *parent) :
     displayInfoWindowAction(NULL),
     logWindow(NULL),
     displayLogWindowAction(NULL),
-    //debuggerWindow(NULL),
-    //displayDebuggerWindowAction(NULL),
+    debuggerWindow(NULL),
+    displayDebuggerWindowAction(NULL),
     emuSaveStateAction(NULL),
     emuLoadStateAction(NULL)
     /*audioEnabled(true),
@@ -73,14 +73,14 @@ MainWindow::MainWindow(QWidget *parent) :
     if (settings.value(SETTINGS_INFOWINDOW_DISPLAY, false).toBool())
         infoWindow->show();
 
-    /*debuggerWindow = new DebuggerWindow(this);
+    debuggerWindow = new DebuggerWindow(this);
     if (settings.value(SETTINGS_DEBUGGERWINDOW_DISPLAY, false).toBool())
-        debuggerWindow->show();*/
+        debuggerWindow->show();
 
     fpsTimer.start();
     frameCapTimer.start();
 
-    emulator = new Emulator(this, /*this,*/ infoWindow/*, debuggerWindow, this*/);
+    emulator = new Emulator(this, /*this,*/ infoWindow, debuggerWindow/*, this*/);
 
     if (qApp->arguments().size() >= 2)
     {
@@ -134,9 +134,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    //infoWindow->close();
+    infoWindow->close();
     logWindow->close();
-    //debuggerWindow->close();
+    debuggerWindow->close();
 
     QSettings settings;
     settings.setValue(SETTINGS_MAINWINDOW_GEOMETRY, saveGeometry());
@@ -269,10 +269,10 @@ void MainWindow::SetupMenuBar()
     connect(displayLogWindowAction, SIGNAL(triggered(bool)), this, SLOT(SlotSetDisplayLogWindow(bool)));
 
     // Display | Debugger Window
-    /*displayDebuggerWindowAction = displayMenu->addAction("&Debugger Window");
+    displayDebuggerWindowAction = displayMenu->addAction("&Debugger Window");
     displayDebuggerWindowAction->setCheckable(true);
     displayDebuggerWindowAction->setChecked(settings.value(SETTINGS_DEBUGGERWINDOW_DISPLAY, false).toBool());
-    connect(displayDebuggerWindowAction, SIGNAL(triggered(bool)), this, SLOT(SlotSetDisplayDebuggerWindow(bool)));*/
+    connect(displayDebuggerWindowAction, SIGNAL(triggered(bool)), this, SLOT(SlotSetDisplayDebuggerWindow(bool)));
 }
 
 
@@ -434,7 +434,7 @@ void MainWindow::OpenRom(const QString &filename)
         emuSaveStateAction->setEnabled(true);
         emuLoadStateAction->setEnabled(true);
 
-        //infoWindow->DrawFrame();
+        infoWindow->DrawFrame();
     }
 }
 
@@ -584,8 +584,8 @@ void MainWindow::SlotDrawFrame()
     pixmap->setScale(displayScale);
 
     // Only update infoWindow 60 time a second, this stops the program locking up when frame cap is off.
-    /*if ((elapsedTime & 0x0F) == 0)
-        infoWindow->DrawFrame();*/
+    if ((elapsedTime & 0x0F) == 0)
+        infoWindow->DrawFrame();
 }
 
 
@@ -649,7 +649,7 @@ void MainWindow::SlotLogWindowClosed()
 }
 
 
-/*void MainWindow::SlotSetDisplayDebuggerWindow(bool checked)
+void MainWindow::SlotSetDisplayDebuggerWindow(bool checked)
 {
     QSettings settings;
     settings.setValue(SETTINGS_DEBUGGERWINDOW_DISPLAY, checked);
@@ -664,7 +664,7 @@ void MainWindow::SlotLogWindowClosed()
 void MainWindow::SlotDebuggerWindowClosed()
 {
     displayDebuggerWindowAction->setChecked(false);
-}*/
+}
 
 
 void MainWindow::SlotSaveState()
