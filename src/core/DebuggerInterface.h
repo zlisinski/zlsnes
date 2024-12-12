@@ -5,11 +5,12 @@
 
 class Cpu;
 class Memory;
+class Ppu;
 
 class DebuggerInterface
 {
 public:
-    virtual void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu) = 0;
+    virtual void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu, Ppu *newPpu) = 0;
 
     virtual bool GetDebuggingEnabled() = 0;
     virtual bool ShouldRun(Address pc) = 0;

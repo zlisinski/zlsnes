@@ -3,6 +3,7 @@
 
 #include "core/Cpu.h"
 #include "core/Memory.h"
+#include "core/Ppu.h"
 
 #include "../SettingsConstants.h"
 #include "../UiUtils.h"
@@ -21,15 +22,16 @@ static const uint32_t INVALID_ADDR = 0xFFFFFFFF;
 DebuggerWindow::DebuggerWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DebuggerWindow),
-    cpu(NULL),
-    memory(NULL),
+    cpu(nullptr),
+    memory(nullptr),
+    ppu(nullptr),
     currentSp(0),
     debuggingEnabled(false),
     singleStep(false),
     runToAddress(INVALID_ADDR),
     disassemblyModel(new DisassemblyModel(palette(), this)),
-    ioRegisterModel(new IoRegisterModel(this))
-    //memoryModel(new MemoryModel(this))
+    ioRegisterModel(new IoRegisterModel(this)),
+    memoryModel(new MemoryModel(this))
 {
     ui->setupUi(this);
     ui->actionToggleDebugging->setChecked(debuggingEnabled);
@@ -49,9 +51,11 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
 
     ui->disassemblyView->setModel(disassemblyModel);
     ui->ioRegistersView->setModel(ioRegisterModel);
-    //ui->memoryView->setModel(memoryModel);
+    ui->memoryView->setModel(memoryModel);
 
-    //ui->memoryView->resizeColumnsToContents();
+    ui->memoryView->resizeColumnsToContents();
+
+    ui->cmbMemoryType->addItems({"WRAM", "VRAM", "OAM", "Palette"});
 
     connect(ui->actionToggleDebugging, SIGNAL(triggered(bool)), this, SLOT(SlotToggleDebugging(bool)));
     connect(ui->actionStep, SIGNAL(triggered()), this, SLOT(SlotStep()));
@@ -83,20 +87,22 @@ void DebuggerWindow::closeEvent(QCloseEvent *event)
 }
 
 
-void DebuggerWindow::SetEmulatorObjects(Memory *newMemory, Cpu *newCpu)
+void DebuggerWindow::SetEmulatorObjects(Memory *newMemory, Cpu *newCpu, Ppu *newPpu)
 {
     //This function runs in the thread context of the Emulator worker thread.
 
     // All values should be NULL or not NULL. If only some are NULL, treat them all as NULL.
-    if (newMemory == NULL || newCpu == NULL)
+    if (newMemory == nullptr || newCpu == nullptr || newPpu == nullptr)
     {
-        memory = NULL;
-        cpu = NULL;
+        memory = nullptr;
+        cpu = nullptr;
+        ppu = nullptr;
     }
     else
     {
         memory = newMemory;
         cpu = newCpu;
+        ppu = newPpu;
     }
 
     // Run the rest in current thread context.
@@ -213,6 +219,32 @@ void DebuggerWindow::UpdateWidgets(Address pc)
 }
 
 
+void DebuggerWindow::UpdateMemoryView()
+{
+    if (memory == nullptr || ppu == nullptr)
+        return;
+
+    QString selected = ui->cmbMemoryType->currentText();
+
+    if (selected == "WRAM")
+    {
+        memoryModel->SetMemory(memory->GetBytePtr(WRAM_OFFSET), WRAM_SIZE);
+    }
+    else if (selected == "VRAM")
+    {
+        memoryModel->SetMemory(ppu->GetVramPtr(), VRAM_SIZE);
+    }
+    else if (selected == "OAM")
+    {
+        memoryModel->SetMemory(ppu->GetOamPtr(), OAM_SIZE);
+    }
+    else if (selected == "Palette")
+    {
+        memoryModel->SetMemory(ppu->GetPalettePtr(), PALETTE_SIZE);
+    }
+}
+
+
 void DebuggerWindow::SlotProcessUpdate(Address pc)
 {
     UpdateWidgets(pc);
@@ -235,7 +267,7 @@ void DebuggerWindow::SlotToggleDebugging(bool checked)
         ui->actionDisassemble->setEnabled(true);
 
         // Update memory table with new values.
-        //memoryModel->SetMemory(memory);
+        UpdateMemoryView();
 
         // Update widgets with new values.
         if (cpu != NULL)
@@ -323,7 +355,7 @@ void DebuggerWindow::SlotReenableActions()
 void DebuggerWindow::SlotObjectsChanged()
 {
     ioRegisterModel->SetMemory(memory);
-    //memoryModel->SetMemory(memory);
+    UpdateMemoryView();
 
     if (cpu != NULL)
         UpdateWidgets(cpu->GetFullPC());
@@ -339,6 +371,15 @@ void DebuggerWindow::SlotMemoryChanged(Address address, uint16_t len)
     if (debuggingEnabled == true)
     {
         ioRegisterModel->InvalidateMemory(address, len);
-        //memoryModel->InvalidateMemory(address, len);
+
+        if (ui->cmbMemoryType->currentText() == "WRAM")
+            memoryModel->InvalidateMemory(address, len);
     }
+}
+
+
+void DebuggerWindow::on_cmbMemoryType_currentTextChanged(const QString &text)
+{
+    (void)text;
+    UpdateMemoryView();
 }

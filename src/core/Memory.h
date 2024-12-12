@@ -14,6 +14,10 @@ class InfoInterface;
 class Timer;
 
 
+const uint32_t WRAM_OFFSET = 0x7E0000;
+const size_t WRAM_SIZE = 0x20000;
+
+
 class Memory : public IoRegisterSubject
 {
 public:
@@ -118,7 +122,7 @@ protected:
     void RunDma();
 
     std::array<uint8_t, 0xFFFFFF> memory; // This will probably be going away.
-    std::array<uint8_t, 0x20000> wram; // 0x7E0000 - 0x7FFFFF
+    std::array<uint8_t, WRAM_SIZE> wram; // 0x7E0000 - 0x7FFFFF
 
     // The following blocks are mirrored in each of the banks from 0x00-0x3F and 0x80-0xBF.
     std::array<uint8_t, 0xFF> ioPorts21; // 0x2100-0x21FF. Unused: 0x2184+

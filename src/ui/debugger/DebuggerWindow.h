@@ -13,7 +13,7 @@ class Cpu;
 class DisassemblyModel;
 class IoRegisterModel;
 class Memory;
-//class MemoryModel;
+class MemoryModel;
 
 
 class DebuggerWindow : public QMainWindow, public DebuggerInterface
@@ -24,7 +24,7 @@ public:
     explicit DebuggerWindow(QWidget *parent = 0);
     ~DebuggerWindow();
 
-    void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu) override;
+    void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu, Ppu *newPpu) override;
 
     bool GetDebuggingEnabled() override {return debuggingEnabled;}
     bool ShouldRun(Address pc) override;
@@ -38,11 +38,13 @@ protected:
 private:
     void UpdateStack();
     void UpdateWidgets(Address pc);
+    void UpdateMemoryView();
 
     Ui::DebuggerWindow *ui;
 
     Cpu *cpu;
     Memory *memory;
+    Ppu *ppu;
     uint16_t currentSp;
 
     std::atomic<bool> debuggingEnabled;
@@ -51,7 +53,7 @@ private:
 
     DisassemblyModel *disassemblyModel;
     IoRegisterModel *ioRegisterModel;
-    //MemoryModel *memoryModel;
+    MemoryModel *memoryModel;
 
 private slots:
     void SlotProcessUpdate(Address pc);
@@ -62,6 +64,7 @@ private slots:
     void SlotReenableActions();
     void SlotObjectsChanged();
     void SlotMemoryChanged(Address address, uint16_t len);
+    void on_cmbMemoryType_currentTextChanged(const QString &text);
 
 signals:
     void SignalDebuggerWindowClosed();

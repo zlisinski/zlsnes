@@ -1,10 +1,12 @@
 #include "IoRegisters.h"
+#include "DebuggerInterface.h"
 #include "Memory.h"
 #include "Ppu.h"
 
 
-Ppu::Ppu(Memory *memory) :
+Ppu::Ppu(Memory *memory, DebuggerInterface *debuggerInterface) :
     memory(memory),
+    debuggerInterface(debuggerInterface),
     regINIDISP(memory->AttachIoRegister(eRegINIDISP, this)),
     regOBSEL(memory->AttachIoRegister(eRegOBSEL, this)),
     regOAMADDL(memory->AttachIoRegister(eRegOAMADDL, this)),

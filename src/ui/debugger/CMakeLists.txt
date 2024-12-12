@@ -4,6 +4,6 @@ target_sources(zlsnes_ui
     ${CMAKE_CURRENT_SOURCE_DIR}/DebuggerWindow.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DisassemblyModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/IoRegisterModel.cpp
-    #${CMAKE_CURRENT_SOURCE_DIR}/MemoryModel.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MemoryModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Opcode.cpp
 )

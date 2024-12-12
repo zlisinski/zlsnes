@@ -306,7 +306,7 @@
         <number>10</number>
        </property>
        <property name="columnCount">
-        <number>2</number>
+        <number>1</number>
        </property>
        <attribute name="horizontalHeaderVisible">
         <bool>false</bool>
@@ -322,7 +322,6 @@
        <row/>
        <row/>
        <column/>
-       <column/>
       </widget>
      </item>
     </layout>
@@ -337,8 +336,18 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QGridLayout" name="gridLayout_6">
+     <item row="1" column="0">
+      <widget class="QTableView" name="memoryView">
+       <property name="minimumSize">
+        <size>
+         <width>700</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
-      <widget class="QTableView" name="memoryView"/>
+      <widget class="QComboBox" name="cmbMemoryType"/>
      </item>
     </layout>
    </widget>

@@ -3,23 +3,35 @@
 #include "Zlsnes.h"
 #include "IoRegisterProxy.h"
 
+class DebuggerInterface;
 class Memory;
+
+const size_t OAM_SIZE = 544;
+const size_t VRAM_SIZE = 0xFFFF;
+const size_t PALETTE_SIZE = 512;
 
 class Ppu : public IoRegisterProxy
 {
 public:
-    Ppu(Memory *memory);
+    Ppu(Memory *memory, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Ppu() {}
 
     // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
+    // Used for debugging.
+    uint8_t *GetOamPtr() {return &oam[0];}
+    uint8_t *GetVramPtr() {return &vram[0];}
+    uint8_t *GetPalettePtr() {return &palette[0];}
+
 private:
     Memory *memory;
-    std::array<uint8_t, 544> oam;
-    std::array<uint8_t, 0xFFFF> vram;
-    std::array<uint8_t, 512> palette;
+    std::array<uint8_t, OAM_SIZE> oam;
+    std::array<uint8_t, VRAM_SIZE> vram;
+    std::array<uint8_t, PALETTE_SIZE> palette;
+
+    DebuggerInterface *debuggerInterface;
 
     //Write-only
     uint8_t *regINIDISP; // 0x2100 Display Control 1

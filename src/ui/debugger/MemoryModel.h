@@ -3,8 +3,7 @@
 #include <QtCore/QAbstractTableModel>
 
 #include "core/Zlsnes.h"
-
-class Memory;
+#include "core/Address.h"
 
 
 class MemoryModel : public QAbstractTableModel
@@ -15,8 +14,8 @@ public:
     MemoryModel(QObject *parent = NULL);
     virtual ~MemoryModel();
 
-    void SetMemory(const Memory *newMemory);
-    void InvalidateMemory(uint16_t address, uint16_t len);
+    void SetMemory(uint8_t *newMemory, size_t size);
+    void InvalidateMemory(Address address, uint16_t len);
 
     // Overrides for QAbstractTableModel.
     virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
@@ -25,5 +24,6 @@ public:
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
 private:
-    const Memory *memory;
+    uint8_t *memory;
+    size_t memSize;
 };

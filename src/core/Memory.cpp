@@ -3,8 +3,6 @@
 #include "Cartridge.h"
 #include "Timer.h"
 
-static const uint32_t WRAM_OFFSET = 0x7E0000;
-static const uint32_t WRAM_SIZE = 0x20000;
 
 Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterface) :
     memory(),

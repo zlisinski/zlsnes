@@ -147,7 +147,7 @@ void Emulator::ThreadFunc()
             infoInterface->SetMemory(memory->GetBytePtr(0));
 
         if (debuggerInterface)
-            debuggerInterface->SetEmulatorObjects(memory, cpu);
+            debuggerInterface->SetEmulatorObjects(memory, cpu, ppu);
 
         // Immediately quit, for now.
         //cpu->PrintState();
@@ -189,7 +189,7 @@ void Emulator::ThreadFunc()
     if (infoInterface)
         infoInterface->SetMemory(NULL);
     if (debuggerInterface)
-        debuggerInterface->SetEmulatorObjects(NULL, NULL/*, NULL*/);
+        debuggerInterface->SetEmulatorObjects(nullptr, nullptr, nullptr);
 
     //delete audio;
     //audio = NULL;
