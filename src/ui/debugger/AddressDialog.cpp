@@ -23,33 +23,15 @@ void AddressDialog::accept()
 
     // The following sections are not code areas, and don't make sense to allow selection for disassembly.
 
-    if (val >= 0x8000 && val < 0xA000)
+    if ((val & 0x408000) == 0)
     {
-        UiUtils::MessageBox("Can't select VRAM");
+        UiUtils::MessageBox("Can't select System Area");
         return;
     }
 
-    if (val >= 0xE000 && val < 0xFE00)
+    if (val >= 0x7E0000 && val <= 0x7FFFFF)
     {
-        UiUtils::MessageBox("Can't select ECHO");
-        return;
-    }
-
-    if (val >= 0xFE00 && val < 0xFEA0)
-    {
-        UiUtils::MessageBox("Can't select OAM");
-        return;
-    }
-
-    if (val >= 0xFEA0 && val < 0xFF00)
-    {
-        UiUtils::MessageBox("Can't select unused RAM");
-        return;
-    }
-
-    if (val >= 0xFF00 && val < 0xFF80)
-    {
-        UiUtils::MessageBox("Can't select IO Registers");
+        UiUtils::MessageBox("Can't select WRAM");
         return;
     }
 
