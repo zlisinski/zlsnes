@@ -7,6 +7,13 @@
 Ppu::Ppu(Memory *memory, DebuggerInterface *debuggerInterface) :
     memory(memory),
     debuggerInterface(debuggerInterface),
+    forcedBlank(false),
+    brightness(0),
+    screenMode(0),
+    vramIncrement(0),
+    vramIncrementOnHigh(false),
+    vramRwAddr(0),
+    vramPrefetch{0,0},
     regINIDISP(memory->AttachIoRegister(eRegINIDISP, this)),
     regOBSEL(memory->AttachIoRegister(eRegOBSEL, this)),
     regOAMADDL(memory->AttachIoRegister(eRegOAMADDL, this)),
@@ -223,8 +230,11 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
     switch (ioReg)
     {
-        case eRegINIDISP:
+        case eRegINIDISP: // 0x2100
             *regINIDISP = byte;
+            forcedBlank = byte & 0x80;
+            brightness = byte & 0x0F;
+            LogInstruction("ForcedBlank=%d Brightness=%d", forcedBlank, brightness);
             return true;
         case eRegOBSEL:
             *regOBSEL = byte;
@@ -238,8 +248,10 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegOAMDATA:
             *regOAMDATA = byte;
             return true;
-        case eRegBGMODE:
+        case eRegBGMODE: // 0x2105
             *regBGMODE = byte;
+            screenMode = byte & 0x07;
+            LogInstruction("ScreenMode=%d", screenMode);
             return true;
         case eRegMOSAIC:
             *regMOSAIC = byte;
@@ -286,20 +298,60 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegBG4VOFS:
             *regBG4VOFS = byte;
             return true;
-        case eRegVMAIN:
+        case eRegVMAIN: // 0x2115
             *regVMAIN = byte;
+            if ((byte & 0x0C) != 0)
+                throw NotYetImplementedException(fmt("Address translation NYI. Byte=%02X", byte));
+            vramIncrementOnHigh = byte & 0x80;
+            switch (byte & 0x03)
+            {
+                case 0: vramIncrement = 1; break;
+                case 1: vramIncrement = 32; break;
+                case 2: case 3: vramIncrement = 128; break;
+            }
+            LogInstruction("Increment VRAM by %d after reading %s byte", vramIncrement, vramIncrementOnHigh ? "High" : "Low");
             return true;
-        case eRegVMADDL:
+        case eRegVMADDL: // 0x2116
             *regVMADDL = byte;
+
+            // This is a word address, so left shift 1 to get the byte address.
+            vramRwAddr = Bytes::Make16Bit(*regVMADDH, byte) << 1;
+            LogInstruction("vramRwAddr=%04X", vramRwAddr);
+
+            // Prefetch the bytes when the address changes.
+            vramPrefetch[0] = vram[vramRwAddr];
+            vramPrefetch[1] = vram[vramRwAddr + 1];
+
             return true;
-        case eRegVMADDH:
+        case eRegVMADDH: // 0x2117
             *regVMADDH = byte;
+
+            // This is a word address, so left shift 1 to get the byte address.
+            vramRwAddr = Bytes::Make16Bit(byte, *regVMADDL) << 1;
+            LogInstruction("vramRwAddr=%04X", vramRwAddr);
+
+            // Prefetch the bytes when the address changes.
+            vramPrefetch[0] = vram[vramRwAddr];
+            vramPrefetch[1] = vram[vramRwAddr + 1];
+
             return true;
-        case eRegVMDATAL:
+        case eRegVMDATAL: // 0x2118
             *regVMDATAL = byte;
+            vram[vramRwAddr] = byte;
+            if (!vramIncrementOnHigh)
+            {
+                // This is a word address, so left shift 1 to get the byte address.
+                vramRwAddr += vramIncrement << 1;
+            }
             return true;
-        case eRegVMDATAH:
+        case eRegVMDATAH: // 0x2119
             *regVMDATAH = byte;
+            vram[vramRwAddr + 1] = byte;
+            if (vramIncrementOnHigh)
+            {
+                // This is a word address, so left shift 1 to get the byte address.
+                vramRwAddr += vramIncrement << 1;
+            }
             return true;
         case eRegM7SEL:
             *regM7SEL = byte;

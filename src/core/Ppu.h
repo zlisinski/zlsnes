@@ -33,6 +33,15 @@ private:
 
     DebuggerInterface *debuggerInterface;
 
+    bool forcedBlank;
+    uint8_t brightness;
+    uint8_t screenMode;
+
+    uint8_t vramIncrement;
+    bool vramIncrementOnHigh;
+    uint16_t vramRwAddr;
+    uint8_t vramPrefetch[2];
+
     //Write-only
     uint8_t *regINIDISP; // 0x2100 Display Control 1
     uint8_t *regOBSEL;   // 0x2101 Object Size and Object Base
