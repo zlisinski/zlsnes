@@ -9,7 +9,7 @@ class Memory;
 
 const size_t OAM_SIZE = 544;
 const size_t VRAM_SIZE = 0xFFFF;
-const size_t PALETTE_SIZE = 512;
+const size_t CGRAM_SIZE = 512;
 
 class Ppu : public IoRegisterProxy, public TimerObserver
 {
@@ -27,13 +27,13 @@ public:
     // Used for debugging.
     uint8_t *GetOamPtr() {return &oam[0];}
     uint8_t *GetVramPtr() {return &vram[0];}
-    uint8_t *GetPalettePtr() {return &palette[0];}
+    uint8_t *GetCgramPtr() {return &cgram[0];}
 
 private:
     Memory *memory;
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;
-    std::array<uint8_t, PALETTE_SIZE> palette;
+    std::array<uint8_t, CGRAM_SIZE> cgram;
 
     DebuggerInterface *debuggerInterface;
 
@@ -45,6 +45,14 @@ private:
     bool isForcedBlank;
     uint8_t brightness;
     uint8_t screenMode;
+
+    uint8_t bgOffsetLatch;
+    uint8_t bgHOffsetLatch;
+    uint16_t bgHOffset[4];
+    uint16_t bgVOffset[4];
+
+    uint16_t cgramRwAddr;
+    uint8_t cgramLatch;
 
     uint8_t vramIncrement;
     bool isVramIncrementOnHigh;
@@ -118,4 +126,6 @@ private:
     uint8_t *regOPVCT;   // 0x213D PPU2 Vertical Counter Latch   (read-twice)
     uint8_t *regSTAT77;  // 0x213E PPU1 Status and PPU1 Version Number
     uint8_t *regSTAT78;  // 0x213F PPU2 Status and PPU2 Version Number
+
+    friend class PpuTest;
 };

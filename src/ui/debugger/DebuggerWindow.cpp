@@ -55,7 +55,7 @@ DebuggerWindow::DebuggerWindow(QWidget *parent) :
 
     ui->memoryView->resizeColumnsToContents();
 
-    ui->cmbMemoryType->addItems({"WRAM", "VRAM", "OAM", "Palette"});
+    ui->cmbMemoryType->addItems({"WRAM", "VRAM", "OAM", "CGRAM"});
 
     connect(ui->actionToggleDebugging, SIGNAL(triggered(bool)), this, SLOT(SlotToggleDebugging(bool)));
     connect(ui->actionStep, SIGNAL(triggered()), this, SLOT(SlotStep()));
@@ -238,9 +238,9 @@ void DebuggerWindow::UpdateMemoryView()
     {
         memoryModel->SetMemory(ppu->GetOamPtr(), OAM_SIZE);
     }
-    else if (selected == "Palette")
+    else if (selected == "CGRAM")
     {
-        memoryModel->SetMemory(ppu->GetPalettePtr(), PALETTE_SIZE);
+        memoryModel->SetMemory(ppu->GetCgramPtr(), CGRAM_SIZE);
     }
 }
 

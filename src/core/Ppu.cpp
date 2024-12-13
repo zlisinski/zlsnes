@@ -14,6 +14,12 @@ Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debugger
     isForcedBlank(false),
     brightness(0),
     screenMode(0),
+    bgOffsetLatch(0),
+    bgHOffsetLatch(0),
+    bgHOffset{0, 0, 0, 0},
+    bgVOffset{0, 0, 0, 0},
+    cgramRwAddr(0),
+    cgramLatch(0),
     vramIncrement(0),
     isVramIncrementOnHigh(false),
     vramRwAddr(0),
@@ -89,7 +95,7 @@ Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debugger
 
 uint8_t Ppu::ReadRegister(EIORegisters ioReg) const
 {
-    LogInstruction("Ppu::ReadRegister %04X", ioReg);
+    LogDebug("Ppu::ReadRegister %04X", ioReg);
 
     switch (ioReg)
     {
@@ -230,7 +236,7 @@ uint8_t Ppu::ReadRegister(EIORegisters ioReg) const
 
 bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 {
-    LogInstruction("Ppu::WriteRegister %04X, %02X", ioReg, byte);
+    LogDebug("Ppu::WriteRegister %04X, %02X", ioReg, byte);
 
     switch (ioReg)
     {
@@ -238,69 +244,120 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             *regINIDISP = byte;
             isForcedBlank = byte & 0x80;
             brightness = byte & 0x0F;
-            LogInstruction("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
+            LogDebug("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
         case eRegOBSEL:
             *regOBSEL = byte;
-            return true;
+            return false;
         case eRegOAMADDL:
             *regOAMADDL = byte;
-            return true;
+            return false;
         case eRegOAMADDH:
             *regOAMADDH = byte;
-            return true;
+            return false;
         case eRegOAMDATA:
             *regOAMDATA = byte;
-            return true;
+            return false;
         case eRegBGMODE: // 0x2105
             *regBGMODE = byte;
             screenMode = byte & 0x07;
-            LogInstruction("ScreenMode=%d", screenMode);
+            LogDebug("ScreenMode=%d", screenMode);
             return true;
-        case eRegMOSAIC:
+        case eRegMOSAIC: // 0x2106
             *regMOSAIC = byte;
+            LogDebug("MosaicSize=%d MosaicLayers=%d,%d,%d,%d", (byte >> 4), Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte));
             return true;
-        case eRegBG1SC:
+        case eRegBG1SC: // 0x2107
             *regBG1SC = byte;
+            LogDebug("Screen1 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
             return true;
-        case eRegBG2SC:
+        case eRegBG2SC: // 0x2108
             *regBG2SC = byte;
+            LogDebug("Screen2 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
             return true;
-        case eRegBG3SC:
+        case eRegBG3SC: // 0x2109
             *regBG3SC = byte;
+            LogDebug("Screen3 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
             return true;
-        case eRegBG4SC:
+        case eRegBG4SC: // 0x210A
             *regBG4SC = byte;
+            LogDebug("Screen4 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
             return true;
-        case eRegBG12NBA:
+        case eRegBG12NBA: // 0x210B
             *regBG12NBA = byte;
+            LogDebug("Tile Address BG1=%02x BG2=%02X", byte & 0x0F, byte >> 4);
             return true;
-        case eRegBG34NBA:
+        case eRegBG34NBA: // 0x210C
             *regBG34NBA = byte;
+            LogDebug("Tile Address BG3=%02x BG4=%02X", byte & 0x0F, byte >> 4);
             return true;
-        case eRegBG1HOFS:
+        case eRegBG1HOFS: // 0x210D
             *regBG1HOFS = byte;
+            LogDebug("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
+            // This is a write twice register.
+            bgHOffset[0] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
+            bgOffsetLatch = byte;
+            bgHOffsetLatch = byte;
+            LogDebug("bgHOffset[0]=%04X", bgHOffset[0]);
             return true;
-        case eRegBG1VOFS:
+        case eRegBG1VOFS: // 0x210E
             *regBG1VOFS = byte;
+            LogDebug("bgOffsetLatch=%02X", bgOffsetLatch);
+            // This is a write twice register.
+            bgVOffset[0] = (byte << 8) | bgOffsetLatch;
+            bgOffsetLatch = byte;
+            LogDebug("bgVOffset[0]=%04X", bgVOffset[0]);
             return true;
-        case eRegBG2HOFS:
+        case eRegBG2HOFS: // 0x210F
             *regBG2HOFS = byte;
+            LogDebug("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
+            // This is a write twice register.
+            bgHOffset[1] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
+            bgOffsetLatch = byte;
+            bgHOffsetLatch = byte;
+            LogDebug("bgHOffset[1]=%04X", bgHOffset[1]);
             return true;
-        case eRegBG2VOFS:
+        case eRegBG2VOFS: // 0x2110
             *regBG2VOFS = byte;
+            LogDebug("bgOffsetLatch=%02X", bgOffsetLatch);
+            // This is a write twice register.
+            bgVOffset[1] = (byte << 8) | bgOffsetLatch;
+            bgOffsetLatch = byte;
+            LogDebug("bgVOffset[1]=%04X", bgVOffset[1]);
             return true;
-        case eRegBG3HOFS:
+        case eRegBG3HOFS: // 0x2111
             *regBG3HOFS = byte;
+            LogDebug("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
+            // This is a write twice register.
+            bgHOffset[2] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
+            bgOffsetLatch = byte;
+            bgHOffsetLatch = byte;
+            LogDebug("bgHOffset[2]=%04X", bgHOffset[2]);
             return true;
-        case eRegBG3VOFS:
+        case eRegBG3VOFS: // 0x2112
             *regBG3VOFS = byte;
+            LogDebug("bgOffsetLatch=%02X", bgOffsetLatch);
+            // This is a write twice register.
+            bgVOffset[2] = (byte << 8) | bgOffsetLatch;
+            bgOffsetLatch = byte;
+            LogDebug("bgVOffset[2]=%04X", bgVOffset[2]);
             return true;
-        case eRegBG4HOFS:
+        case eRegBG4HOFS: // 0x2113
             *regBG4HOFS = byte;
+            LogDebug("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
+            // This is a write twice register.
+            bgHOffset[3] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
+            bgOffsetLatch = byte;
+            bgHOffsetLatch = byte;
+            LogDebug("bgHOffset[3]=%04X", bgHOffset[3]);
             return true;
-        case eRegBG4VOFS:
+        case eRegBG4VOFS: // 0x2114
             *regBG4VOFS = byte;
+            LogDebug("bgOffsetLatch=%02X", bgOffsetLatch);
+            // This is a write twice register.
+            bgVOffset[3] = (byte << 8) | bgOffsetLatch;
+            bgOffsetLatch = byte;
+            LogDebug("bgVOffset[3]=%04X", bgVOffset[3]);
             return true;
         case eRegVMAIN: // 0x2115
             *regVMAIN = byte;
@@ -313,14 +370,14 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
                 case 1: vramIncrement = 32; break;
                 case 2: case 3: vramIncrement = 128; break;
             }
-            LogInstruction("Increment VRAM by %d after reading %s byte", vramIncrement, isVramIncrementOnHigh ? "High" : "Low");
+            LogDebug("Increment VRAM by %d after reading %s byte", vramIncrement, isVramIncrementOnHigh ? "High" : "Low");
             return true;
         case eRegVMADDL: // 0x2116
             *regVMADDL = byte;
 
             // This is a word address, so left shift 1 to get the byte address.
             vramRwAddr = Bytes::Make16Bit(*regVMADDH, byte) << 1;
-            LogInstruction("vramRwAddr=%04X", vramRwAddr);
+            LogDebug("vramRwAddr=%04X", vramRwAddr);
 
             // Prefetch the bytes when the address changes.
             vramPrefetch[0] = vram[vramRwAddr];
@@ -332,7 +389,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
             // This is a word address, so left shift 1 to get the byte address.
             vramRwAddr = Bytes::Make16Bit(byte, *regVMADDL) << 1;
-            LogInstruction("vramRwAddr=%04X", vramRwAddr);
+            LogDebug("vramRwAddr=%04X", vramRwAddr);
 
             // Prefetch the bytes when the address changes.
             vramPrefetch[0] = vram[vramRwAddr];
@@ -359,118 +416,142 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegM7SEL:
             *regM7SEL = byte;
-            return true;
+            return false;
         case eRegM7A:
             *regM7A = byte;
-            return true;
+            return false;
         case eRegM7B:
             *regM7B = byte;
-            return true;
+            return false;
         case eRegM7C:
             *regM7C = byte;
-            return true;
+            return false;
         case eRegM7D:
             *regM7D = byte;
-            return true;
+            return false;
         case eRegM7X:
             *regM7X = byte;
-            return true;
+            return false;
         case eRegM7Y:
             *regM7Y = byte;
-            return true;
-        case eRegCGADD:
+            return false;
+        case eRegCGADD: // 0x2121
             *regCGADD = byte;
+            // This is a word address, so left shift 1 to get the byte address.
+            // Since the low bit is always 0, this also resets the read/write twice sequence on CGDATA/RDCGRAM.
+            cgramRwAddr = byte << 1;
+            LogDebug("Palette color index=%04X", cgramRwAddr);
             return true;
-        case eRegCGDATA:
+        case eRegCGDATA: // 0x2122
             *regCGDATA = byte;
+            // The first write gets saved, and both bytes get written to cgram on the second write to the register.
+            if ((cgramRwAddr & 0x01) == 0)
+            {
+                cgramLatch = byte;
+                LogDebug("Saving cgram byte %02X", byte);
+            }
+            else
+            {
+                cgram[cgramRwAddr - 1] = cgramLatch;
+                cgram[cgramRwAddr] = byte;
+                LogDebug("Writing word to cgram %02X%02X", byte, cgramLatch);
+            }
+            cgramRwAddr++;
             return true;
         case eRegW12SEL:
             *regW12SEL = byte;
-            return true;
+            return false;
         case eRegW34SEL:
             *regW34SEL = byte;
-            return true;
+            return false;
         case eRegWOBJSEL:
             *regWOBJSEL = byte;
-            return true;
+            return false;
         case eRegWH0:
             *regWH0 = byte;
-            return true;
+            return false;
         case eRegWH1:
             *regWH1 = byte;
-            return true;
+            return false;
         case eRegWH2:
             *regWH2 = byte;
-            return true;
+            return false;
         case eRegWH3:
             *regWH3 = byte;
-            return true;
+            return false;
         case eRegWBGLOG:
             *regWBGLOG = byte;
-            return true;
+            return false;
         case eRegWOBJLOG:
             *regWOBJLOG = byte;
-            return true;
-        case eRegTM:
+            return false;
+        case eRegTM: // 0x212C
             *regTM = byte;
+            LogDebug("Main Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
             return true;
-        case eRegTS:
+        case eRegTS: // 0x212D
             *regTS = byte;
+            LogDebug("Subscreen Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
             return true;
-        case eRegTMW:
+        case eRegTMW: // 0x212E
             *regTMW = byte;
+            LogDebug("Main Window Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
             return true;
-        case eRegTSW:
+        case eRegTSW: // 0x212F
             *regTSW = byte;
+            LogDebug("Subscreen Window Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
             return true;
-        case eRegCGWSEL:
+        case eRegCGWSEL: // 0x2130
             *regCGWSEL = byte;
+            LogDebug("ForceBlack=%d ColorMath=%d SubscreenBG=%d DirectColor=%d", (byte >> 6), ((byte >> 4) & 0x03), ((byte >> 1) & 0x01), (byte & 0x01));
             return true;
-        case eRegCGADSUB:
+        case eRegCGADSUB: // 0x2131
             *regCGADSUB = byte;
+            LogDebug("CGMath=%02X", byte);
             return true;
         case eRegCOLDATA:
             *regCOLDATA = byte;
-            return true;
-        case eRegSETINI:
+            return false;
+        case eRegSETINI: // 0x2133
             *regSETINI = byte;
+            LogDebug("ExtSync=%d ExtBg=%d HiRes=%d Overscan=%d, ObjInterlace=%d ScreenInterlace=%d", Bytes::GetBit<7>(byte), Bytes::GetBit<6>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<0>(byte));
             return true;
         case eRegMPYL:
             *regMPYL = byte;
-            return true;
+            return false;
         case eRegMPYM:
             *regMPYM = byte;
-            return true;
+            return false;
         case eRegMPYH:
             *regMPYH = byte;
-            return true;
+            return false;
         case eRegSLHV:
             *regSLHV = byte;
-            return true;
+            return false;
         case eRegRDOAM:
             *regRDOAM = byte;
-            return true;
+            return false;
         case eRegRDVRAML:
             *regRDVRAML = byte;
-            return true;
+            return false;
         case eRegRDVRAMH:
             *regRDVRAMH = byte;
-            return true;
+            return false;
         case eRegRDCGRAM:
             *regRDCGRAM = byte;
-            return true;
+            return false;
         case eRegOPHCT:
             *regOPHCT = byte;
-            return true;
+            return false;
         case eRegOPVCT:
             *regOPVCT = byte;
-            return true;
+            return false;
         case eRegSTAT77:
             *regSTAT77 = byte;
-            return true;
+            return false;
         case eRegSTAT78:
             *regSTAT78 = byte;
-            return true;
+            return false;
         default:
             return false;
     }
