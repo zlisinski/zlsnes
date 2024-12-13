@@ -481,7 +481,20 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 void Ppu::UpdateTimer(uint32_t value)
 {
     clockCounter += value;
-    if (clockCounter > 1364)
+
+    if (clockCounter > 4 && clockCounter < 1096)
+    {
+        isHBlank = false;
+        // Clear HBlank flag.
+        *memory->GetBytePtr(eRegHVBJOY) &= 0xBF;
+    }
+    else if (clockCounter >= 1096 && clockCounter < 1364)
+    {
+        isHBlank = true;
+        // Set HBlank flag.
+        *memory->GetBytePtr(eRegHVBJOY) |= 0x40;
+    }
+    else if (clockCounter >= 1364)
     {
         clockCounter -= 1364;
 
@@ -489,13 +502,17 @@ void Ppu::UpdateTimer(uint32_t value)
         if (scanline == 225)
         {
             isVBlank = true;
+            // Set VBlank flags.
             *memory->GetBytePtr(eRegRDNMI) |= 0x80;
+            *memory->GetBytePtr(eRegHVBJOY) |= 0x80;
         }
         else if (scanline == 262)
         {
             scanline = 0;
             isVBlank = false;
+            // Clear VBlank flags.
             *memory->GetBytePtr(eRegRDNMI) &= 0x7F;
+            *memory->GetBytePtr(eRegHVBJOY) &= 0x7F;
         }
     }
 }
