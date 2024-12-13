@@ -5,7 +5,6 @@
 
 
 Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterface) :
-    memory(),
     wram(),
     ioPorts21(),
     ioPorts40(),
@@ -264,7 +263,6 @@ uint8_t *Memory::GetBytePtr(uint32_t addr)
 
 void Memory::ClearMemory()
 {
-    memory.fill(0);
     wram.fill(0);
     ioPorts21.fill(0);
     ioPorts40.fill(0);

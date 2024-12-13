@@ -1,4 +1,9 @@
 #include <gtest/gtest.h>
+
+// Include the mocks first so they override subsequent includes.
+#include "mock/Memory.h"
+#include "mock/Timer.h"
+
 #include "AddressMode.h"
 #include "Bytes.h"
 #include "Timer.h"

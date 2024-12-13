@@ -6,6 +6,10 @@
 #include <QJsonArray>
 #include <QString>
 
+// Include the mocks first so they override subsequent includes.
+#include "mock/Memory.h"
+#include "mock/Timer.h"
+
 #include "Bytes.h"
 #include "Cpu.h"
 #include "Timer.h"

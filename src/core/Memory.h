@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ZLSNES_CORE_MEMORY_H
+#define ZLSNES_CORE_MEMORY_H
 
 #include <array>
 
@@ -110,8 +111,7 @@ public:
 
     // Bypasses checking of reads/writes from/to special addresses. Don't use unless you know what you are doing.
     // Since there is not a flat memory model, incrementing the pointer could do bad things.
-    //const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
-    uint8_t *GetBytePtr(uint32_t addr);// {return &memory[addr];}
+    uint8_t *GetBytePtr(uint32_t addr);
 
     void ClearMemory();
 
@@ -121,7 +121,6 @@ protected:
 
     void RunDma();
 
-    std::array<uint8_t, 0xFFFFFF> memory; // This will probably be going away.
     std::array<uint8_t, WRAM_SIZE> wram; // 0x7E0000 - 0x7FFFFF
 
     // The following blocks are mirrored in each of the banks from 0x00-0x3F and 0x80-0xBF.
@@ -138,3 +137,5 @@ protected:
 
     friend class MemoryTest;
 };
+
+#endif

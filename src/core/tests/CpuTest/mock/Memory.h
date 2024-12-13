@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ZLSNES_CORE_MEMORY_H
+#define ZLSNES_CORE_MEMORY_H
 
 #include <array>
 
@@ -116,3 +117,5 @@ protected:
     
     std::array<uint8_t, 0xFFFFFF> memory;
 };
+
+#endif

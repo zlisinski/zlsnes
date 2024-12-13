@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ZLSNES_CORE_TIMER_H
+#define ZLSNES_CORE_TIMER_H
 
 #include "Zlsnes.h"
 #include "TimerObserver.h"
@@ -24,3 +25,5 @@ public:
 private:
     uint32_t internalCounter;
 };
+
+#endif
