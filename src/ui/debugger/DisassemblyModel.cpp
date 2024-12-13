@@ -14,9 +14,9 @@ const QSet<uint8_t> DisassemblyModel::stopOpcodes = {
     0x6C, // JMP (abs)
     0x7C, // JMP (abs,X)
     0xDC, // JMP [abs]
-    0x22, // JSL
-    0x20, // JSR abs
-    0xFC, // JSR (abs,X)
+    //0x22, // JSL
+    //0x20, // JSR abs
+    //0xFC, // JSR (abs,X)
     0x6B, // RTL
     0x60, // RTS
     0x00, // BRK
