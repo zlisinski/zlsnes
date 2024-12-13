@@ -21,7 +21,7 @@ void Memory::SetTimer(Timer *timer)
     (void)timer;
 }
 
-uint8_t Memory::Read8Bit(uint32_t addr) const
+uint8_t Memory::Read8Bit(uint32_t addr)
 {
     return memory[addr];
 }

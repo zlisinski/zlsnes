@@ -4,14 +4,18 @@
 #include "Ppu.h"
 
 
-Ppu::Ppu(Memory *memory, DebuggerInterface *debuggerInterface) :
+Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debuggerInterface) :
     memory(memory),
     debuggerInterface(debuggerInterface),
-    forcedBlank(false),
+    isHBlank(true),
+    isVBlank(false),
+    clockCounter(0),
+    scanline(0),
+    isForcedBlank(false),
     brightness(0),
     screenMode(0),
     vramIncrement(0),
-    vramIncrementOnHigh(false),
+    isVramIncrementOnHigh(false),
     vramRwAddr(0),
     vramPrefetch{0,0},
     regINIDISP(memory->AttachIoRegister(eRegINIDISP, this)),
@@ -79,7 +83,7 @@ Ppu::Ppu(Memory *memory, DebuggerInterface *debuggerInterface) :
     regSTAT77(memory->AttachIoRegister(eRegSTAT77, this)),
     regSTAT78(memory->AttachIoRegister(eRegSTAT78, this))
 {
-
+    timerSubject->AttachObserver(this);
 }
 
 
@@ -232,9 +236,9 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
     {
         case eRegINIDISP: // 0x2100
             *regINIDISP = byte;
-            forcedBlank = byte & 0x80;
+            isForcedBlank = byte & 0x80;
             brightness = byte & 0x0F;
-            LogInstruction("ForcedBlank=%d Brightness=%d", forcedBlank, brightness);
+            LogInstruction("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
         case eRegOBSEL:
             *regOBSEL = byte;
@@ -302,14 +306,14 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             *regVMAIN = byte;
             if ((byte & 0x0C) != 0)
                 throw NotYetImplementedException(fmt("Address translation NYI. Byte=%02X", byte));
-            vramIncrementOnHigh = byte & 0x80;
+            isVramIncrementOnHigh = byte & 0x80;
             switch (byte & 0x03)
             {
                 case 0: vramIncrement = 1; break;
                 case 1: vramIncrement = 32; break;
                 case 2: case 3: vramIncrement = 128; break;
             }
-            LogInstruction("Increment VRAM by %d after reading %s byte", vramIncrement, vramIncrementOnHigh ? "High" : "Low");
+            LogInstruction("Increment VRAM by %d after reading %s byte", vramIncrement, isVramIncrementOnHigh ? "High" : "Low");
             return true;
         case eRegVMADDL: // 0x2116
             *regVMADDL = byte;
@@ -338,7 +342,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAL: // 0x2118
             *regVMDATAL = byte;
             vram[vramRwAddr] = byte;
-            if (!vramIncrementOnHigh)
+            if (!isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
                 vramRwAddr += vramIncrement << 1;
@@ -347,7 +351,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAH: // 0x2119
             *regVMDATAH = byte;
             vram[vramRwAddr + 1] = byte;
-            if (vramIncrementOnHigh)
+            if (isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
                 vramRwAddr += vramIncrement << 1;
@@ -471,4 +475,27 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return false;
     }
     return false;
+}
+
+
+void Ppu::UpdateTimer(uint32_t value)
+{
+    clockCounter += value;
+    if (clockCounter > 1364)
+    {
+        clockCounter -= 1364;
+
+        scanline++;
+        if (scanline == 225)
+        {
+            isVBlank = true;
+            *memory->GetBytePtr(eRegRDNMI) |= 0x80;
+        }
+        else if (scanline == 262)
+        {
+            scanline = 0;
+            isVBlank = false;
+            *memory->GetBytePtr(eRegRDNMI) &= 0x7F;
+        }
+    }
 }

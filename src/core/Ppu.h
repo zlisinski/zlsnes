@@ -2,6 +2,7 @@
 
 #include "Zlsnes.h"
 #include "IoRegisterProxy.h"
+#include "TimerObserver.h"
 
 class DebuggerInterface;
 class Memory;
@@ -10,15 +11,18 @@ const size_t OAM_SIZE = 544;
 const size_t VRAM_SIZE = 0xFFFF;
 const size_t PALETTE_SIZE = 512;
 
-class Ppu : public IoRegisterProxy
+class Ppu : public IoRegisterProxy, public TimerObserver
 {
 public:
-    Ppu(Memory *memory, DebuggerInterface *debuggerInterface = nullptr);
+    Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Ppu() {}
 
     // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
+
+    // Inherited from TimerObserver.
+    void UpdateTimer(uint32_t value) override;
 
     // Used for debugging.
     uint8_t *GetOamPtr() {return &oam[0];}
@@ -33,12 +37,17 @@ private:
 
     DebuggerInterface *debuggerInterface;
 
-    bool forcedBlank;
+    bool isHBlank;
+    bool isVBlank;
+    uint32_t clockCounter;
+    uint32_t scanline;
+
+    bool isForcedBlank;
     uint8_t brightness;
     uint8_t screenMode;
 
     uint8_t vramIncrement;
-    bool vramIncrementOnHigh;
+    bool isVramIncrementOnHigh;
     uint16_t vramRwAddr;
     uint8_t vramPrefetch[2];
 

@@ -26,6 +26,10 @@ public:
 
     void AttachObserver(TimerObserver *observer)
     {
+        if (timerObserverCount == timerObserversMax)
+            throw std::range_error("Too many timer observers");
+        if (observer == nullptr)
+            throw std::logic_error("observer == null");
         timerObservers[timerObserverCount++] = observer;
     }
 
@@ -39,12 +43,7 @@ public:
     void NotifyObservers(uint32_t value)
     {
         for (int i = 0; i < timerObserverCount; i++)
-        {
-            if (timerObservers[i])
-            {
-                timerObservers[i]->UpdateTimer(value);
-            }
-        }
+            timerObservers[i]->UpdateTimer(value);
     }
 
 protected:

@@ -39,7 +39,7 @@ void Memory::SetTimer(Timer *timer)
 }
 
 
-uint8_t Memory::Read8Bit(uint32_t addr) const
+uint8_t Memory::Read8Bit(uint32_t addr)
 {
     if ((addr & 0x408000) == 0) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x7FFF.
     {
@@ -64,6 +64,24 @@ uint8_t Memory::Read8Bit(uint32_t addr) const
                 //timer->AddCycle(EClockSpeed::eClockOther);
                 //return ioPorts40[addr & 0xFF];
             case 0x42:
+                timer->AddCycle(EClockSpeed::eClockIoReg);
+                switch (addr)
+                {
+                    case eRegRDNMI:
+                        {
+                            uint8_t value = ioPorts42[addr & 0xFF];
+                            if (value & 0x80)
+                            {
+                                // VBlank NMI flag gets reset after reads.
+                                ioPorts42[addr & 0xFF] &= 0x7F;
+                                if (debuggerInterface != nullptr)
+                                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
+                            }
+                            return value;
+                        }
+                    default:
+                        throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
+                }
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
                 //return ioPorts42[addr & 0xFF];
@@ -143,7 +161,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x42:
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
+                timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr)
                 {
                     case eRegNMITIMEN:

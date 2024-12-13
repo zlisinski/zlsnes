@@ -62,7 +62,7 @@ bool Emulator::LoadRom(const std::string &filename)
     memory = new Memory(infoInterface, debuggerInterface);
     //interrupts = new Interrupt(memory);
     timer = new Timer(/*memory, interrupts*/);
-    ppu = new Ppu(memory/*, interrupts, displayInterface, timer*/);
+    ppu = new Ppu(memory, timer, debuggerInterface);
     //input = new Input(memory, interrupts);
     cpu = new Cpu(/*interrupts,*/ memory, timer);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
