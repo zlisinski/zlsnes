@@ -144,7 +144,12 @@ void Emulator::ThreadFunc()
     try
     {
         if (infoInterface)
-            infoInterface->SetMemory(memory->GetBytePtr(0));
+        {
+            infoInterface->SetIoPorts21(memory->GetBytePtr(0x2100));
+            infoInterface->SetVram(ppu->GetVramPtr());
+            infoInterface->SetOam(ppu->GetOamPtr());
+            infoInterface->SetCgram(ppu->GetCgramPtr());
+        }
 
         if (debuggerInterface)
             debuggerInterface->SetEmulatorObjects(memory, cpu, ppu);
@@ -187,7 +192,12 @@ void Emulator::ThreadFunc()
     }
 
     if (infoInterface)
-        infoInterface->SetMemory(NULL);
+    {
+        infoInterface->SetIoPorts21(nullptr);
+        infoInterface->SetVram(nullptr);
+        infoInterface->SetOam(nullptr);
+        infoInterface->SetCgram(nullptr);
+    }
     if (debuggerInterface)
         debuggerInterface->SetEmulatorObjects(nullptr, nullptr, nullptr);
 

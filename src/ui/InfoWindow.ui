@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>614</width>
-    <height>658</height>
+    <width>905</width>
+    <height>707</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabTiles">
       <attribute name="title">
@@ -27,19 +27,62 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
-         <width>403</width>
-         <height>603</height>
+         <y>110</y>
+         <width>431</width>
+         <height>541</height>
         </rect>
        </property>
       </widget>
-      <widget class="QGraphicsView" name="gvTilePreview">
+      <widget class="QGroupBox" name="groupBox_2">
        <property name="geometry">
         <rect>
-         <x>435</x>
-         <y>0</y>
-         <width>128</width>
-         <height>128</height>
+         <x>10</x>
+         <y>10</y>
+         <width>201</width>
+         <height>91</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Video</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_21">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_18">
+          <property name="text">
+           <string>Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="labelVideoMode">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_22">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QGraphicsView" name="gvPalette">
+       <property name="geometry">
+        <rect>
+         <x>510</x>
+         <y>120</y>
+         <width>262</width>
+         <height>262</height>
         </rect>
        </property>
       </widget>
@@ -322,14 +365,4 @@
  </widget>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="buttonGroup_3"/>
-  <buttongroup name="buttonGroup"/>
-  <buttongroup name="buttonGroup_8"/>
-  <buttongroup name="buttonGroup_2"/>
-  <buttongroup name="buttonGroup_6"/>
-  <buttongroup name="buttonGroup_5"/>
-  <buttongroup name="buttonGroup_7"/>
-  <buttongroup name="buttonGroup_4"/>
- </buttongroups>
 </ui>

@@ -1,5 +1,6 @@
 #include <memory>
 #include <QtCore/QSettings>
+#include <QtCore/QTimer>
 #include <QtWidgets/QGraphicsPixmapItem>
 
 #include "InfoWindow.h"
@@ -14,12 +15,18 @@
 InfoWindow::InfoWindow(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::InfoWindow),
-    memory(NULL)
+    ioPorts21(nullptr),
+    vram(nullptr),
+    oam(nullptr),
+    cgram(nullptr),
+    paletteData{0}
 {
     ui->setupUi(this);
 
     QGraphicsScene *scene = new QGraphicsScene(this);
     ui->gvTiles->setScene(scene);
+    scene = new QGraphicsScene(this);
+    ui->gvPalette->setScene(scene);
 
     QSettings settings;
     restoreGeometry(settings.value(SETTINGS_INFOWINDOW_GEOMETRY).toByteArray());
@@ -29,6 +36,10 @@ InfoWindow::InfoWindow(QWidget *parent) :
 
     ClearCartridgeInfo();
     DrawFrame();
+
+    // Use a timer for updating the tilemap images until I get actual frames rendering.
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(SlotDrawFrame()));
 }
 
 
@@ -91,8 +102,19 @@ void InfoWindow::DrawFrame()
 }
 
 
+void InfoWindow::showEvent(QShowEvent *event)
+{
+    timer->start(100);
+
+    QWidget::showEvent(event);
+}
+
+
 void InfoWindow::closeEvent(QCloseEvent *event)
 {
+    // No need to keep updating if the window isn't open.
+    timer->stop();
+
     QSettings settings;
     settings.setValue(SETTINGS_INFOWINDOW_GEOMETRY, saveGeometry());
 
@@ -122,6 +144,8 @@ void InfoWindow::ClearCartridgeInfo()
     ui->labelChecksum2->setText("");
     ui->labelMakerCode->setText("");
     ui->labelGameCode->setText("");
+
+    ui->labelVideoMode->setText("");
 }
 
 
@@ -172,20 +196,119 @@ QString InfoWindow::GetChipsetString(uint8_t chipset)
 }
 
 
+void InfoWindow::GeneratePalette()
+{
+    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+        return;
+
+    // Convert BGR555 to ARGB8888
+    for (int i = 0; i < 256; i++)
+    {
+        uint16_t color = Bytes::Make16Bit(cgram[(i * 2) + 1], cgram[i * 2]);
+
+        uint8_t r = color & 0x1F;
+        r = (r << 3) | ((r >> 2) & 0x07);
+
+        color >>= 5;
+        uint8_t g = color & 0x1F;
+        g = (g << 3) | ((g >> 2) & 0x07);
+
+        color >>= 5;
+        uint8_t b = color & 0x1F;
+        b = (b << 3) | ((b >> 2) & 0x07);
+
+        paletteData[i] = 0xFF000000 | Bytes::Make24Bit(r, g, b);
+    }
+}
+
+
 void InfoWindow::UpdateTileView()
 {
+    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+        return;
 
+    const int SCALE = 3;
+    const uint16_t bg1TileOffset = (ioPorts21[eRegBG12NBA & 0xFF] & 0x0F) << 13;
+    const uint8_t *tilesetData = &vram[bg1TileOffset];
+
+    ui->gvTiles->scene()->clear();
+    ui->gvTiles->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
+    QPen pen(Qt::green, 1);
+
+    // Draw grid.
+    for (int i = 0; i < 25; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        ui->gvTiles->scene()->addLine(0, len, 400, len, pen);
+    }
+    for (int i = 0; i < 17; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        ui->gvTiles->scene()->addLine(len, 0, len, 600, pen);
+    }
+
+    for (int tile = 0; tile < 384; tile++)
+    {
+        QImage img(8, 8, QImage::Format_RGB32);
+
+        for (int y = 0; y < 8; y++)
+        {
+            const uint8_t *tileData = &tilesetData[(tile * 16) + (y * 2)];
+
+            for (int x = 0; x < 8; x++)
+            {
+                uint8_t lowBit = ((tileData[0] >> (7 - x)) & 0x01);
+                uint8_t highBit = ((tileData[1] >> (7 - x)) & 0x01);
+                uint8_t pixelVal = lowBit | (highBit << 1);
+                img.setPixel(x, y, paletteData[pixelVal]);
+            }
+        }
+
+        QGraphicsPixmapItem *pixmap = ui->gvTiles->scene()->addPixmap(QPixmap::fromImage(img));
+        pixmap->setScale(SCALE);
+        int xpos = 1 + ((tile % 16) * 8 * SCALE) + (tile % 16);
+        int ypos = 1 + ((tile / 16) * 8 * SCALE) + (tile / 16);
+        pixmap->setPos(xpos, ypos);
+    }
+}
+
+
+void InfoWindow::UpdatePaletteView()
+{
+    const int SCALE = 16;
+    ui->gvPalette->scene()->clear();
+    ui->gvPalette->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
+    
+    QPen pen;
+    QBrush brush;
+
+    for (int x = 0; x < 16; x++)
+    {
+        for (int y = 0; y < 16; y++)
+        {
+            uint32_t color = paletteData[(y * 16) + x];
+            pen.setColor(color);
+            brush.setColor(color);
+            brush.setStyle(Qt::SolidPattern);
+            ui->gvPalette->scene()->addRect((x * SCALE), (y * SCALE), SCALE, SCALE, pen, brush);
+        }
+    }
 }
 
 
 void InfoWindow::UpdateMemoryView()
 {
+    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+        return;
 
+    ui->labelVideoMode->setText(QString::number(ioPorts21[eRegBGMODE & 0xFF] & 0x07));
 }
 
 
 void InfoWindow::SlotDrawFrame()
 {
+    GeneratePalette();
     UpdateTileView();
+    UpdatePaletteView();
     UpdateMemoryView();
 }

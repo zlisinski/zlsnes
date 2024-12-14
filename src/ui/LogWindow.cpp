@@ -91,10 +91,10 @@ void LogWindow::SlotOutputMessage()
         tm *now = localtime(&entry->tv.tv_sec);
         strftime(timeBuf, sizeof(timeBuf), "%H:%M:%S", now);
         ss << timeBuf << "." << std::setfill('0') << std::setw(6) << entry->tv.tv_usec << ":  " << entry->message;
-        if (entry->level == LogLevel::eInstruction)
+        //if (entry->level == LogLevel::eInstruction)
             printf("%s\n", ss.str().c_str());
-        else
-            ui->txtOutput->append(ss.str().c_str());
+        //else
+        //    ui->txtOutput->append(ss.str().c_str());
     }
 
     entries.clear();
