@@ -4,6 +4,7 @@ set(CORE_SRC
     Cartridge.cpp
     Cpu.cpp
     Emulator.cpp
+    Input.cpp
     Logger.cpp
     Memory.cpp
     Ppu.cpp

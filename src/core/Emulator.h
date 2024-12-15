@@ -3,7 +3,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
-//#include "Buttons.h"
+#include "Buttons.h"
 #include "Cartridge.h"
 
 //class Audio;
@@ -13,7 +13,7 @@ class DebuggerInterface;
 class DisplayInterface;
 //class GameSpeedSubject;
 class InfoInterface;
-//class Input;
+class Input;
 //class Interrupt;
 class Memory;
 class Ppu;
@@ -30,8 +30,8 @@ public:
     void ResetEmulation();
     void PauseEmulation(bool pause);
     void EndEmulation();
-    //void ButtonPressed(Buttons::Button button);
-    //void ButtonReleased(Buttons::Button button);
+    void ButtonPressed(Buttons::Button button);
+    void ButtonReleased(Buttons::Button button);
 
     void SaveState(int slot);
     void LoadState(int slot);
@@ -57,10 +57,10 @@ private:
     //GameSpeedSubject *gameSpeedSubject;
 
     //Audio *audio;
-    //Buttons buttons;
+    Buttons buttons;
     Cartridge cartridge;
     Cpu *cpu;
-    //Input *input;
+    Input *input;
     //Interrupt *interrupts;
     Memory *memory;
     Ppu *ppu;

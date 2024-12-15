@@ -7,9 +7,6 @@ extern const char *SETTINGS_AUDIO_CHANNEL2;
 extern const char *SETTINGS_AUDIO_CHANNEL3;
 extern const char *SETTINGS_AUDIO_CHANNEL4;
 
-extern const char *SETTINGS_BOOTROM_ENABLED;
-extern const char *SETTINGS_BOOTROM_PATH;
-
 extern const char *SETTINGS_DEBUGGERWINDOW_GEOMETRY;
 extern const char *SETTINGS_DEBUGGERWINDOW_STATE;
 extern const char *SETTINGS_DEBUGGERWINDOW_DISPLAY;
@@ -26,6 +23,10 @@ extern const char *SETTINGS_INPUT_KEY_LEFT;
 extern const char *SETTINGS_INPUT_KEY_RIGHT;
 extern const char *SETTINGS_INPUT_KEY_B;
 extern const char *SETTINGS_INPUT_KEY_A;
+extern const char *SETTINGS_INPUT_KEY_Y;
+extern const char *SETTINGS_INPUT_KEY_X;
+extern const char *SETTINGS_INPUT_KEY_L;
+extern const char *SETTINGS_INPUT_KEY_R;
 extern const char *SETTINGS_INPUT_KEY_START;
 extern const char *SETTINGS_INPUT_KEY_SELECT;
 extern const char *SETTINGS_INPUT_PAD_UP;
@@ -34,6 +35,10 @@ extern const char *SETTINGS_INPUT_PAD_LEFT;
 extern const char *SETTINGS_INPUT_PAD_RIGHT;
 extern const char *SETTINGS_INPUT_PAD_B;
 extern const char *SETTINGS_INPUT_PAD_A;
+extern const char *SETTINGS_INPUT_PAD_Y;
+extern const char *SETTINGS_INPUT_PAD_X;
+extern const char *SETTINGS_INPUT_PAD_L;
+extern const char *SETTINGS_INPUT_PAD_R;
 extern const char *SETTINGS_INPUT_PAD_START;
 extern const char *SETTINGS_INPUT_PAD_SELECT;
 

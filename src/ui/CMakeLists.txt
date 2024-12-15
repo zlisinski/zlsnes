@@ -17,9 +17,11 @@ include_directories(../)
 
 set(UI_SRC
     InfoWindow.cpp
+    KeyBindingDialog.cpp
     LogWindow.cpp
     MainWindow.cpp
     SettingsConstants.cpp
+    SettingsDialog.cpp
 )
 
 add_library(zlsnes_ui

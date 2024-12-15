@@ -7,7 +7,7 @@
 #include "LogWindow.h"
 #include "MainWindow.h"
 #include "SettingsConstants.h"
-//#include "SettingsDialog.h"
+#include "SettingsDialog.h"
 #include "UiUtils.h"
 #include "../core/Emulator.h"
 //#include "../Input.h"
@@ -25,9 +25,9 @@ MainWindow::MainWindow(QWidget *parent) :
     frameCount(0),
     frameCapTimer(),
     frameCapSetting(60),
-/*#ifdef QT_GAMEPAD_LIB
+#ifdef QT_GAMEPAD_LIB
     gamepad(NULL),
-#endif*/
+#endif
     infoWindow(NULL),
     displayInfoWindowAction(NULL),
     logWindow(NULL),
@@ -57,10 +57,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     SetupMenuBar();
     SetupStatusBar();
-    /*SetupGamepad();
-    SetupAudio();
+    SetupGamepad();
+    //SetupAudio();
 
-    LoadKeyBindings();*/
+    LoadKeyBindings();
 
     graphicsView = new QGraphicsView(this);
     graphicsView->setFrameStyle(QFrame::NoFrame);
@@ -106,12 +106,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    /*Buttons::Button button = keyboardBindings.value(static_cast<Qt::Key>(event->key()), Buttons::Button::eButtonNone);
+    Buttons::Button button = keyboardBindings.value(static_cast<Qt::Key>(event->key()), Buttons::Button::eButtonNone);
     if (button != Buttons::Button::eButtonNone)
     {
         emulator->ButtonPressed(button);
     }
-    else*/
+    else
     {
         QMainWindow::keyPressEvent(event);
     }
@@ -120,12 +120,12 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
-    /*Buttons::Button button = keyboardBindings.value(static_cast<Qt::Key>(event->key()), Buttons::Button::eButtonNone);
+    Buttons::Button button = keyboardBindings.value(static_cast<Qt::Key>(event->key()), Buttons::Button::eButtonNone);
     if (button != Buttons::Button::eButtonNone)
     {
         emulator->ButtonReleased(button);
     }
-    else*/
+    else
     {
         QMainWindow::keyReleaseEvent(event);
     }
@@ -172,9 +172,9 @@ void MainWindow::SetupMenuBar()
     fileMenu->addSeparator();
 
     // File | Settings
-    /*QAction *fileSettingsAction = new QAction("&Settings...", this);
+    QAction *fileSettingsAction = new QAction("&Settings...", this);
     fileMenu->addAction(fileSettingsAction);
-    connect(fileSettingsAction, SIGNAL(triggered()), this, SLOT(SlotOpenSettings()));*/
+    connect(fileSettingsAction, SIGNAL(triggered()), this, SLOT(SlotOpenSettings()));
 
     // File | Quit
     fileMenu->addSeparator();
@@ -285,7 +285,7 @@ void MainWindow::SetupStatusBar()
 }
 
 
-/*void MainWindow::SetupGamepad()
+void MainWindow::SetupGamepad()
 {
 #ifdef QT_GAMEPAD_LIB
     QList<int> gamepads = QGamepadManager::instance()->connectedGamepads();
@@ -302,7 +302,7 @@ void MainWindow::SetupStatusBar()
 }
 
 
-void MainWindow::SetupAudio()
+/*void MainWindow::SetupAudio()
 {
     LoadAudioSettings();
 
@@ -339,7 +339,7 @@ void MainWindow::LoadAudioSettings()
     enabledAudioChannels.channel2 = settings.value(SETTINGS_AUDIO_CHANNEL2, true).toBool();
     enabledAudioChannels.channel3 = settings.value(SETTINGS_AUDIO_CHANNEL3, true).toBool();
     enabledAudioChannels.channel4 = settings.value(SETTINGS_AUDIO_CHANNEL4, true).toBool();
-}
+}*/
 
 
 void MainWindow::LoadKeyBindings()
@@ -352,6 +352,10 @@ void MainWindow::LoadKeyBindings()
         {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_RIGHT, Qt::Key_D).toInt()), Buttons::eButtonRight},
         {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_B, Qt::Key_K).toInt()), Buttons::eButtonB},
         {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_A, Qt::Key_L).toInt()), Buttons::eButtonA},
+        {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_Y, Qt::Key_I).toInt()), Buttons::eButtonY},
+        {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_X, Qt::Key_O).toInt()), Buttons::eButtonX},
+        {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_L, Qt::Key_U).toInt()), Buttons::eButtonL},
+        {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_R, Qt::Key_P).toInt()), Buttons::eButtonR},
         {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_START, Qt::Key_J).toInt()), Buttons::eButtonStart},
         {static_cast<Qt::Key>(settings.value(SETTINGS_INPUT_KEY_SELECT, Qt::Key_H).toInt()), Buttons::eButtonSelect}
     };
@@ -363,11 +367,15 @@ void MainWindow::LoadKeyBindings()
         {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_RIGHT, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonRight},
         {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_B, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonB},
         {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_A, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonA},
+        {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_Y, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonY},
+        {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_X, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonX},
+        {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_L, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonL},
+        {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_R, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonR},
         {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_START, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonStart},
         {static_cast<QGamepadManager::GamepadButton>(settings.value(SETTINGS_INPUT_PAD_SELECT, QGamepadManager::ButtonInvalid).toInt()), Buttons::eButtonSelect}
     };
 #endif
-}*/
+}
 
 
 void MainWindow::UpdateRecentFile(const QString &filename)
@@ -680,18 +688,18 @@ void MainWindow::SlotLoadState()
 }
 
 
-/*void MainWindow::SlotOpenSettings()
+void MainWindow::SlotOpenSettings()
 {
     SettingsDialog dialog(this);
     dialog.setModal(true);
     dialog.exec();
 
-    LoadAudioSettings();
+    //LoadAudioSettings();
     LoadKeyBindings();
 }
 
 
-void MainWindow::SlotAudioStateChanged(QAudio::State state)
+/*void MainWindow::SlotAudioStateChanged(QAudio::State state)
 {
     switch (state)
     {
@@ -717,7 +725,7 @@ void MainWindow::SlotAudioStateChanged(QAudio::State state)
             LogError("Audio suspended");
             break;
     }
-}
+}*/
 
 #ifdef QT_GAMEPAD_LIB
 void MainWindow::SlotGamepadPressed(int deviceId, QGamepadManager::GamepadButton gamepadButton, double value)
@@ -743,4 +751,4 @@ void MainWindow::SlotGamepadReleased(int deviceId, QGamepadManager::GamepadButto
         emulator->ButtonReleased(button);
     }
 }
-#endif*/
+#endif

@@ -7,9 +7,6 @@ const char *SETTINGS_AUDIO_CHANNEL2 = "Audio/Channel2";
 const char *SETTINGS_AUDIO_CHANNEL3 = "Audio/Channel3";
 const char *SETTINGS_AUDIO_CHANNEL4 = "Audio/Channel4";
 
-const char *SETTINGS_BOOTROM_ENABLED = "BootRom/Enabled";
-const char *SETTINGS_BOOTROM_PATH = "BootRom/Path";
-
 const char *SETTINGS_DEBUGGERWINDOW_GEOMETRY = "DebuggerWindow/Geometry";
 const char *SETTINGS_DEBUGGERWINDOW_STATE = "DebuggerWindow/State";
 const char *SETTINGS_DEBUGGERWINDOW_DISPLAY = "DebuggerWindow/Display";
@@ -26,6 +23,10 @@ const char *SETTINGS_INPUT_KEY_LEFT = "Input/Key_Left";
 const char *SETTINGS_INPUT_KEY_RIGHT = "Input/Key_Right";
 const char *SETTINGS_INPUT_KEY_B = "Input/Key_B";
 const char *SETTINGS_INPUT_KEY_A = "Input/Key_A";
+const char *SETTINGS_INPUT_KEY_Y = "Input/Key_Y";
+const char *SETTINGS_INPUT_KEY_X = "Input/Key_X";
+const char *SETTINGS_INPUT_KEY_L = "Input/Key_L";
+const char *SETTINGS_INPUT_KEY_R = "Input/Key_R";
 const char *SETTINGS_INPUT_KEY_START = "Input/Key_Start";
 const char *SETTINGS_INPUT_KEY_SELECT = "Input/Key_Select";
 const char *SETTINGS_INPUT_PAD_UP = "Input/Pad_Up";
@@ -34,6 +35,10 @@ const char *SETTINGS_INPUT_PAD_LEFT = "Input/Pad_Left";
 const char *SETTINGS_INPUT_PAD_RIGHT = "Input/Pad_Right";
 const char *SETTINGS_INPUT_PAD_B = "Input/Pad_B";
 const char *SETTINGS_INPUT_PAD_A = "Input/Pad_A";
+const char *SETTINGS_INPUT_PAD_Y = "Input/Pad_Y";
+const char *SETTINGS_INPUT_PAD_X = "Input/Pad_X";
+const char *SETTINGS_INPUT_PAD_L = "Input/Pad_L";
+const char *SETTINGS_INPUT_PAD_R = "Input/Pad_R";
 const char *SETTINGS_INPUT_PAD_START = "Input/Pad_Start";
 const char *SETTINGS_INPUT_PAD_SELECT = "Input/Pad_Select";
 

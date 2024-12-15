@@ -2,16 +2,15 @@
 
 #include <array>
 #include <QElapsedTimer>
-//#ifdef QT_GAMEPAD_LIB
-//#include <QtGamepad>
-//#endif
+#ifdef QT_GAMEPAD_LIB
+#include <QtGamepad>
+#endif
 //#include <QAudioOutput>
 #include <QGraphicsView>
 #include <QMainWindow>
 
 //#include "../core/AudioInterface.h"
-//#include "../core/Buttons.h"
-//#include "../core/Display.h"
+#include "../core/Buttons.h"
 #include "../core/DisplayInterface.h"
 //#include "../core/GameSpeedObserver.h"
 
@@ -58,10 +57,10 @@ protected:
 private:
     void SetupMenuBar();
     void SetupStatusBar();
-    /*void SetupGamepad();
-    void SetupAudio();
-    void LoadAudioSettings();
-    void LoadKeyBindings();*/
+    void SetupGamepad();
+    //void SetupAudio();
+    //void LoadAudioSettings();
+    void LoadKeyBindings();
     void UpdateRecentFile(const QString &filename);
     void UpdateRecentFilesActions();
     void SetDisplayScale(int scale);
@@ -83,11 +82,11 @@ private:
     QElapsedTimer frameCapTimer;
     int frameCapSetting;
 
-    /*QHash<Qt::Key, Buttons::Button> keyboardBindings;
+    QHash<Qt::Key, Buttons::Button> keyboardBindings;
 #ifdef QT_GAMEPAD_LIB
     QHash<QGamepadManager::GamepadButton, Buttons::Button> gamepadBindings;
     QGamepad *gamepad;
-#endif*/
+#endif
 
     std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer;
     int displayScale;
@@ -130,12 +129,12 @@ private slots:
     void SlotDebuggerWindowClosed();
     void SlotSaveState();
     void SlotLoadState();
-    /*void SlotOpenSettings();
-    void SlotAudioStateChanged(QAudio::State state);
+    void SlotOpenSettings();
+    //void SlotAudioStateChanged(QAudio::State state);
 #ifdef QT_GAMEPAD_LIB
     void SlotGamepadPressed(int deviceId, QGamepadManager::GamepadButton gamepadButton, double value);
     void SlotGamepadReleased(int deviceId, QGamepadManager::GamepadButton gamepadButton);
-#endif*/
+#endif
 
 signals:
     void SignalFrameReady();

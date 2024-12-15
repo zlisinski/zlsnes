@@ -6,7 +6,7 @@
 #include "DisplayInterface.h"
 #include "Emulator.h"
 #include "InfoInterface.h"
-//#include "Input.h"
+#include "Input.h"
 #include "Memory.h"
 #include "Ppu.h"
 #include "Timer.h"
@@ -21,12 +21,12 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     infoInterface(infoInterface),
     debuggerInterface(debuggerInterface),
     /*gameSpeedSubject(gameSpeedSubject),
-    audio(NULL),
-    buttons(),*/
+    audio(NULL),*/
+    buttons(),
     cartridge(),
     cpu(NULL),
-    /*input(NULL),
-    interrupts(NULL),*/
+    input(NULL),
+    //interrupts(NULL),
     memory(NULL),
     ppu(NULL),
     timer(NULL)
@@ -63,7 +63,7 @@ bool Emulator::LoadRom(const std::string &filename)
     //interrupts = new Interrupt(memory);
     timer = new Timer(/*memory, interrupts*/);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
-    //input = new Input(memory, interrupts);
+    input = new Input(memory/*, interrupts*/);
     cpu = new Cpu(/*interrupts,*/ memory, timer);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
 
@@ -103,7 +103,7 @@ void Emulator::EndEmulation()
 }
 
 
-/*void Emulator::ButtonPressed(Buttons::Button button)
+void Emulator::ButtonPressed(Buttons::Button button)
 {
     uint8_t oldButtonData = buttons.data;
 
@@ -124,7 +124,7 @@ void Emulator::ButtonReleased(Buttons::Button button)
 
     if (input && buttons.data != oldButtonData)
         input->SetButtons(buttons);
-}*/
+}
 
 
 void Emulator::SaveState(int slot)
@@ -207,9 +207,9 @@ void Emulator::ThreadFunc()
     cpu = NULL;
     delete ppu;
     ppu = NULL;
-    /*delete input;
+    delete input;
     input = NULL;
-    delete interrupts;
+    /*delete interrupts;
     interrupts = NULL;*/
     delete timer;
     timer = NULL;
