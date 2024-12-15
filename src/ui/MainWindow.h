@@ -22,8 +22,7 @@ class LogWindow;
 class QLabel;
 
 const int MAX_RECENT_FILES = 10;
-const int SCREEN_X = 512;
-const int SCREEN_Y = 448;
+
 
 class MainWindow : public QMainWindow, public DisplayInterface//, public AudioInterface, public GameSpeedSubject
 {
@@ -35,9 +34,9 @@ public:
 
     // DisplayInterface functions.
     // Callback for Emulator to signal a frame is ready to be drawn.
-    virtual void FrameReady(uint32_t *displayFrameBuffer);
+    void FrameReady(const std::array<uint32_t, SCREEN_X * SCREEN_Y> &displayFrameBuffer) override;
     // Callback for Emulator to show message box.
-    virtual void RequestMessageBox(const std::string &message);
+    void RequestMessageBox(const std::string &message) override;
 
     // AudioInterface functions.
     /*virtual void AudioDataReady(const std::array<int16_t, AudioInterface::BUFFER_LEN> &data);
@@ -90,7 +89,7 @@ private:
     QGamepad *gamepad;
 #endif*/
 
-    uint32_t frameBuffer[SCREEN_X * SCREEN_Y];
+    std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer;
     int displayScale;
 
     InfoWindow *infoWindow;

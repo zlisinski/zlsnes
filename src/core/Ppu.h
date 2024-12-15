@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Zlsnes.h"
+#include "DisplayInterface.h"
 #include "IoRegisterProxy.h"
 #include "TimerObserver.h"
 
@@ -14,7 +15,7 @@ const size_t CGRAM_SIZE = 512;
 class Ppu : public IoRegisterProxy, public TimerObserver
 {
 public:
-    Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debuggerInterface = nullptr);
+    Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Ppu() {}
 
     // Inherited from IoRegisterProxy.
@@ -30,12 +31,20 @@ public:
     uint8_t *GetCgramPtr() {return &cgram[0];}
 
 private:
+    uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
+    void DrawScanline(uint8_t scanline);
+    void DrawBackgroundScanline(uint8_t scanline);
+    void DrawScreen();
+
     Memory *memory;
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;
     std::array<uint8_t, CGRAM_SIZE> cgram;
+    std::array<uint32_t, CGRAM_SIZE / 2> palette;
+    std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer;
 
     DebuggerInterface *debuggerInterface;
+    DisplayInterface *displayInterface;
 
     bool isHBlank;
     bool isVBlank;
@@ -44,7 +53,7 @@ private:
 
     bool isForcedBlank;
     uint8_t brightness;
-    uint8_t screenMode;
+    uint8_t bgMode;
 
     uint8_t bgOffsetLatch;
     uint8_t bgHOffsetLatch;

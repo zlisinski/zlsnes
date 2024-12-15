@@ -4,16 +4,17 @@
 #include "Ppu.h"
 
 
-Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DebuggerInterface *debuggerInterface) :
+Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     memory(memory),
     debuggerInterface(debuggerInterface),
+    displayInterface(displayInterface),
     isHBlank(true),
     isVBlank(false),
     clockCounter(0),
     scanline(0),
     isForcedBlank(false),
     brightness(0),
-    screenMode(0),
+    bgMode(0),
     bgOffsetLatch(0),
     bgHOffsetLatch(0),
     bgHOffset{0, 0, 0, 0},
@@ -260,8 +261,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return false;
         case eRegBGMODE: // 0x2105
             *regBGMODE = byte;
-            screenMode = byte & 0x07;
-            LogDebug("ScreenMode=%d", screenMode);
+            bgMode = byte & 0x07;
+            LogDebug("bgMode=%d", bgMode);
             return true;
         case eRegMOSAIC: // 0x2106
             *regMOSAIC = byte;
@@ -455,6 +456,9 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
                 cgram[cgramRwAddr - 1] = cgramLatch;
                 cgram[cgramRwAddr] = byte;
                 LogDebug("Writing word to cgram %02X%02X", byte, cgramLatch);
+
+                // Convert to ARGB and store in palette.
+                palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(Bytes::Make16Bit(byte, cgramLatch));
             }
             cgramRwAddr++;
             return true;
@@ -579,6 +583,9 @@ void Ppu::UpdateTimer(uint32_t value)
     {
         clockCounter -= 1364;
 
+        if (scanline < 224)
+            DrawScanline(scanline);
+
         scanline++;
         if (scanline == 225)
         {
@@ -586,6 +593,8 @@ void Ppu::UpdateTimer(uint32_t value)
             // Set VBlank flags.
             *memory->GetBytePtr(eRegRDNMI) |= 0x80;
             *memory->GetBytePtr(eRegHVBJOY) |= 0x80;
+
+            DrawScreen();
         }
         else if (scanline == 262)
         {
@@ -596,4 +605,75 @@ void Ppu::UpdateTimer(uint32_t value)
             *memory->GetBytePtr(eRegHVBJOY) &= 0x7F;
         }
     }
+}
+
+
+uint32_t Ppu::ConvertBGR555toARGB888(uint16_t bgrColor)
+{
+    uint8_t r = bgrColor & 0x1F;
+    r = (r << 3) | ((r >> 2) & 0x07);
+
+    bgrColor >>= 5;
+    uint8_t g = bgrColor & 0x1F;
+    g = (g << 3) | ((g >> 2) & 0x07);
+
+    bgrColor >>= 5;
+    uint8_t b = bgrColor & 0x1F;
+    b = (b << 3) | ((b >> 2) & 0x07);
+
+    return 0xFF000000 | Bytes::Make24Bit(r, g, b);
+}
+
+
+void Ppu::DrawScanline(uint8_t scanline)
+{
+    DrawBackgroundScanline(scanline);
+}
+
+
+void Ppu::DrawBackgroundScanline(uint8_t scanline)
+{
+    // Draw only Mode0 BG1 for now.
+    // TODO: Check tile size in BGMODE
+    // TODO: Check tile size in BGnSC
+
+    // tilesetData is the actual pixel/palette-index data for a tile.
+    const uint16_t tilesetDataOffset = (*regBG12NBA & 0x0F) << 13;
+    const uint8_t *tilesetData = &vram[tilesetDataOffset];
+
+    // tilemap is an index into tileData, as well as priority and flip data.
+    //const uint8_t hTilemapCount = Bytes::GetBit<0>(*regBG1SC);
+    //const uint8_t vTilemapCount = Bytes::GetBit<1>(*regBG1SC);
+    const uint16_t tilemapOffset = (*regBG1SC & 0xFC) << 11;
+    const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[tilemapOffset]);
+
+    const uint32_t TILE_SIZE = 8; // TODO: check actual tile size.
+    const uint32_t TILEMAP_WIDTH = 32;
+    uint32_t tileY = scanline / TILE_SIZE;
+    for (int i = 0; i < SCREEN_X; i++)
+    {
+        uint32_t x = i / 2; // in 256 resolution mode.
+        uint32_t tileX = x / TILE_SIZE;
+
+        uint16_t tilemapEntry = tilemap[tileX + (tileY * TILEMAP_WIDTH)];
+        uint32_t tileId = (tilemapEntry & 0x3FF) << 1; // Word address
+        // TODO: Handle priority, palette, and H/V flip.
+        uint32_t tileDataOffset = (tileId * TILE_SIZE) + ((scanline & 0x07) * 2);
+        const uint8_t *tileData = &tilesetData[tileDataOffset];
+
+        uint8_t lowBit = ((tileData[0] >> (7 - (x & 7))) & 0x01);
+        uint8_t highBit = ((tileData[1] >> (7 - (x & 7))) & 0x01);
+        uint8_t pixelVal = lowBit | (highBit << 1);
+        uint32_t color = palette[pixelVal];
+
+        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
+        frameBuffer[pixelOffset] = color;
+        frameBuffer[pixelOffset + (SCREEN_X)] = color;
+    }
+}
+
+
+void Ppu::DrawScreen()
+{
+    displayInterface->FrameReady(frameBuffer);
 }

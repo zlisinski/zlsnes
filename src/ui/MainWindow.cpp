@@ -439,12 +439,13 @@ void MainWindow::OpenRom(const QString &filename)
 }
 
 
-void MainWindow::FrameReady(uint32_t *displayFrameBuffer)
+void MainWindow::FrameReady(const std::array<uint32_t, SCREEN_X * SCREEN_Y> &displayFrameBuffer)
 {
     // This function runs in the thread context of the Emulator worker thread.
 
     // Copy data so Emulator thread doesn't change data while we're drawing the screen.
-    memcpy(frameBuffer, displayFrameBuffer, sizeof(frameBuffer));
+    //memcpy(frameBuffer, displayFrameBuffer, sizeof(frameBuffer));
+    frameBuffer = displayFrameBuffer;
 
     // Signal the main thread to draw the screen.
     emit SignalFrameReady();
@@ -578,7 +579,7 @@ void MainWindow::SlotDrawFrame()
         frameCount++;
     }
 
-    QImage img((uchar *)(frameBuffer), 160, 144, QImage::Format_RGB32);
+    QImage img((uchar *)(&frameBuffer[0]), SCREEN_X, SCREEN_Y, QImage::Format_RGB32);
     graphicsView->scene()->clear();
     QGraphicsPixmapItem *pixmap = graphicsView->scene()->addPixmap(QPixmap::fromImage(img));
     pixmap->setScale(displayScale);
