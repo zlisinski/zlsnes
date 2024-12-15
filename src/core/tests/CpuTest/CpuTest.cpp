@@ -129,13 +129,6 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
         cpu->reg.pc = initial["pc"].toInt();
         SetEmulationMode(emulationMode);
 
-        if (cpu->reg.flags.d == 1 && (opcodeName.startsWith("TEST_ADC_") || opcodeName.startsWith("TEST_SBC_")))
-        {
-            // BCD mode is broken for invalid BCD digits, ignore for now.
-            // TODO: Fix this.
-            continue;
-        }
-
         // Set RAM initial values.
         QJsonArray initalRam = initial["ram"].toArray();
         for (int j = 0; j < initalRam.size(); j++)

@@ -1,7 +1,6 @@
 #include <sstream>
 
 #include "AddressMode.h"
-#include "Bcd.h"
 #include "Cpu.h"
 #include "Memory.h"
 #include "Timer.h"
@@ -749,15 +748,29 @@ void Cpu::ProcessOpCode()
                     if (reg.flags.d == 0)
                     {
                         result = reg.a + reg.flags.c + operand;
+                        reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
                     }
                     else
                     {
-                        result = Bcd::Add(reg.a, operand);
-                        result = Bcd::Add(result, reg.flags.c);
+                        result = (reg.a & 0x0F) + (operand & 0x0F) + reg.flags.c;
+                        if (result >= 0x0A)
+                            result = ((result + 0x06) & 0x0F) + 0x10;
+                        result = (reg.a & 0xF0) + (operand & 0xF0) + result;
+                        if (result >= 0xA0)
+                            result = ((result + 0x60) & 0xFF) + 0x100;
+                        result = (reg.a & 0x0F00) + (operand & 0x0F00) + result;
+                        if (result >= 0x0A00)
+                            result = ((result + 0x600) & 0x0FFF) + 0x1000;
+                        result = (reg.a & 0xF000) + (operand & 0xF000) + result;
+
+                        // Set overflow before final adjustment.
+                        reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
+
+                        if (result >= 0xA000)
+                            result += 0x6000;
                     }
 
                     reg.flags.c = result > 0xFFFF;
-                    reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
                     reg.a = result;
                     SetNFlag(reg.a);
                     SetZFlag(reg.a);
@@ -770,15 +783,23 @@ void Cpu::ProcessOpCode()
                     if (reg.flags.d == 0)
                     {
                         result = reg.al + reg.flags.c + operand;
+                        reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
                     }
                     else
                     {
-                        result = Bcd::Add(reg.al, operand);
-                        result = Bcd::Add(result, reg.flags.c);
+                        result = (reg.al & 0x0F) + (operand & 0x0F) + reg.flags.c;
+                        if (result >= 0x0A)
+                            result = ((result + 0x06) & 0x0F) + 0x10;
+                        result = (reg.al & 0xF0) + (operand & 0xF0) + result;
+
+                        // Set overflow before final adjustment.
+                        reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
+
+                        if (result >= 0xA0)
+                            result += 0x60;
                     }
 
                     reg.flags.c = result > 0xFF;
-                    reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
                     reg.al = result;
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
@@ -814,15 +835,29 @@ void Cpu::ProcessOpCode()
                     if (reg.flags.d == 0)
                     {
                         result = reg.a + reg.flags.c + operand;
+                        reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
                     }
                     else
                     {
-                        result = Bcd::Subtract(reg.a, operand);
-                        result = Bcd::Subtract(result, !reg.flags.c);
+                        result = (reg.a & 0x0F) + (operand & 0x0F) + reg.flags.c;
+                        if (result <= 0x0F)
+                            result = ((result - 0x06) & 0x0F); //+ 0x10;
+                        result = (reg.a & 0xF0) + (operand & 0xF0) + result;
+                        if (result <= 0xFF)
+                            result = ((result - 0x60) & 0xFF); //+ 0x10;
+                        result = (reg.a & 0x0F00) + (operand & 0x0F00) + result;
+                        if (result <= 0x0FFF)
+                            result = ((result - 0x0600) & 0x0FFF); //+ 0x10;
+                        result = (reg.a & 0xF000) + (operand & 0xF000) + result;
+
+                        // Set overflow before final adjustment.
+                        reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
+
+                        if (result <= 0xFFFF)
+                            result -= 0x6000;
                     }
 
-                    reg.flags.c = result > 0xFFFF;
-                    reg.flags.v = (((reg.a ^ result) & ~(reg.a ^ operand)) & 0x8000) != 0;
+                    reg.flags.c = static_cast<int8_t>((result >> 16) & 0xFF) > 0;
                     reg.a = result;
                     SetNFlag(reg.a);
                     SetZFlag(reg.a);
@@ -835,15 +870,23 @@ void Cpu::ProcessOpCode()
                     if (reg.flags.d == 0)
                     {
                         result = reg.al + reg.flags.c + operand;
+                        reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
                     }
                     else
                     {
-                        result = Bcd::Subtract(reg.al, operand);
-                        result = Bcd::Subtract(result, !reg.flags.c);
+                        result = (reg.al & 0x0F) + (operand & 0x0F) + reg.flags.c;
+                        if (result <= 0x0F)
+                            result = ((result - 0x06) & 0x0F); //+ 0x10;
+                        result = (reg.al & 0xF0) + (operand & 0xF0) + result;
+
+                        // Set overflow before final adjustment.
+                        reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
+
+                        if (result <= 0xFF)
+                            result -= 0x60;
                     }
 
-                    reg.flags.c = result > 0xFF;
-                    reg.flags.v = (((reg.al ^ result) & ~(reg.al ^ operand)) & 0x80) != 0;
+                    reg.flags.c = static_cast<int8_t>(result >> 8) > 0;
                     reg.al = result;
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
