@@ -66,7 +66,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr)
                 {
-                    case eRegRDNMI:
+                    case eRegRDNMI: // 0x4219
                         {
                             uint8_t value = ioPorts42[addr & 0xFF];
                             if (value & 0x80)
@@ -78,6 +78,8 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                             }
                             return value;
                         }
+                    case eRegHVBJOY: // 0x4212
+                        return ioPorts42[addr & 0xFF];
                     default:
                         throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 }
@@ -163,10 +165,10 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr)
                 {
-                    case eRegNMITIMEN:
+                    case eRegNMITIMEN: // 0x4200
                         ioPorts42[addr & 0xFF] = value;
                         break;
-                    case eRegMDMAEN:
+                    case eRegMDMAEN: // 0x420B
                         ioPorts42[addr & 0xFF] = value;
                         RunDma();
                         break;

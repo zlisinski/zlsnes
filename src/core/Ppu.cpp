@@ -594,7 +594,19 @@ void Ppu::UpdateTimer(uint32_t value)
             *memory->GetBytePtr(eRegRDNMI) |= 0x80;
             *memory->GetBytePtr(eRegHVBJOY) |= 0x80;
 
+            // If joypad auto read is enabled, toggle the busy flag.
+            // TODO: This doesn't belong in the PPU, move it somewhere better.
+            if (Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegNMITIMEN)))
+                *memory->GetBytePtr(eRegHVBJOY) |= 0x01;
+
             DrawScreen();
+        }
+        else if (scanline == 228)
+        {
+            // If joypad auto read is enabled, toggle the busy flag.
+            // TODO: This doesn't belong in the PPU, move it somewhere better.
+            if (Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegNMITIMEN)))
+                *memory->GetBytePtr(eRegHVBJOY) &= ~0x01;
         }
         else if (scanline == 262)
         {

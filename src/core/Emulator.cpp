@@ -63,7 +63,7 @@ bool Emulator::LoadRom(const std::string &filename)
     //interrupts = new Interrupt(memory);
     timer = new Timer(/*memory, interrupts*/);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
-    input = new Input(memory/*, interrupts*/);
+    input = new Input(memory, timer/*, interrupts*/);
     cpu = new Cpu(/*interrupts,*/ memory, timer);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
 
@@ -105,7 +105,7 @@ void Emulator::EndEmulation()
 
 void Emulator::ButtonPressed(Buttons::Button button)
 {
-    uint8_t oldButtonData = buttons.data;
+    uint16_t oldButtonData = buttons.data;
 
     // Set bit for button.
     buttons.data |= button;
@@ -117,7 +117,7 @@ void Emulator::ButtonPressed(Buttons::Button button)
 
 void Emulator::ButtonReleased(Buttons::Button button)
 {
-    uint8_t oldButtonData = buttons.data;
+    uint16_t oldButtonData = buttons.data;
 
     // Clear bit for button.
     buttons.data &= ~button;

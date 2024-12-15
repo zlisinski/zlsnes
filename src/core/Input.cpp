@@ -3,24 +3,31 @@
 #include "Memory.h"
 
 
-enum ButtonMask
-{
-    eMaskARight    = ~0x01, // 0xFE
-    eMaskBLeft     = ~0x02, // 0xFD
-    eMaskSelectUp  = ~0x04, // 0xFB
-    eMaskStartDown = ~0x08, // 0xF7
-    eMaskDirection = 0x10, // 0xEF
-    eMaskButtons   = 0x20  // 0xDF
-};
-
-
-Input::Input(IoRegisterSubject *ioRegisterSubject/*, Interrupt *interrupts*/) :
-    //regP1(ioRegisterSubject->AttachIoRegister(eRegP1, this)),
+Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts*/) :
+    memory(memory),
     //interrupts(interrupts),
-    buttonData()
+    buttonData(),
+    lastAutoReadFlag(false),
+    regJOY1L(memory->AttachIoRegister(eRegJOY1L, this)),
+    regJOY1H(memory->AttachIoRegister(eRegJOY1H, this)),
+    regJOY2L(memory->AttachIoRegister(eRegJOY2L, this)),
+    regJOY2H(memory->AttachIoRegister(eRegJOY2H, this)),
+    regJOY3L(memory->AttachIoRegister(eRegJOY3L, this)),
+    regJOY3H(memory->AttachIoRegister(eRegJOY3H, this)),
+    regJOY4L(memory->AttachIoRegister(eRegJOY4L, this)),
+    regJOY4H(memory->AttachIoRegister(eRegJOY4H, this))
 {
     // Start out with all buttons released.
-    //*regP1 = 0xFF;
+    *regJOY1L = 0;
+    *regJOY1H = 0;
+    *regJOY2L = 0;
+    *regJOY2H = 0;
+    *regJOY3L = 0;
+    *regJOY3H = 0;
+    *regJOY4L = 0;
+    *regJOY4H = 0;
+
+    timerSubject->AttachObserver(this);
 }
 
 
@@ -30,15 +37,20 @@ Input::~Input()
 }
 
 
+void Input::SetButtons(const Buttons &buttons)
+{
+    LogDebug("SetButtons: %04X", buttons.data);
+    buttonData = buttons;
+}
+
+
 bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
 {
-   LogInstruction("Input::WriteByte %04X, %02X", ioReg, byte);
+   //LogInstruction("Input::WriteByte %04X, %02X", ioReg, byte);
 
     switch (ioReg)
     {
-        /*case eRegP1:
-            UpdateRegP1(byte);
-            return true;*/
+        // These are all read-only.
         default:
             return false;
     }
@@ -47,22 +59,47 @@ bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
 uint8_t Input::ReadRegister(EIORegisters ioReg) const
 {
-    LogInstruction("Input::ReadByte %04X", ioReg);
+    //LogInstruction("Input::ReadByte %04X", ioReg);
 
     switch (ioReg)
     {
-        /*case eRegP1:
-            return *regP1;*/
+        case eRegJOY1L:
+            return *regJOY1L;
+        case eRegJOY1H:
+            return *regJOY1H;
+        case eRegJOY2L:
+            return *regJOY2L;
+        case eRegJOY2H:
+            return *regJOY2H;
+        case eRegJOY3L:
+            return *regJOY3L;
+        case eRegJOY3H:
+            return *regJOY3H;
+        case eRegJOY4L:
+            return *regJOY4L;
+        case eRegJOY4H:
+            return *regJOY4H;
         default:
             throw std::range_error(fmt("Input doesnt handle reads to 0x%04X", ioReg));
     }
 }
 
 
-void Input::SetButtons(const Buttons &buttons)
+void Input::UpdateTimer(uint32_t value)
 {
-    buttonData = buttons;
-    //UpdateRegP1(*regP1);
+    (void)value;
+
+    bool autoReadFlag = Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegHVBJOY));
+
+    // Only update when it changes, we don't need to do this every cycle for multiple scanlines.
+    // TODO: Vblank observer?
+    if (autoReadFlag && !lastAutoReadFlag)
+    {
+        *regJOY1L = Bytes::GetByte<0>(buttonData.data);
+        *regJOY1H = Bytes::GetByte<1>(buttonData.data);
+    }
+
+    lastAutoReadFlag = autoReadFlag;
 }
 
 

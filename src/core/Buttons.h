@@ -7,19 +7,22 @@ class Buttons
 public:
     enum Button
     {
-        eButtonNone = 0x00,
-        eButtonUp = 0x01,
-        eButtonRight = 0x02,
-        eButtonDown = 0x04,
-        eButtonLeft = 0x08,
-        eButtonSelect = 0x10,
-        eButtonStart = 0x20,
-        eButtonB = 0x40,
-        eButtonA = 0x80,
-        eButtonY = 0x100,
-        eButtonX = 0x200,
-        eButtonL = 0x400,
-        eButtonR = 0x800
+        eButtonNone   = 0x00,
+
+        eButtonR      = 0x10,
+        eButtonL      = 0x20,
+        eButtonX      = 0x40,
+        eButtonA      = 0x80,
+
+        eButtonRight  = 0x100,
+        eButtonLeft   = 0x200,
+        eButtonDown   = 0x400,
+        eButtonUp     = 0x800,
+
+        eButtonStart  = 0x1000,
+        eButtonSelect = 0x2000,
+        eButtonY      = 0x4000,
+        eButtonB      = 0x8000
     };
 
     Buttons() : data(0) {}
