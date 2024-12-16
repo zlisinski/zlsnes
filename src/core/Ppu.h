@@ -68,6 +68,9 @@ private:
     uint16_t vramRwAddr;
     uint8_t vramPrefetch[2];
 
+    uint16_t oamRwAddr;
+    uint8_t oamLatch;
+
     //Write-only
     uint8_t *regINIDISP; // 0x2100 Display Control 1
     uint8_t *regOBSEL;   // 0x2101 Object Size and Object Base

@@ -21,6 +21,7 @@ protected:
     uint16_t GetBgHOffset(int i) {return ppu->bgHOffset[i];}
     uint16_t GetBgVOffset(int i) {return ppu->bgVOffset[i];}
     uint8_t GetCgramData(uint16_t addr) {return ppu->cgram[addr];}
+    uint8_t GetOamData(uint16_t addr) {return ppu->oam[addr];}
 
     Ppu *ppu;
     Memory *memory;
@@ -116,4 +117,44 @@ TEST_F(PpuTest, TEST_CGDATA_Write_Twice)
     EXPECT_EQ(GetCgramData(0x60), 0x56);
     EXPECT_EQ(GetCgramData(0x61), 0x78);
     EXPECT_EQ(GetCgramData(0x40), 0);
+}
+
+
+TEST_F(PpuTest, TEST_OAMDATA_Write_Twice)
+{
+    // This is a word address, so double it (0x20) when reading memory.
+    ppu->WriteRegister(eRegOAMADDL, 0x10);
+    ppu->WriteRegister(eRegOAMADDH, 0x00);
+
+    // Test that both bytes are only written to oam after the second write to the register.
+    ppu->WriteRegister(eRegOAMDATA, 0x12);
+    EXPECT_EQ(GetOamData(0x20), 0);
+    ppu->WriteRegister(eRegOAMDATA, 0x34);
+    EXPECT_EQ(GetOamData(0x20), 0x12);
+    EXPECT_EQ(GetOamData(0x21), 0x34);
+
+    // Test that changing the address after one byte is read will lose that value.
+    ppu->WriteRegister(eRegOAMADDL, 0x20);
+    ppu->WriteRegister(eRegOAMDATA, 0x12);
+    EXPECT_EQ(GetOamData(0x40), 0);
+    // Change the address after one byte written. First byte (0x12) should be lost.
+    ppu->WriteRegister(eRegOAMADDL, 0x30);
+    ppu->WriteRegister(eRegOAMDATA, 0x56);
+    EXPECT_EQ(GetOamData(0x60), 0);
+    ppu->WriteRegister(eRegOAMDATA, 0x78);
+    EXPECT_EQ(GetOamData(0x60), 0x56);
+    EXPECT_EQ(GetOamData(0x61), 0x78);
+    EXPECT_EQ(GetOamData(0x40), 0);
+
+    // Writing to the high table should write immediately
+    ppu->WriteRegister(eRegOAMADDL, 0x00);
+    ppu->WriteRegister(eRegOAMADDH, 0x01);
+    ppu->WriteRegister(eRegOAMDATA, 0x56);
+    EXPECT_EQ(GetOamData(0x200), 0x56);
+
+    // Writing to > 0x21F should mirror.
+    ppu->WriteRegister(eRegOAMADDL, 0x7F); // 0x2FE, mirrored 0x21E
+    ppu->WriteRegister(eRegOAMADDH, 0x01);
+    ppu->WriteRegister(eRegOAMDATA, 0xAB);
+    EXPECT_EQ(GetOamData(0x21E), 0xAB);
 }

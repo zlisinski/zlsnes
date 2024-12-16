@@ -6,6 +6,11 @@
 
 Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     memory(memory),
+    oam{0},
+    vram{0},
+    cgram{0},
+    palette{0},
+    frameBuffer{0},
     debuggerInterface(debuggerInterface),
     displayInterface(displayInterface),
     isHBlank(true),
@@ -25,6 +30,8 @@ Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayIn
     isVramIncrementOnHigh(false),
     vramRwAddr(0),
     vramPrefetch{0,0},
+    oamRwAddr(0),
+    oamLatch(0),
     regINIDISP(memory->AttachIoRegister(eRegINIDISP, this)),
     regOBSEL(memory->AttachIoRegister(eRegOBSEL, this)),
     regOAMADDL(memory->AttachIoRegister(eRegOAMADDL, this)),
@@ -245,6 +252,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             *regINIDISP = byte;
             isForcedBlank = byte & 0x80;
             brightness = byte & 0x0F;
+            // TODO: reset oamRwAddr if this is written on the first scanline of vblank (225/240).
             LogPpu("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
         case eRegOBSEL: // 0x2101
@@ -253,15 +261,42 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegOAMADDL: // 0x2102
             *regOAMADDL = byte;
-            LogPpu("OAMADDL=%02X. NYI", byte);
+            // This is a word address, so left shift 1 to get the byte address.
+            oamRwAddr = Bytes::Make16Bit((*regOAMADDH) & 0x01, byte) << 1;
+            LogPpu("oamRwAddr=%04X", oamRwAddr);
             return true;
         case eRegOAMADDH: // 0x2103
             *regOAMADDH = byte;
-            LogPpu("OAMADDH=%02X. NYI", byte);
+            // This is a word address, so left shift 1 to get the byte address.
+            oamRwAddr = Bytes::Make16Bit((byte) & 0x01, *regOAMADDL) << 1;
+            LogPpu("oamRwAddr=%04X", oamRwAddr);
             return true;
         case eRegOAMDATA: // 0x2104
             *regOAMDATA = byte;
-            return false;
+
+            // The first write gets saved, and both bytes get written to oam on the second write to the register.
+            if ((oamRwAddr & 0x01) == 0)
+            {
+                oamLatch = byte;
+                LogPpu("Saving oam byte %02X", byte);
+            }
+
+            // Writes to the high 32 bytes get applied immediately.
+            if (oamRwAddr >= 0x200)
+            {
+                // Only the last 5 bits count. Anything higher than 0x21F is mirrored.
+                oam[0x200 | (oamRwAddr & 0x1F)] = byte;
+                LogPpu("Writing byte to high oam %04X(%04X)=%02X", oamRwAddr, (0x200 | (oamRwAddr & 0x1F)), byte);
+            }
+            else if (oamRwAddr & 0x01)
+            {
+                oam[oamRwAddr - 1] = oamLatch;
+                oam[oamRwAddr] = byte;
+                LogPpu("Writing word to oam %04X=%02X%02X", oamRwAddr, byte, oamLatch);
+            }
+            // 0-0x21F are valid, anything above is mirrored.
+            oamRwAddr = (oamRwAddr + 1) & 0x3FF;
+            return true;
         case eRegBGMODE: // 0x2105
             *regBGMODE = byte;
             bgMode = byte & 0x07;
@@ -602,6 +637,8 @@ void Ppu::UpdateTimer(uint32_t value)
     {
         clockCounter -= 1364;
 
+        // TODO: Check for number of scanlines per screen in regSETINI.
+
         if (scanline < 224)
             DrawScanline(scanline);
 
@@ -617,6 +654,10 @@ void Ppu::UpdateTimer(uint32_t value)
             // TODO: This doesn't belong in the PPU, move it somewhere better.
             if (Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegNMITIMEN)))
                 *memory->GetBytePtr(eRegHVBJOY) |= 0x01;
+
+            // Reset the Oam address value on VBlank, but not when in forced VBlank.
+            if (!isForcedBlank)
+                oamRwAddr = Bytes::Make16Bit((*regOAMADDH) & 0x01, *regOAMADDL) << 1; // Word address.
 
             DrawScreen();
         }
