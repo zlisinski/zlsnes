@@ -62,20 +62,13 @@ bool Cartridge::Validate()
         rom.erase(rom.begin(), rom.begin() + copierHeaderLen);
     }
 
-    // TODO: Replace with actual minimal ROM size. This value will allow checking for both LoROM and HiROM headers.
-    if (rom.size() < 0xFFFF)
-    {
-        LogError("File is too small");
-        return false;
-    }
-
     size_t offset = 0;
 
-    if (FindHeader(LOROM_HEADER_OFFSET))
+    if ((rom.size() >= LOROM_HEADER_OFFSET + 32) && FindHeader(LOROM_HEADER_OFFSET))
     {
         offset = LOROM_HEADER_OFFSET;
     }
-    else if (FindHeader(HIROM_HEADER_OFFSET))
+    else if ((rom.size() >= HIROM_HEADER_OFFSET + 32) && FindHeader(HIROM_HEADER_OFFSET))
     {
         offset = HIROM_HEADER_OFFSET;
     }
@@ -142,7 +135,8 @@ bool Cartridge::FindHeader(size_t headerOffset)
     }
 
     // Check checksums. This doesn't actually verify all ROM data in case this is a hacked ROM.
-    if ((header.checksum ^ header.checksumComplement) != 0xFFFF)
+    if ((header.checksum ^ header.checksumComplement) != 0xFFFF &&
+        !(header.checksum == 0x5343 && header.checksumComplement == 0x4343)) // Some test roms use these hardcoded values.
     {
         LogError("Bad checksum at %04X", headerOffset);
         return false;
