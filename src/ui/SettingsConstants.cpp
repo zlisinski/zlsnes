@@ -43,6 +43,7 @@ const char *SETTINGS_INPUT_PAD_START = "Input/Pad_Start";
 const char *SETTINGS_INPUT_PAD_SELECT = "Input/Pad_Select";
 
 const char *SETTINGS_LOGGER_LEVEL = "Logger/Level";
+const char *SETTINGS_LOGGER_INSTRUCTION_LEVEL = "Logger/InstructionLevel";
 
 const char *SETTINGS_LOGWINDOW_GEOMETRY = "LogWindow/Geometry";
 const char *SETTINGS_LOGWINDOW_DISPLAY = "LogWindow/Display";

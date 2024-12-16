@@ -43,6 +43,7 @@ extern const char *SETTINGS_INPUT_PAD_START;
 extern const char *SETTINGS_INPUT_PAD_SELECT;
 
 extern const char *SETTINGS_LOGGER_LEVEL;
+extern const char *SETTINGS_LOGGER_INSTRUCTION_LEVEL;
 
 extern const char *SETTINGS_LOGWINDOW_GEOMETRY;
 extern const char *SETTINGS_LOGWINDOW_DISPLAY;

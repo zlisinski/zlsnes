@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Setup logger before anything else.
     Logger::SetLogLevel(static_cast<LogLevel>(settings.value(SETTINGS_LOGGER_LEVEL, 0).toInt()));
+    Logger::SetInstructionLogLevel(settings.value(SETTINGS_LOGGER_INSTRUCTION_LEVEL, 0).toUInt());
     logWindow = new LogWindow(this);
     Logger::SetOutput(logWindow);
     if (settings.value(SETTINGS_LOGWINDOW_DISPLAY, false).toBool())

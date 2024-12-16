@@ -6,15 +6,15 @@
 #include "Timer.h"
 
 // Use this for opcodes that don't have an AddressMode or data.
-#define LogInst(name) LogInstruction("%02X: %s", opcode, (name))
+#define LogInst(name) LogCpu("%02X: %s", opcode, (name))
 
 // This requires the opcode case to have an AddressMode variable named 'mode'.
 // Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode,Read8Bit() or mode.Read16Bit().
-#define LogInstM(name) LogInstruction("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
+#define LogInstM(name) LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
 
 // This requires the opcode case to have an AddressMode pointer named 'mode'.
 // Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode->Read8Bit() or mode->Read16Bit().
-#define LogInstMp(name) LogInstruction("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
+#define LogInstMp(name) LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
 
 
 Cpu::Cpu(Memory *memory, Timer *timer) :
@@ -497,7 +497,7 @@ void Cpu::ProcessOpCode()
             {
                 uint16_t value = ReadPC16Bit();
                 Push16Bit(value);
-                LogInstruction("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                LogCpu("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
             }
             break;
 
@@ -514,7 +514,7 @@ void Cpu::ProcessOpCode()
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
                 Push16Bit(reg.pc + value);
-                LogInstruction("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                LogCpu("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
             }
             break;
 
@@ -1367,7 +1367,7 @@ void Cpu::ProcessOpCode()
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 reg.pc += offset;
-                LogInstruction("%02X %02X: BRA %d", opcode, offset, offset);
+                LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
             }
             break;
 
@@ -1375,7 +1375,7 @@ void Cpu::ProcessOpCode()
             {
                 int16_t offset = static_cast<int16_t>(ReadPC16Bit());
                 reg.pc += offset;
-                LogInstruction("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
+                LogCpu("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
             }
             break;
 
@@ -1401,7 +1401,7 @@ void Cpu::ProcessOpCode()
                 }
 
                 const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-                LogInstruction("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
+                LogCpu("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
             }
             break;
 
@@ -1632,7 +1632,7 @@ void Cpu::ProcessOpCode()
         // MVP - Move Memory Positive
         case 0x44:
             {
-                LogInstruction("%02X: MVP", opcode);
+                LogCpu("%02X: MVP", opcode);
                 // Technically this instruction uses its own address mode, but Immediate works too.
                 AddressModeImmediate mode(this, memory);
                 // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.
@@ -1665,7 +1665,7 @@ void Cpu::ProcessOpCode()
         // MVN - Move Memory Negative
         case 0x54:
             {
-                LogInstruction("%02X: MVN", opcode);
+                LogCpu("%02X: MVN", opcode);
                 // Technically this instruction uses its own address mode, but Immediate works too.
                 AddressModeImmediate mode(this, memory);
                 // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.

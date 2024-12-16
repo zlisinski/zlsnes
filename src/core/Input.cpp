@@ -39,14 +39,14 @@ Input::~Input()
 
 void Input::SetButtons(const Buttons &buttons)
 {
-    LogDebug("SetButtons: %04X", buttons.data);
+    LogInput("SetButtons: %04X", buttons.data);
     buttonData = buttons;
 }
 
 
 bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
 {
-   //LogInstruction("Input::WriteByte %04X, %02X", ioReg, byte);
+   LogInput("Input::WriteByte %04X, %02X", ioReg, byte);
 
     switch (ioReg)
     {
@@ -59,7 +59,7 @@ bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
 uint8_t Input::ReadRegister(EIORegisters ioReg) const
 {
-    //LogInstruction("Input::ReadByte %04X", ioReg);
+    LogInput("Input::ReadByte %04X", ioReg);
 
     switch (ioReg)
     {

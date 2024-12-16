@@ -337,8 +337,8 @@ void Memory::RunDma()
         // How many bytes to transfer. byteCount == 0 means 65536, since it will underflow.
         uint16_t byteCount = Bytes::Make16Bit(ioPorts43[ch | eDma_DASxH], ioPorts43[ch | eDma_DASxL]);
 
-        LogInstruction("DMA%d: dmap=%02X, bToA=%d, aBusAddr=%06X, aBusInc=%d, bBusAddr=%04X, count=%d",
-                       channel, dmap, bToA, aBusAddr, aBusInc, bBusAddr, (int)byteCount);
+        LogMemory("DMA%d: dmap=%02X, bToA=%d, aBusAddr=%06X, aBusInc=%d, bBusAddr=%04X, count=%d",
+                  channel, dmap, bToA, aBusAddr, aBusInc, bBusAddr, (int)byteCount);
 
         do
         {

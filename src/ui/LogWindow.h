@@ -19,10 +19,12 @@ public:
     explicit LogWindow(QWidget *parent = 0);
     ~LogWindow();
 
-    virtual void Output(std::unique_ptr<LogEntry> entry);
+    // Inherited from LoggerOutput.
+    void Output(std::unique_ptr<LogEntry> entry) override;
 
 protected:
-    virtual void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event) override;
+    void SetInstructionCheckboxEnabled(bool enable);
 
 private:
     Ui::LogWindow *ui;
@@ -31,13 +33,19 @@ private:
 
 private slots:
     void SlotOutputMessage();
-    void SlotErrorClicked();
-    void SlotWarningClicked();
-    void SlotInfoClicked();
-    void SlotDebugClicked();
-    void SlotInstructionClicked();
-    void SlotClearOutputClicked();
-    void SlotSaveOutputClicked();
+
+    // Auto connect signal/slot based on function name.
+    void on_rbError_clicked();
+    void on_rbWarning_clicked();
+    void on_rbInfo_clicked();
+    void on_rbDebug_clicked();
+    void on_rbInstruction_clicked();
+    void on_chkCpu_clicked(bool checked);
+    void on_chkPpu_clicked(bool checked);
+    void on_chkMemory_clicked(bool checked);
+    void on_chkInput_clicked(bool checked);
+    void on_btnClear_clicked();
+    void on_btnSave_clicked();
 
 signals:
     void SignalLogWindowClosed();

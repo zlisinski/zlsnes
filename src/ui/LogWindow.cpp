@@ -18,6 +18,8 @@ LogWindow::LogWindow(QWidget *parent) :
     QSettings settings;
     restoreGeometry(settings.value(SETTINGS_LOGWINDOW_GEOMETRY).toByteArray());
 
+    SetInstructionCheckboxEnabled(false);
+
     switch (Logger::GetLogLevel())
     {
         case LogLevel::eError:
@@ -34,18 +36,18 @@ LogWindow::LogWindow(QWidget *parent) :
             break;
         case LogLevel::eInstruction:
             ui->rbInstruction->setChecked(true);
+            SetInstructionCheckboxEnabled(true);
             break;
     }
 
+    uint32_t instLevel = Logger::GetInstructionLogLevel();
+    ui->chkCpu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eCpu));
+    ui->chkPpu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::ePpu));
+    ui->chkMemory->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eMemory));
+    ui->chkInput->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eInput));
+
     connect(this, SIGNAL(SignalLogWindowClosed()), parent, SLOT(SlotLogWindowClosed()));
     connect(this, SIGNAL(SignalMessageReady()), this, SLOT(SlotOutputMessage()));
-    connect(ui->rbError, SIGNAL(clicked()), this, SLOT(SlotErrorClicked()));
-    connect(ui->rbWarning, SIGNAL(clicked()), this, SLOT(SlotWarningClicked()));
-    connect(ui->rbInfo, SIGNAL(clicked()), this, SLOT(SlotInfoClicked()));
-    connect(ui->rbDebug, SIGNAL(clicked()), this, SLOT(SlotDebugClicked()));
-    connect(ui->rbInstruction, SIGNAL(clicked()), this, SLOT(SlotInstructionClicked()));
-    connect(ui->btnClear, SIGNAL(clicked()), this, SLOT(SlotClearOutputClicked()));
-    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(SlotSaveOutputClicked()));
 }
 
 
@@ -101,53 +103,123 @@ void LogWindow::SlotOutputMessage()
 }
 
 
-void LogWindow::SlotErrorClicked()
+void LogWindow::SetInstructionCheckboxEnabled(bool enable)
+{
+    ui->chkCpu->setEnabled(enable);
+    ui->chkPpu->setEnabled(enable);
+    ui->chkMemory->setEnabled(enable);
+    ui->chkInput->setEnabled(enable);
+}
+
+
+void LogWindow::on_rbError_clicked()
 {
     QSettings settings;
     settings.setValue(SETTINGS_LOGGER_LEVEL, static_cast<int>(LogLevel::eError));
     Logger::SetLogLevel(LogLevel::eError);
+    SetInstructionCheckboxEnabled(false);
 }
 
 
-void LogWindow::SlotWarningClicked()
+void LogWindow::on_rbWarning_clicked()
 {
     QSettings settings;
     settings.setValue(SETTINGS_LOGGER_LEVEL, static_cast<int>(LogLevel::eWarning));
     Logger::SetLogLevel(LogLevel::eWarning);
+    SetInstructionCheckboxEnabled(false);
 }
 
 
-void LogWindow::SlotInfoClicked()
+void LogWindow::on_rbInfo_clicked()
 {
     QSettings settings;
     settings.setValue(SETTINGS_LOGGER_LEVEL, static_cast<int>(LogLevel::eInfo));
     Logger::SetLogLevel(LogLevel::eInfo);
+    SetInstructionCheckboxEnabled(false);
 }
 
 
-void LogWindow::SlotDebugClicked()
+void LogWindow::on_rbDebug_clicked()
 {
     QSettings settings;
     settings.setValue(SETTINGS_LOGGER_LEVEL, static_cast<int>(LogLevel::eDebug));
     Logger::SetLogLevel(LogLevel::eDebug);
+    SetInstructionCheckboxEnabled(false);
 }
 
 
-void LogWindow::SlotInstructionClicked()
+void LogWindow::on_rbInstruction_clicked()
 {
     QSettings settings;
     settings.setValue(SETTINGS_LOGGER_LEVEL, static_cast<int>(LogLevel::eInstruction));
     Logger::SetLogLevel(LogLevel::eInstruction);
+    SetInstructionCheckboxEnabled(true);
 }
 
 
-void LogWindow::SlotClearOutputClicked()
+void LogWindow::on_chkCpu_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eCpu);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eCpu);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_chkPpu_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::ePpu);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::ePpu);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_chkMemory_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eMemory);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eMemory);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_chkInput_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eInput);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eInput);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_btnClear_clicked()
 {
     ui->txtOutput->clear();
 }
 
 
-void LogWindow::SlotSaveOutputClicked()
+void LogWindow::on_btnSave_clicked()
 {
     QString filename = QFileDialog::getSaveFileName(this, "Save log output");
     if (filename == "")
