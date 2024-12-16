@@ -247,16 +247,19 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             brightness = byte & 0x0F;
             LogPpu("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
-        case eRegOBSEL:
+        case eRegOBSEL: // 0x2101
             *regOBSEL = byte;
-            return false;
-        case eRegOAMADDL:
+            LogPpu("OBSEL=%02X. NYI", byte);
+            return true;
+        case eRegOAMADDL: // 0x2102
             *regOAMADDL = byte;
-            return false;
-        case eRegOAMADDH:
+            LogPpu("OAMADDL=%02X. NYI", byte);
+            return true;
+        case eRegOAMADDH: // 0x2103
             *regOAMADDH = byte;
-            return false;
-        case eRegOAMDATA:
+            LogPpu("OAMADDH=%02X. NYI", byte);
+            return true;
+        case eRegOAMDATA: // 0x2104
             *regOAMDATA = byte;
             return false;
         case eRegBGMODE: // 0x2105
@@ -418,24 +421,30 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegM7SEL:
             *regM7SEL = byte;
             return false;
-        case eRegM7A:
+        case eRegM7A: // 0x211B
             *regM7A = byte;
-            return false;
-        case eRegM7B:
+            LogPpu("M7A=%02X. NYI", byte);
+            return true;
+        case eRegM7B: // 0x211C
             *regM7B = byte;
-            return false;
-        case eRegM7C:
+            LogPpu("M7B=%02X. NYI", byte);
+            return true;
+        case eRegM7C: // 0x211D
             *regM7C = byte;
-            return false;
-        case eRegM7D:
+            LogPpu("M7C=%02X. NYI", byte);
+            return true;
+        case eRegM7D: // 0x211E
             *regM7D = byte;
-            return false;
-        case eRegM7X:
+            LogPpu("M7D=%02X. NYI", byte);
+            return true;
+        case eRegM7X: // 0x211F
             *regM7X = byte;
-            return false;
-        case eRegM7Y:
+            LogPpu("M7X=%02X. NYI", byte);
+            return true;
+        case eRegM7Y: // 0x2120
             *regM7Y = byte;
-            return false;
+            LogPpu("M7Y=%02X. NYI", byte);
+            return true;
         case eRegCGADD: // 0x2121
             *regCGADD = byte;
             // This is a word address, so left shift 1 to get the byte address.
@@ -462,33 +471,42 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             }
             cgramRwAddr++;
             return true;
-        case eRegW12SEL:
+        case eRegW12SEL: // 0x2123
             *regW12SEL = byte;
-            return false;
-        case eRegW34SEL:
+            LogPpu("W12SEL=%02X. NYI", byte);
+            return true;
+        case eRegW34SEL: // 0x2124
             *regW34SEL = byte;
-            return false;
-        case eRegWOBJSEL:
+            LogPpu("W34SEL=%02X. NYI", byte);
+            return true;
+        case eRegWOBJSEL: // 0x2125
             *regWOBJSEL = byte;
-            return false;
-        case eRegWH0:
+            LogPpu("OBJSEL=%02X. NYI", byte);
+            return true;
+        case eRegWH0: // 0x2126
             *regWH0 = byte;
-            return false;
-        case eRegWH1:
+            LogPpu("WH0=%02X. NYI", byte);
+            return true;
+        case eRegWH1: // 0x2127
             *regWH1 = byte;
-            return false;
-        case eRegWH2:
+            LogPpu("WH1=%02X. NYI", byte);
+            return true;
+        case eRegWH2: // 0x2128
             *regWH2 = byte;
-            return false;
-        case eRegWH3:
+            LogPpu("WH2=%02X. NYI", byte);
+            return true;
+        case eRegWH3: // 0x2129
             *regWH3 = byte;
-            return false;
-        case eRegWBGLOG:
+            LogPpu("WH3=%02X. NYI", byte);
+            return true;
+        case eRegWBGLOG: // 0x212A
             *regWBGLOG = byte;
-            return false;
-        case eRegWOBJLOG:
+            LogPpu("WBGLOG=%02X. NYI", byte);
+            return true;
+        case eRegWOBJLOG: // 0x212B
             *regWOBJLOG = byte;
-            return false;
+            LogPpu("WOBJLOG=%02X. NYI", byte);
+            return true;
         case eRegTM: // 0x212C
             *regTM = byte;
             LogPpu("Main Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
@@ -513,9 +531,10 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             *regCGADSUB = byte;
             LogPpu("CGMath=%02X", byte);
             return true;
-        case eRegCOLDATA:
+        case eRegCOLDATA: // 0x2132
             *regCOLDATA = byte;
-            return false;
+            LogPpu("COLDATA=%02X. NYI", byte);
+            return true;
         case eRegSETINI: // 0x2133
             *regSETINI = byte;
             LogPpu("ExtSync=%d ExtBg=%d HiRes=%d Overscan=%d, ObjInterlace=%d ScreenInterlace=%d", Bytes::GetBit<7>(byte), Bytes::GetBit<6>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<0>(byte));

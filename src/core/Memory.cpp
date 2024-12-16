@@ -155,9 +155,10 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x40:
-                throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockOther);
-                //ioPorts40[addr & 0xFF] = value;
+                //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
+                timer->AddCycle(EClockSpeed::eClockOther);
+                ioPorts40[addr & 0xFF] = value;
+                LogMemory("Write to joypad port %04X %02X", addr & 0xFFFF, value);
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
@@ -167,10 +168,59 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 {
                     case eRegNMITIMEN: // 0x4200
                         ioPorts42[addr & 0xFF] = value;
+                        LogMemory("NMITIMEN=%02X", value);
+                        break;
+                    case eRegWRIO: // 0x4201
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRIO=%02X NYI", value);
+                        break;
+                    case eRegWRMPYA: // 0x4202
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRMPYA=%02X NYI", value);
+                        break;
+                    case eRegWRMPYB: // 0x4203
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRMPYB=%02X NYI", value);
+                        break;
+                    case eRegWRDIVL: // 0x4204
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRDIVL=%02X NYI", value);
+                        break;
+                    case eRegWRDIVH: // 0x4205
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRDIVH=%02X NYI", value);
+                        break;
+                    case eRegWRDIVB: // 0x4206
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("WRDIVB=%02X NYI", value);
+                        break;
+                    case eRegHTIMEL: // 0x4207
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("HTIMEL=%02X NYI", value);
+                        break;
+                    case eRegHTIMEH: // 0x4208
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("HTIMEH=%02X NYI", value);
+                        break;
+                    case eRegVTIMEL: // 0x4209
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("VTIMEL=%02X NYI", value);
+                        break;
+                    case eRegVTIMEH: // 0x420A
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("VTIMEH=%02X NYI", value);
                         break;
                     case eRegMDMAEN: // 0x420B
                         ioPorts42[addr & 0xFF] = value;
                         RunDma();
+                        break;
+                    case eRegHDMAEN: // 0x420C
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("HDMAEN=%02X NYI", value);
+                        break;
+                    case eRegMEMSEL: // 0x420D
+                        ioPorts42[addr & 0xFF] = value;
+                        LogMemory("MEMSEL: %s. NYI", (value & 0x01) ? "false" : "slow");
                         break;
                     default:
                         throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
