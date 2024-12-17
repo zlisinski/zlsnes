@@ -193,14 +193,14 @@ TEST_F(MemoryTest, TEST_WRam_Mirror)
 /*TEST_F(MemoryTest, TEST_ioPorts21_Mirror)
 {
     // Writes to 21xx ports should be mirrored into other banks.
-    memory->Write8Bit(0x002184, 0x99);
+    memory->Write8Bit(0x002180, 0x99);
 
-    EXPECT_EQ(ioPorts21[0x84], 0x99);
+    EXPECT_EQ(ioPorts21[0x80], 0x99);
 
     for (int i = 0; i < 0x40; i++)
     {
-        EXPECT_EQ(memory->Read8Bit(Address(i, 0x2184)), 0x99) << i;
-        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x2184)), 0x99) << i + 0x80;
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x2180)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x2180)), 0x99) << i + 0x80;
     }
 }
 
@@ -208,14 +208,14 @@ TEST_F(MemoryTest, TEST_WRam_Mirror)
 TEST_F(MemoryTest, TEST_ioPorts40_Mirror)
 {
     // Writes to 40xx ports should be mirrored into other banks.
-    memory->Write8Bit(0x004018, 0x99);
+    memory->Write8Bit(0x004016, 0x99);
 
-    EXPECT_EQ(ioPorts40[0x18], 0x99);
+    EXPECT_EQ(ioPorts40[0x16], 0x99);
 
     for (int i = 0; i < 0x40; i++)
     {
-        EXPECT_EQ(memory->Read8Bit(Address(i, 0x4018)), 0x99) << i;
-        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4018)), 0x99) << i + 0x80;
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x4016)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4016)), 0x99) << i + 0x80;
     }
 }
 
@@ -223,14 +223,14 @@ TEST_F(MemoryTest, TEST_ioPorts40_Mirror)
 TEST_F(MemoryTest, TEST_ioPorts42_Mirror)
 {
     // Writes to 42xx ports should be mirrored into other banks.
-    memory->Write8Bit(0x00420E, 0x99);
+    memory->Write8Bit(0x004200, 0x99);
 
-    EXPECT_EQ(ioPorts42[0x0E], 0x99);
+    EXPECT_EQ(ioPorts42[0x00], 0x99);
 
     for (int i = 0; i < 0x40; i++)
     {
-        EXPECT_EQ(memory->Read8Bit(Address(i, 0x420E)), 0x99) << i;
-        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x420E)), 0x99) << i + 0x80;
+        EXPECT_EQ(memory->Read8Bit(Address(i, 0x4200)), 0x99) << i;
+        EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4200)), 0x99) << i + 0x80;
     }
 }
 
@@ -248,6 +248,37 @@ TEST_F(MemoryTest, TEST_ioPorts43_Mirror)
         EXPECT_EQ(memory->Read8Bit(Address(i + 0x80, 0x4380)), 0x99) << i + 0x80;
     }
 }*/
+
+
+TEST_F(MemoryTest, TEST_WRAM_read_write_ports)
+{
+    // Write address registers
+    memory->Write8Bit(eRegWMADDH, 0x01);
+    memory->Write8Bit(eRegWMADDM, 0x23);
+    memory->Write8Bit(eRegWMADDL, 0x45);
+
+    // Write some data
+    memory->Write8Bit(eRegWMDATA, 0xAB);
+    memory->Write8Bit(eRegWMDATA, 0xCD);
+
+    // Values should be written to wrma.
+    EXPECT_EQ(wram[0x12345], 0xAB);
+    EXPECT_EQ(wram[0x12346], 0xCD);
+
+    // There is an interal counter, so reads won't read the last bytes written
+    EXPECT_EQ(memory->Read8Bit(eRegWMDATA), 0x00);
+    EXPECT_EQ(memory->Read8Bit(eRegWMDATA), 0x00);
+
+    // Reset the address back to the start
+    memory->Write8Bit(eRegWMADDH, 0x01);
+    memory->Write8Bit(eRegWMADDM, 0x23);
+    memory->Write8Bit(eRegWMADDL, 0x45);
+
+    // Now the values written can be read.
+    EXPECT_EQ(memory->Read8Bit(eRegWMDATA), 0xAB);
+    EXPECT_EQ(memory->Read8Bit(eRegWMDATA), 0xCD);
+}
+
 
 class FakeIo : public IoRegisterProxy
 {

@@ -11,6 +11,7 @@ Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterfac
     ioPorts42(),
     ioPorts43(),
     expansion(),
+    wramRWAddr(0),
     cart(NULL),
     debuggerInterface(debuggerInterface),
     infoInterface(infoInterface),
@@ -55,8 +56,21 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 timer->AddCycle(EClockSpeed::eClockWRam);
                 return wram[addr & 0x1FFF];
             case 0x21:
-                throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
+                timer->AddCycle(EClockSpeed::eClockIoReg);
+                switch (addr & 0xFFFF)
+                {
+                    case eRegWMDATA: // 0x2180
+                        {
+                            uint8_t value = wram[wramRWAddr];
+                            LogMemory("Read from wram through WMData %06X=%02X", wramRWAddr, value);
+                            wramRWAddr = (wramRWAddr + 1) & 0x1FFFF;
+                            return value;
+                        }
+                        break;
+                    default:
+                        throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
+                }
+                //throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 //return ioPorts21[addr & 0xFF];
             case 0x40:
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
@@ -64,7 +78,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 //return ioPorts40[addr & 0xFF];
             case 0x42:
                 timer->AddCycle(EClockSpeed::eClockIoReg);
-                switch (addr)
+                switch (addr & 0xFFFF)
                 {
                     case eRegRDNMI: // 0x4219
                         {
@@ -148,8 +162,33 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     debuggerInterface->MemoryChanged(Address(0x7E, addr & 0x1FFF), 1);
                 return;
             case 0x21:
-                throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
+                timer->AddCycle(EClockSpeed::eClockIoReg);
+                switch (addr & 0xFFFF)
+                {
+                    case eRegWMDATA: // 0x2180
+                        wram[wramRWAddr] = value;
+                        LogMemory("Write to wram through WMData %06X=%02X", wramRWAddr, value);
+                        wramRWAddr = (wramRWAddr + 1) & 0x1FFFF; // This may be meant to update the WMADD[HML] registers.
+                        break;
+                    case eRegWMADDL: // 0x2181
+                        ioPorts21[addr & 0xFF] = value;
+                        wramRWAddr = Bytes::Make24Bit(ioPorts21[eRegWMADDH & 0xFF] & 0x01, ioPorts21[eRegWMADDM & 0xFF], value);
+                        LogMemory("wramRwAddr=%06X", wramRWAddr);
+                        break;
+                    case eRegWMADDM: // 0x2182
+                        ioPorts21[addr & 0xFF] = value;
+                        wramRWAddr = Bytes::Make24Bit(ioPorts21[eRegWMADDH & 0xFF] & 0x01, value, ioPorts21[eRegWMADDL & 0xFF]);
+                        LogMemory("wramRwAddr=%06X", wramRWAddr);
+                        break;
+                    case eRegWMADDH: // 0x2183
+                        ioPorts21[addr & 0xFF] = value;
+                        wramRWAddr = Bytes::Make24Bit(value & 0x01, ioPorts21[eRegWMADDM & 0xFF], ioPorts21[eRegWMADDL & 0xFF]);
+                        LogMemory("wramRwAddr=%06X", wramRWAddr);
+                        break;
+                    default:
+                        throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
+                }
+                //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //ioPorts21[addr & 0xFF] = value;
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
@@ -164,7 +203,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 return;
             case 0x42:
                 timer->AddCycle(EClockSpeed::eClockIoReg);
-                switch (addr)
+                switch (addr & 0xFFFF)
                 {
                     case eRegNMITIMEN: // 0x4200
                         ioPorts42[addr & 0xFF] = value;
