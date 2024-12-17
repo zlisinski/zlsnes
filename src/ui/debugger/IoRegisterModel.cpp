@@ -6,7 +6,6 @@
 #include "IoRegisterModel.h"
 
 
-static const int ROW_COUNT = 105;
 static const int COL_COUNT = 1;
 
 
@@ -124,7 +123,95 @@ static const IoRegData ioRegData[] = {
     {"421C JOY3L", 0x421C},
     {"421D JOY3H", 0x421D},
     {"421E JOY4L", 0x421E},
-    {"421F JOY4H", 0x421F}
+    {"421F JOY4H", 0x421F},
+    {"4300 DMAP0", 0x4300},
+    {"4301 BBAD0", 0x4301},
+    {"4302 A1T0L", 0x4302},
+    {"4303 A1T0H", 0x4303},
+    {"4304 A1B0", 0x4304},
+    {"4305 DAS0L", 0x4305},
+    {"4306 DAS0H", 0x4306},
+    {"4307 DASB0", 0x4307},
+    {"4308 A2A0L", 0x4308},
+    {"4309 A2A0H", 0x4309},
+    {"430A NTRL0", 0x430A},
+    {"4310 DMAP1", 0x4310},
+    {"4311 BBAD1", 0x4311},
+    {"4312 A1T1L", 0x4312},
+    {"4313 A1T1H", 0x4313},
+    {"4314 A1B1", 0x4314},
+    {"4315 DAS1L", 0x4315},
+    {"4316 DAS1H", 0x4316},
+    {"4317 DASB1", 0x4317},
+    {"4318 A2A1L", 0x4318},
+    {"4319 A2A1H", 0x4319},
+    {"431A NTRL1", 0x431A},
+    {"4320 DMAP2", 0x4320},
+    {"4321 BBAD2", 0x4321},
+    {"4322 A1T2L", 0x4322},
+    {"4323 A1T2H", 0x4323},
+    {"4324 A1B2", 0x4324},
+    {"4325 DAS2L", 0x4325},
+    {"4326 DAS2H", 0x4326},
+    {"4327 DASB2", 0x4327},
+    {"4328 A2A2L", 0x4328},
+    {"4329 A2A2H", 0x4329},
+    {"432A NTRL2", 0x432A},
+    {"4330 DMAP3", 0x4330},
+    {"4331 BBAD3", 0x4331},
+    {"4332 A1T3L", 0x4332},
+    {"4333 A1T3H", 0x4333},
+    {"4334 A1B3", 0x4334},
+    {"4335 DAS3L", 0x4335},
+    {"4336 DAS3H", 0x4336},
+    {"4337 DASB3", 0x4337},
+    {"4338 A2A3L", 0x4338},
+    {"4339 A2A3H", 0x4339},
+    {"433A NTRL3", 0x433A},
+    {"4340 DMAP4", 0x4340},
+    {"4341 BBAD4", 0x4341},
+    {"4342 A1T4L", 0x4342},
+    {"4343 A1T4H", 0x4343},
+    {"4344 A1B4", 0x4344},
+    {"4345 DAS4L", 0x4345},
+    {"4346 DAS4H", 0x4346},
+    {"4347 DASB4", 0x4347},
+    {"4348 A2A4L", 0x4348},
+    {"4349 A2A4H", 0x4349},
+    {"434A NTRL4", 0x434A},
+    {"4350 DMAP5", 0x4350},
+    {"4351 BBAD5", 0x4351},
+    {"4352 A1T5L", 0x4352},
+    {"4353 A1T5H", 0x4353},
+    {"4354 A1B5", 0x4354},
+    {"4355 DAS5L", 0x4355},
+    {"4356 DAS5H", 0x4356},
+    {"4357 DASB5", 0x4357},
+    {"4358 A2A5L", 0x4358},
+    {"4359 A2A5H", 0x4359},
+    {"435A NTRL5", 0x435A},
+    {"4360 DMAP6", 0x4360},
+    {"4361 BBAD6", 0x4361},
+    {"4362 A1T6L", 0x4362},
+    {"4363 A1T6H", 0x4363},
+    {"4364 A1B6", 0x4364},
+    {"4365 DAS6L", 0x4365},
+    {"4366 DAS6H", 0x4366},
+    {"4367 DASB6", 0x4367},
+    {"4368 A2A6L", 0x4368},
+    {"4369 A2A6H", 0x4369},
+    {"436A NTRL6", 0x436A},
+    {"4370 DMAP7", 0x4370},
+    {"4371 BBAD7", 0x4371},
+    {"4372 A1T7L", 0x4372},
+    {"4373 A1T7H", 0x4373},
+    {"4374 A1B7", 0x4374},
+    {"4375 DAS7L", 0x4375},
+    {"4376 DAS7H", 0x4376},
+    {"4377 DASB7", 0x4377},
+    {"4378 A2A7L", 0x4378},
+    {"4379 A2A7H", 0x4379},
+    {"437A NTRL7", 0x437A},
 };
 
 
@@ -158,7 +245,7 @@ void IoRegisterModel::InvalidateMemory(Address address, uint16_t len)
     if (page == 0x2100 || page == 0x4000 || page == 0x4200 || page == 0x4300)
     {
         QModelIndex startIndex = this->index(0, 0);
-        QModelIndex endIndex = this->index(ROW_COUNT - 1, 0);
+        QModelIndex endIndex = this->index(this->rowCount() - 1, 0);
         emit dataChanged(startIndex, endIndex);
     }
 }
@@ -168,7 +255,7 @@ int IoRegisterModel::rowCount(const QModelIndex &parent /*= QModelIndex()*/) con
 {
     Q_UNUSED(parent);
 
-    return ROW_COUNT;
+    return sizeof(ioRegData) / sizeof(IoRegData);
 }
 
 

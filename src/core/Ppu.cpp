@@ -438,6 +438,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAL: // 0x2118
             *regVMDATAL = byte;
             vram[vramRwAddr] = byte;
+            LogPpu("Write to vram %04X=%02X", vramRwAddr);
             if (!isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
@@ -447,6 +448,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAH: // 0x2119
             *regVMDATAH = byte;
             vram[vramRwAddr + 1] = byte;
+            LogPpu("Write to vram %04X=%02X", vramRwAddr);
             if (isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
@@ -499,7 +501,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             {
                 cgram[cgramRwAddr - 1] = cgramLatch;
                 cgram[cgramRwAddr] = byte;
-                LogPpu("Writing word to cgram %02X%02X", byte, cgramLatch);
+                LogPpu("Writing word to cgram %04X %02X%02X", cgramRwAddr, byte, cgramLatch);
 
                 // Convert to ARGB and store in palette.
                 palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(Bytes::Make16Bit(byte, cgramLatch));
