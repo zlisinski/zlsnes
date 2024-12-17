@@ -305,6 +305,7 @@ static const QSet<uint8_t> ImmediateA = {
     0x49, // EOR
     0x69, // ADC
     0x89, // BIT
+    0xA9, // LDA
     0xC9, // CMP
     0xE9, // SBC
 };
