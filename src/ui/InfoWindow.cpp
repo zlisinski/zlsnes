@@ -34,7 +34,7 @@ InfoWindow::InfoWindow(QWidget *parent) :
     connect(this, SIGNAL(SignalInfoWindowClosed()), parent, SLOT(SlotInfoWindowClosed()));
     connect(this, SIGNAL(SignalDrawFrame()), this, SLOT(SlotDrawFrame()));
 
-    ClearCartridgeInfo();
+    ClearWidgets();
     DrawFrame();
 
     // Use a timer for updating the tilemap images until I get actual frames rendering.
@@ -124,7 +124,7 @@ void InfoWindow::closeEvent(QCloseEvent *event)
 }
 
 
-void InfoWindow::ClearCartridgeInfo()
+void InfoWindow::ClearWidgets()
 {
     ui->labelTitle->setText("");
     ui->labelRomType->setText("");
@@ -146,6 +146,26 @@ void InfoWindow::ClearCartridgeInfo()
     ui->labelGameCode->setText("");
 
     ui->labelVideoMode->setText("");
+
+    ui->labelBG1Enabled->setText("");
+    ui->labelBG4Enabled->setText("");
+    ui->labelBG2Enabled->setText("");
+    ui->labelBG3Enabled->setText("");
+
+    ui->labelBG1ChrSize->setText("");
+    ui->labelBG2ChrSize->setText("");
+    ui->labelBG3ChrSize->setText("");
+    ui->labelBG4ChrSize->setText("");
+
+    ui->labelBG1Tileset->setText("");
+    ui->labelBG2Tileset->setText("");
+    ui->labelBG3Tileset->setText("");
+    ui->labelBG4Tileset->setText("");
+
+    ui->labelBG1Tilemap->setText("");
+    ui->labelBG2Tilemap->setText("");
+    ui->labelBG3Tilemap->setText("");
+    ui->labelBG4Tilemap->setText("");
 }
 
 
@@ -301,7 +321,50 @@ void InfoWindow::UpdateMemoryView()
     if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
         return;
 
-    ui->labelVideoMode->setText(QString::number(ioPorts21[eRegBGMODE & 0xFF] & 0x07));
+    uint8_t value;
+    uint8_t value2;
+
+    value = ioPorts21[eRegBGMODE & 0xFF];
+    ui->labelVideoMode->setText(QString::number(value & 0x07));
+    ui->labelBG1ChrSize->setText(Bytes::GetBit<4>(value) ? "16x16" : "8x8");
+    ui->labelBG2ChrSize->setText(Bytes::GetBit<5>(value) ? "16x16" : "8x8");
+    ui->labelBG3ChrSize->setText(Bytes::GetBit<6>(value) ? "16x16" : "8x8");
+    ui->labelBG4ChrSize->setText(Bytes::GetBit<7>(value) ? "16x16" : "8x8");
+
+    value = ioPorts21[eRegTM & 0xFF];
+    value2 = ioPorts21[eRegTS & 0xFF];
+    ui->labelBG1Enabled->setText((Bytes::GetBit<0>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<0>(value2) ? "Sub" : ""));
+    ui->labelBG2Enabled->setText((Bytes::GetBit<1>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<1>(value2) ? "Sub" : ""));
+    ui->labelBG3Enabled->setText((Bytes::GetBit<2>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<2>(value2) ? "Sub" : ""));
+    ui->labelBG4Enabled->setText((Bytes::GetBit<3>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<3>(value2) ? "Sub" : ""));
+
+    value = ioPorts21[eRegBG12NBA & 0xFF];
+    ui->labelBG1Tileset->setText(UiUtils::FormatHexWord((value & 0x0F) << 13));
+    ui->labelBG2Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
+
+    value = ioPorts21[eRegBG34NBA & 0xFF];
+    ui->labelBG3Tileset->setText(UiUtils::FormatHexWord((value & 0x0F) << 13));
+    ui->labelBG4Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
+    
+    value = ioPorts21[eRegBG1SC & 0xFF];
+    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
+                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+
+    value = ioPorts21[eRegBG2SC & 0xFF];
+    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
+                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+
+    value = ioPorts21[eRegBG3SC & 0xFF];
+    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
+                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+
+    value = ioPorts21[eRegBG4SC & 0xFF];
+    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
+                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
 }
 
 

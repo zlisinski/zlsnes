@@ -434,7 +434,7 @@ void MainWindow::OpenRom(const QString &filename)
         if (!emulator->LoadRom(filename.toLatin1().data()))
         {
             LogError("Error loading ROM");
-            infoWindow->ClearCartridgeInfo();
+            infoWindow->ClearWidgets();
             return;
         }
 

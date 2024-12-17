@@ -140,4 +140,6 @@ private:
     uint8_t *regSTAT78;  // 0x213F PPU2 Status and PPU2 Version Number
 
     friend class PpuTest;
+    friend class InfoWindow;
+    friend class DebuggerWindow;
 };

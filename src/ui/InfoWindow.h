@@ -24,7 +24,7 @@ public:
     void SetCgram(const uint8_t *cgram) override {this->cgram = cgram;}
     void UpdateCartridgeInfo(const Cartridge &cartridge) override;
 
-    void ClearCartridgeInfo();
+    void ClearWidgets();
     void DrawFrame();
 
 protected:
