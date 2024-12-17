@@ -287,7 +287,7 @@ uint8_t *Memory::GetBytePtr(uint32_t addr)
 
     // WRAM mirror.
     if ((addr & 0x40E000) == 0)
-        return &wram[addr & 0x1FFFF];
+        return &wram[addr & 0x1FFF];
 
     // WRAM.
     if ((addr & 0xFE0000) == 0x7E0000)

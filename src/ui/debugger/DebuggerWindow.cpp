@@ -158,22 +158,27 @@ void DebuggerWindow::UpdateStack()
     if (cpu == NULL || memory == NULL)
         return;
 
-    currentSp = cpu->reg.sp;
+    currentSp = cpu->reg.sp + 1;
 
     // Let the view determine how many rows to be displayed.
     const int rowCount = ui->stackView->rowCount();
 
     ui->stackView->clearContents();
+    ui->stackView->setVerticalHeaderLabels({});
 
     for (int i = 0; i < rowCount; i++)
     {
+        // Don't go outside the wram mirror block, the pointer is no longer valid.
+        if ((currentSp + i) > 0x1FFF)
+            break;
+
         uint16_t address = currentSp + i;
         QTableWidgetItem *item = new QTableWidgetItem(UiUtils::FormatHexWord(address));
-        ui->stackView->setItem(i, 0, item);
+        ui->stackView->setVerticalHeaderItem(i, item);
 
         uint8_t value = memory->ReadRaw8Bit(address);
         item = new QTableWidgetItem(UiUtils::FormatHexByte(value));
-        ui->stackView->setItem(i, 1, item);
+        ui->stackView->setItem(i, 0, item);
     }
 }
 
