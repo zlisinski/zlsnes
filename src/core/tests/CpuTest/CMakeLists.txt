@@ -24,3 +24,5 @@ target_link_libraries(CpuTest
 
 add_test(NAME CpuTest COMMAND CpuTest)
 set_property(TEST CpuTest PROPERTY WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+add_compile_definitions("TESTING")
