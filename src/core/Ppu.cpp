@@ -438,7 +438,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAL: // 0x2118
             *regVMDATAL = byte;
             vram[vramRwAddr] = byte;
-            LogPpu("Write to vram %04X=%02X", vramRwAddr);
+            LogPpu("Write to vram %04X=%02X", vramRwAddr, byte);
             if (!isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
@@ -448,7 +448,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegVMDATAH: // 0x2119
             *regVMDATAH = byte;
             vram[vramRwAddr + 1] = byte;
-            LogPpu("Write to vram %04X=%02X", vramRwAddr);
+            LogPpu("Write to vram %04X=%02X", vramRwAddr, byte);
             if (isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
