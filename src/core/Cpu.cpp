@@ -1366,26 +1366,26 @@ void Cpu::ProcessOpCode()
         case 0x80: // BRA - Branch
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
+                LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
                 if (offset == -2)
                     throw InfiniteLoopException();
 #endif
                 reg.pc += offset;
-                LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
             }
             break;
 
         case 0x82: // BRL - Branch Long
             {
                 int16_t offset = static_cast<int16_t>(ReadPC16Bit());
+                LogCpu("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
                 if (offset == -3)
                     throw InfiniteLoopException();
 #endif
                 reg.pc += offset;
-                LogCpu("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
             }
             break;
 

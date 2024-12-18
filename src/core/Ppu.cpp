@@ -751,3 +751,13 @@ void Ppu::DrawScreen()
 {
     displayInterface->FrameReady(frameBuffer);
 }
+
+
+void Ppu::DrawFullScreen()
+{
+    for (int i = 0; i < 224; i++)
+    {
+        DrawScanline(i);
+    }
+    DrawScreen();
+}

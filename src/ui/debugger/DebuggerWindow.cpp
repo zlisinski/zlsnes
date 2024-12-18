@@ -124,6 +124,9 @@ void DebuggerWindow::SetCurrentOp(Address pc)
     {
         // Re-Enable controls. Emit a signal, since we are running in a non-main thread.
         emit SignalReenableActions();
+
+        // Redraw the whole screen so we don't have to wait for a vblank to see changes.
+        ppu->DrawFullScreen();
     }
     singleStep = false;
 
@@ -134,6 +137,9 @@ void DebuggerWindow::SetCurrentOp(Address pc)
 
         // Re-Enable controls. Emit a signal, since we are running in a non-main thread.
         emit SignalReenableActions();
+
+        // Redraw the whole screen so we don't have to wait for a vblank to see changes.
+        ppu->DrawFullScreen();
     }
 
     emit SignalUpdateReady(pc);

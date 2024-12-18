@@ -22,3 +22,4 @@ target_link_libraries(zlsnes_core
 enable_testing()
 
 add_subdirectory(tests)
+add_compile_definitions("TESTING")

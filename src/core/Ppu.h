@@ -35,6 +35,7 @@ private:
     void DrawScanline(uint8_t scanline);
     void DrawBackgroundScanline(uint8_t scanline);
     void DrawScreen();
+    void DrawFullScreen(); // Used when debugging to update the screen.
 
     Memory *memory;
     std::array<uint8_t, OAM_SIZE> oam;
