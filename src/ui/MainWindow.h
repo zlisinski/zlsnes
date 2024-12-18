@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow, public DisplayInterface//, public AudioIn
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, QWidget *parent = 0);
     ~MainWindow();
 
     // DisplayInterface functions.

@@ -15,20 +15,16 @@
 #include "ui_DebuggerWindow.h"
 
 
-// 0xFFFFFFFF is outside the 24-bit addressable range, so it's safe to use for an invalid address value.
-static const uint32_t INVALID_ADDR = 0xFFFFFFFF;
-
-
-DebuggerWindow::DebuggerWindow(QWidget *parent) :
+DebuggerWindow::DebuggerWindow(QWidget *parent, bool debuggingEnabled, uint32_t runToAddress) :
     QMainWindow(parent),
     ui(new Ui::DebuggerWindow),
     cpu(nullptr),
     memory(nullptr),
     ppu(nullptr),
     currentSp(0),
-    debuggingEnabled(false),
+    debuggingEnabled(debuggingEnabled),
     singleStep(false),
-    runToAddress(INVALID_ADDR),
+    runToAddress(runToAddress),
     disassemblyModel(new DisassemblyModel(palette(), this)),
     ioRegisterModel(new IoRegisterModel(this)),
     memoryModel(new MemoryModel(this))

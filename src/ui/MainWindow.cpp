@@ -14,7 +14,7 @@
 #include "../core/Logger.h"
 
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, QWidget *parent) :
     QMainWindow(parent),
     graphicsView(NULL),
     labelFps(NULL),
@@ -46,7 +46,6 @@ MainWindow::MainWindow(QWidget *parent) :
     qRegisterMetaType<QVector<int>>("QVector<int>");
 
     QSettings settings;
-    displayScale = settings.value(SETTINGS_VIDEO_SCALE, 1).toInt();
 
     // Setup logger before anything else.
     Logger::SetLogLevel(static_cast<LogLevel>(settings.value(SETTINGS_LOGGER_LEVEL, 0).toInt()));
@@ -74,26 +73,36 @@ MainWindow::MainWindow(QWidget *parent) :
     if (settings.value(SETTINGS_INFOWINDOW_DISPLAY, false).toBool())
         infoWindow->show();
 
-    debuggerWindow = new DebuggerWindow(this);
-    if (settings.value(SETTINGS_DEBUGGERWINDOW_DISPLAY, false).toBool())
-        debuggerWindow->show();
-
     fpsTimer.start();
     frameCapTimer.start();
 
-    emulator = new Emulator(this, /*this,*/ infoWindow, debuggerWindow/*, this*/);
-
-    if (qApp->arguments().size() >= 2)
-    {
-        QString filename = QFileInfo(qApp->arguments().at(1)).canonicalFilePath();
-        OpenRom(filename);
-    }
-
     restoreGeometry(settings.value(SETTINGS_MAINWINDOW_GEOMETRY).toByteArray());
+    displayScale = settings.value(SETTINGS_VIDEO_SCALE, 1).toInt();
     SetDisplayScale(displayScale);
 
     connect(this, SIGNAL(SignalFrameReady()), this, SLOT(SlotDrawFrame()));
     connect(this, SIGNAL(SignalShowMessageBox(const QString&)), this, SLOT(SlotShowMessageBox(const QString &)));
+
+    // If debugging or a run-to address was set on the command line, pass it on to the debugger.
+    if (startInDebug)
+    {
+        debuggerWindow = new DebuggerWindow(this, true, runToAddress);
+        debuggerWindow->show();
+    }
+    else
+    {
+        debuggerWindow = new DebuggerWindow(this);
+        if (settings.value(SETTINGS_DEBUGGERWINDOW_DISPLAY, false).toBool())
+            debuggerWindow->show();
+    }
+
+    emulator = new Emulator(this, /*this,*/ infoWindow, debuggerWindow/*, this*/);
+
+    // Open the file if one was passed on the command line.
+    if (romFilename != "")
+    {
+        OpenRom(romFilename);
+    }
 }
 
 

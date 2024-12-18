@@ -2,8 +2,8 @@
 
 #include <QtWidgets/QMainWindow>
 
-#include "core/Zlsnes.h"
-#include "core/DebuggerInterface.h"
+#include "../../core/Zlsnes.h"
+#include "../../core/DebuggerInterface.h"
 
 namespace Ui {
 class DebuggerWindow;
@@ -16,12 +16,16 @@ class Memory;
 class MemoryModel;
 
 
+// 0xFFFFFFFF is outside the 24-bit addressable range, so it's safe to use for an invalid address value.
+const uint32_t INVALID_ADDR = 0xFFFFFFFF;
+
+
 class DebuggerWindow : public QMainWindow, public DebuggerInterface
 {
     Q_OBJECT
 
 public:
-    explicit DebuggerWindow(QWidget *parent = 0);
+    explicit DebuggerWindow(QWidget *parent, bool debuggingEnabled = false, uint32_t runToAddress = INVALID_ADDR);
     ~DebuggerWindow();
 
     void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu, Ppu *newPpu) override;
