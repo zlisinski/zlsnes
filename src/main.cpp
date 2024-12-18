@@ -15,11 +15,13 @@ int main(int argc, char *argv[])
     parser.addPositionalArgument("romfile", "ROM file to load");
     parser.addOptions({
         {"d", "Start in debugging mode"},
-        {"r", "Run-to address (implies -d)", "address"}
+        {"r", "Run-to address (implies -d)", "address"},
+        {"n", "Dont save to recent files"}
     });
     parser.process(app);
 
     bool debug = false;
+    bool saveToRecent = true;
     uint32_t runToAddress = INVALID_ADDR;
     QString filename;
 
@@ -39,6 +41,12 @@ int main(int argc, char *argv[])
     if (parser.isSet("d"))
     {
         debug = true;
+    }
+
+    // Check for saving to recent files list
+    if (parser.isSet("n"))
+    {
+        saveToRecent = false;
     }
 
     // Check for run-to address.
@@ -64,7 +72,7 @@ int main(int argc, char *argv[])
         debug = true;
     }
 
-    MainWindow window(filename, debug, runToAddress);
+    MainWindow window(filename, debug, runToAddress, saveToRecent);
     window.setWindowTitle("ZLSNES");
     window.show();
 

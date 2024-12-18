@@ -14,7 +14,7 @@
 #include "../core/Logger.h"
 
 
-MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, QWidget *parent) :
+MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, bool saveToRecent, QWidget *parent) :
     QMainWindow(parent),
     graphicsView(NULL),
     labelFps(NULL),
@@ -101,7 +101,7 @@ MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t r
     // Open the file if one was passed on the command line.
     if (romFilename != "")
     {
-        OpenRom(romFilename);
+        OpenRom(romFilename, saveToRecent);
     }
 }
 
@@ -432,13 +432,14 @@ void MainWindow::SetDisplayScale(int scale)
 }
 
 
-void MainWindow::OpenRom(const QString &filename)
+void MainWindow::OpenRom(const QString &filename, bool saveToRecent)
 {
     if (filename != "")
     {
         statusBar()->showMessage("Filename = " + filename, 5000);
 
-        UpdateRecentFile(filename);
+        if (saveToRecent)
+            UpdateRecentFile(filename);
 
         if (!emulator->LoadRom(filename.toLatin1().data()))
         {

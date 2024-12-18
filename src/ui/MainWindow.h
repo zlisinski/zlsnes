@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow, public DisplayInterface//, public AudioIn
     Q_OBJECT
 
 public:
-    explicit MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, QWidget *parent = 0);
+    explicit MainWindow(const QString &romFilename, bool startInDebug, uint32_t runToAddress, bool saveToRecent, QWidget *parent = 0);
     ~MainWindow();
 
     // DisplayInterface functions.
@@ -64,7 +64,7 @@ private:
     void UpdateRecentFile(const QString &filename);
     void UpdateRecentFilesActions();
     void SetDisplayScale(int scale);
-    void OpenRom(const QString &filename);
+    void OpenRom(const QString &filename, bool saveToRecent = true);
 
     QGraphicsView *graphicsView;
     QLabel *labelFps;
