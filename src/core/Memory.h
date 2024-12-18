@@ -113,6 +113,8 @@ public:
     // Since there is not a flat memory model, incrementing the pointer could do bad things.
     uint8_t *GetBytePtr(uint32_t addr);
 
+    inline uint8_t GetOpenBusValue() const {return openBusValue;}
+
     void ClearMemory();
 
 protected:
@@ -131,6 +133,9 @@ protected:
     std::array<uint8_t, 0x2000> expansion; // 0x6000-0x7FFF.
 
     uint32_t wramRWAddr;
+
+    // Some register bits are not connected and return the last value read from the data bus.
+    uint8_t openBusValue;
 
     Cartridge *cart;
     DebuggerInterface *debuggerInterface;

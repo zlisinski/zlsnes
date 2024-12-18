@@ -12,6 +12,7 @@ Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterfac
     ioPorts43(),
     expansion(),
     wramRWAddr(0),
+    openBusValue(0),
     cart(NULL),
     debuggerInterface(debuggerInterface),
     infoInterface(infoInterface),
@@ -41,6 +42,9 @@ void Memory::SetTimer(Timer *timer)
 
 uint8_t Memory::Read8Bit(uint32_t addr)
 {
+    // Note: Only store the openBusValue on reads from ROM and RAM (assuming that code can be executed from RAM).
+    // IO registers should never be part of the instruction.
+
     if ((addr & 0x408000) == 0) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x7FFF.
     {
         if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
@@ -54,7 +58,9 @@ uint8_t Memory::Read8Bit(uint32_t addr)
             case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
             case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
                 timer->AddCycle(EClockSpeed::eClockWRam);
-                return wram[addr & 0x1FFF];
+                // Save value for later open bus reads.
+                openBusValue = wram[addr & 0x1FFF];
+                return openBusValue;
             case 0x21:
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
@@ -80,7 +86,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
-                    case eRegRDNMI: // 0x4219
+                    case eRegRDNMI: // 0x4210
                         {
                             uint8_t value = ioPorts42[addr & 0xFF];
                             if (value & 0x80)
@@ -90,6 +96,10 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                                 if (debuggerInterface != nullptr)
                                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                             }
+
+                            // Bits 4-6 are open bus.
+                            value = (value & 0x8F) | (openBusValue & 0x70);
+
                             return value;
                         }
                     case eRegHVBJOY: // 0x4212
@@ -114,7 +124,9 @@ uint8_t Memory::Read8Bit(uint32_t addr)
     if ((addr & 0xFE0000) == 0x7E0000) // Bank is 0x7E or 0x7F.
     {
         timer->AddCycle(EClockSpeed::eClockWRam);
-        return wram[addr & 0x1FFFF];
+        // Save value for later open bus reads.
+        openBusValue = wram[addr & 0x1FFFF];
+        return openBusValue;
     }
 
     if (addr & 0x8000)
@@ -125,7 +137,9 @@ uint8_t Memory::Read8Bit(uint32_t addr)
         // Assume LoROM for now.
         // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
         uint32_t mappedAddr = (((addr & 0xFF0000) >> 1) | (addr & 0x7FFF));
-        return cart->GetRom()[mappedAddr];
+        // Save value for later open bus reads.
+        openBusValue = cart->GetRom()[mappedAddr];
+        return openBusValue;
     }
 
     // TODO: Figure out if this is slow or fast
