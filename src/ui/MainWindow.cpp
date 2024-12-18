@@ -55,6 +55,8 @@ MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t r
     if (settings.value(SETTINGS_LOGWINDOW_DISPLAY, false).toBool())
         logWindow->show();
 
+    setWindowTitle("ZLSNES");
+
     SetupMenuBar();
     SetupStatusBar();
     SetupGamepad();

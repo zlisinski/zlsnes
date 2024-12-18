@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
     }
 
     MainWindow window(filename, debug, runToAddress, saveToRecent);
-    window.setWindowTitle("ZLSNES");
     window.show();
 
     return app.exec();
