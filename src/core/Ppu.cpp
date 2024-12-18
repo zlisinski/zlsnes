@@ -718,7 +718,7 @@ void Ppu::DrawBackgroundScanline(uint8_t scanline)
     // tilemap is an index into tileData, as well as priority and flip data.
     //const uint8_t hTilemapCount = Bytes::GetBit<0>(*regBG1SC);
     //const uint8_t vTilemapCount = Bytes::GetBit<1>(*regBG1SC);
-    const uint16_t tilemapOffset = (*regBG1SC & 0xFC) << 11;
+    const uint16_t tilemapOffset = (*regBG1SC & 0xFC) << 9;
     const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[tilemapOffset]);
 
     const uint32_t TILE_SIZE = 8; // TODO: check actual tile size.
