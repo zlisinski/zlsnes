@@ -26,12 +26,12 @@ private:
 class IoRegisterSubject
 {
 public:
-    uint8_t *RequestOwnership(EIORegisters ioReg, IoRegisterProxy *proxy)
+    uint8_t &RequestOwnership(EIORegisters ioReg, IoRegisterProxy *proxy)
     {
         if (ioRegisterProxies.count(ioReg) != 0)
             throw std::runtime_error(fmt("IO port %02X is already owned", ioReg));
         ioRegisterProxies.insert({ioReg, proxy});
-        return GetIoRegisterPtr(ioReg);
+        return GetIoRegisterRef(ioReg);
     }
 
     // Don't bother with detaching, since everything is destroyed at the same time.
@@ -41,7 +41,7 @@ public:
 protected:
     virtual ~IoRegisterSubject() {}
 
-    virtual uint8_t *GetIoRegisterPtr(EIORegisters ioReg) = 0;
+    virtual uint8_t &GetIoRegisterRef(EIORegisters ioReg) = 0;
 
     bool WriteIoRegisterProxy(EIORegisters ioReg, uint8_t byte)
     {

@@ -18,14 +18,14 @@ Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts
     regJOY4H(memory->RequestOwnership(eRegJOY4H, this))
 {
     // Start out with all buttons released.
-    *regJOY1L = 0;
-    *regJOY1H = 0;
-    *regJOY2L = 0;
-    *regJOY2H = 0;
-    *regJOY3L = 0;
-    *regJOY3H = 0;
-    *regJOY4L = 0;
-    *regJOY4H = 0;
+    regJOY1L = 0;
+    regJOY1H = 0;
+    regJOY2L = 0;
+    regJOY2H = 0;
+    regJOY3L = 0;
+    regJOY3H = 0;
+    regJOY4L = 0;
+    regJOY4H = 0;
 
     timerSubject->AttachObserver(this);
 }
@@ -64,21 +64,21 @@ uint8_t Input::ReadRegister(EIORegisters ioReg) const
     switch (ioReg)
     {
         case eRegJOY1L:
-            return *regJOY1L;
+            return regJOY1L;
         case eRegJOY1H:
-            return *regJOY1H;
+            return regJOY1H;
         case eRegJOY2L:
-            return *regJOY2L;
+            return regJOY2L;
         case eRegJOY2H:
-            return *regJOY2H;
+            return regJOY2H;
         case eRegJOY3L:
-            return *regJOY3L;
+            return regJOY3L;
         case eRegJOY3H:
-            return *regJOY3H;
+            return regJOY3H;
         case eRegJOY4L:
-            return *regJOY4L;
+            return regJOY4L;
         case eRegJOY4H:
-            return *regJOY4H;
+            return regJOY4H;
         default:
             throw std::range_error(fmt("Input doesnt handle reads to 0x%04X", ioReg));
     }
@@ -95,8 +95,8 @@ void Input::UpdateTimer(uint32_t value)
     // TODO: Vblank observer?
     if (autoReadFlag && !lastAutoReadFlag)
     {
-        *regJOY1L = Bytes::GetByte<0>(buttonData.data);
-        *regJOY1H = Bytes::GetByte<1>(buttonData.data);
+        regJOY1L = Bytes::GetByte<0>(buttonData.data);
+        regJOY1H = Bytes::GetByte<1>(buttonData.data);
     }
 
     lastAutoReadFlag = autoReadFlag;

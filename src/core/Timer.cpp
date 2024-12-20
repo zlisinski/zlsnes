@@ -62,13 +62,13 @@ void Timer::AddCycle(uint8_t clocks)
             Bytes::SetBit<7>(regHVBJOY);
 
             // If joypad auto read is enabled, toggle the busy flag.
-            if (Bytes::GetBit<0>(*regNMITIMEN))
+            if (Bytes::GetBit<0>(regNMITIMEN))
                 Bytes::SetBit<0>(regHVBJOY);
         }
         else if (vCount == 228)
         {
             // If joypad auto read is enabled, toggle the busy flag.
-            if (Bytes::GetBit<0>(*regNMITIMEN))
+            if (Bytes::GetBit<0>(regNMITIMEN))
                 Bytes::ClearBit<0>(regHVBJOY);
         }
         else if (vCount == 262)
@@ -99,7 +99,7 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg) const
             return memory->GetOpenBusValue();
         case eRegRDNMI: // 0x4210
         {
-            uint8_t value = *regRDNMI;
+            uint8_t value = regRDNMI;
 
             // VBlank NMI flag gets reset after reads.
             Bytes::ClearBit<7>(regRDNMI);
@@ -110,9 +110,9 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg) const
             return value;
         }
         case eRegTIMEUP: // 0x4211
-            return *regTIMEUP;
+            return regTIMEUP;
         case eRegHVBJOY: // 0x4212
-            return *regHVBJOY;
+            return regHVBJOY;
         default:
             throw std::range_error(fmt("Timer doesnt handle reads to 0x%04X", ioReg));
     }
@@ -126,23 +126,23 @@ bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
     switch (ioReg)
     {
         case eRegNMITIMEN: // 0x4200
-            *regNMITIMEN = byte;
+            regNMITIMEN = byte;
             LogTimer("NMITIMEN=%02X", byte);
             return true;
         case eRegHTIMEL: // 0x4207
-            *regHTIMEL = byte;
+            regHTIMEL = byte;
             LogTimer("HTIMEL=%02X NYI", byte);
             return true;
         case eRegHTIMEH: // 0x4208
-            *regHTIMEH = byte;
+            regHTIMEH = byte;
             LogTimer("HTIMEH=%02X NYI", byte);
             return true;
         case eRegVTIMEL: // 0x4209
-            *regVTIMEL = byte;
+            regVTIMEL = byte;
             LogTimer("VTIMEL=%02X NYI", byte);
             return true;
         case eRegVTIMEH: // 0x420A
-            *regVTIMEH = byte;
+            regVTIMEH = byte;
             LogTimer("VTIMEH=%02X NYI", byte);
             return true;
         case eRegRDNMI: // 0x4210

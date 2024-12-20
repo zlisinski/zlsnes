@@ -41,7 +41,7 @@ void Memory::ClearMemory()
     memory.fill(0);
 }
 
-uint8_t *Memory::GetIoRegisterPtr(EIORegisters ioReg)
+uint8_t &Memory::GetIoRegisterRef(EIORegisters ioReg)
 {
-    return &memory[ioReg];
+    return memory[ioReg];
 }

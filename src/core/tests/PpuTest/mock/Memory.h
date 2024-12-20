@@ -112,7 +112,7 @@ public:
 
 protected:
     // Inherited from IoRegisterSubject.
-    uint8_t *GetIoRegisterPtr(EIORegisters ioReg) override;
+    uint8_t &GetIoRegisterRef(EIORegisters ioReg) override;
     
     std::array<uint8_t, 0xFFFFFF> memory;
 };

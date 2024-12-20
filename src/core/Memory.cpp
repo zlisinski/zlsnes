@@ -339,18 +339,18 @@ void Memory::ClearMemory()
 }
 
 
-uint8_t *Memory::GetIoRegisterPtr(EIORegisters ioReg)
+uint8_t &Memory::GetIoRegisterRef(EIORegisters ioReg)
 {
     switch (ioReg & 0xFF00)
     {
         case 0x2100:
-            return &ioPorts21[ioReg & 0xFF];
+            return ioPorts21[ioReg & 0xFF];
         case 0x4000:
-            return &ioPorts40[ioReg & 0xFF];
+            return ioPorts40[ioReg & 0xFF];
         case 0x4200:
-            return &ioPorts42[ioReg & 0xFF];
+            return ioPorts42[ioReg & 0xFF];
         case 0x4300:
-            return &ioPorts43[ioReg & 0xFF];
+            return ioPorts43[ioReg & 0xFF];
         default:
             throw std::range_error(fmt("Invalid IO register %04X", ioReg));
     }

@@ -44,14 +44,14 @@ private:
 
     Memory *memory;
 
-    uint8_t *regNMITIMEN; // 0x4200
-    uint8_t *regHTIMEL; // 0x4207
-    uint8_t *regHTIMEH; // 0x4208
-    uint8_t *regVTIMEL; // 0x4209
-    uint8_t *regVTIMEH; // 0x420A
-    uint8_t *regRDNMI; // 0x4210
-    uint8_t *regTIMEUP; // 0x4211
-    uint8_t *regHVBJOY; // 0x4212
+    uint8_t &regNMITIMEN; // 0x4200
+    uint8_t &regHTIMEL; // 0x4207
+    uint8_t &regHTIMEH; // 0x4208
+    uint8_t &regVTIMEL; // 0x4209
+    uint8_t &regVTIMEH; // 0x420A
+    uint8_t &regRDNMI; // 0x4210
+    uint8_t &regTIMEUP; // 0x4211
+    uint8_t &regHVBJOY; // 0x4212
 };
 
 #endif

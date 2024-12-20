@@ -34,12 +34,12 @@ private:
 
     bool lastAutoReadFlag;
 
-    uint8_t *regJOY1L;
-    uint8_t *regJOY1H;
-    uint8_t *regJOY2L;
-    uint8_t *regJOY2H;
-    uint8_t *regJOY3L;
-    uint8_t *regJOY3H;
-    uint8_t *regJOY4L;
-    uint8_t *regJOY4H;
+    uint8_t &regJOY1L;
+    uint8_t &regJOY1H;
+    uint8_t &regJOY2L;
+    uint8_t &regJOY2H;
+    uint8_t &regJOY3L;
+    uint8_t &regJOY3H;
+    uint8_t &regJOY4L;
+    uint8_t &regJOY4H;
 };
