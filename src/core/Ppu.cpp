@@ -2,20 +2,21 @@
 #include "DebuggerInterface.h"
 #include "Memory.h"
 #include "Ppu.h"
+#include "Timer.h"
 
 
-Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
-    memory(memory),
+Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     oam{0},
     vram{0},
     cgram{0},
     palette{0},
     frameBuffer{0},
+    memory(memory),
+    timer(timer),
     debuggerInterface(debuggerInterface),
     displayInterface(displayInterface),
     isHBlank(true),
     isVBlank(false),
-    clockCounter(0),
     scanline(0),
     isForcedBlank(false),
     brightness(0),
@@ -32,72 +33,72 @@ Ppu::Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayIn
     vramPrefetch{0,0},
     oamRwAddr(0),
     oamLatch(0),
-    regINIDISP(memory->AttachIoRegister(eRegINIDISP, this)),
-    regOBSEL(memory->AttachIoRegister(eRegOBSEL, this)),
-    regOAMADDL(memory->AttachIoRegister(eRegOAMADDL, this)),
-    regOAMADDH(memory->AttachIoRegister(eRegOAMADDH, this)),
-    regOAMDATA(memory->AttachIoRegister(eRegOAMDATA, this)),
-    regBGMODE(memory->AttachIoRegister(eRegBGMODE, this)),
-    regMOSAIC(memory->AttachIoRegister(eRegMOSAIC, this)),
-    regBG1SC(memory->AttachIoRegister(eRegBG1SC, this)),
-    regBG2SC(memory->AttachIoRegister(eRegBG2SC, this)),
-    regBG3SC(memory->AttachIoRegister(eRegBG3SC, this)),
-    regBG4SC(memory->AttachIoRegister(eRegBG4SC, this)),
-    regBG12NBA(memory->AttachIoRegister(eRegBG12NBA, this)),
-    regBG34NBA(memory->AttachIoRegister(eRegBG34NBA, this)),
-    regBG1HOFS(memory->AttachIoRegister(eRegBG1HOFS, this)),
-    regBG1VOFS(memory->AttachIoRegister(eRegBG1VOFS, this)),
-    regBG2HOFS(memory->AttachIoRegister(eRegBG2HOFS, this)),
-    regBG2VOFS(memory->AttachIoRegister(eRegBG2VOFS, this)),
-    regBG3HOFS(memory->AttachIoRegister(eRegBG3HOFS, this)),
-    regBG3VOFS(memory->AttachIoRegister(eRegBG3VOFS, this)),
-    regBG4HOFS(memory->AttachIoRegister(eRegBG4HOFS, this)),
-    regBG4VOFS(memory->AttachIoRegister(eRegBG4VOFS, this)),
-    regVMAIN(memory->AttachIoRegister(eRegVMAIN, this)),
-    regVMADDL(memory->AttachIoRegister(eRegVMADDL, this)),
-    regVMADDH(memory->AttachIoRegister(eRegVMADDH, this)),
-    regVMDATAL(memory->AttachIoRegister(eRegVMDATAL, this)),
-    regVMDATAH(memory->AttachIoRegister(eRegVMDATAH, this)),
-    regM7SEL(memory->AttachIoRegister(eRegM7SEL, this)),
-    regM7A(memory->AttachIoRegister(eRegM7A, this)),
-    regM7B(memory->AttachIoRegister(eRegM7B, this)),
-    regM7C(memory->AttachIoRegister(eRegM7C, this)),
-    regM7D(memory->AttachIoRegister(eRegM7D, this)),
-    regM7X(memory->AttachIoRegister(eRegM7X, this)),
-    regM7Y(memory->AttachIoRegister(eRegM7Y, this)),
-    regCGADD(memory->AttachIoRegister(eRegCGADD, this)),
-    regCGDATA(memory->AttachIoRegister(eRegCGDATA, this)),
-    regW12SEL(memory->AttachIoRegister(eRegW12SEL, this)),
-    regW34SEL(memory->AttachIoRegister(eRegW34SEL, this)),
-    regWOBJSEL(memory->AttachIoRegister(eRegWOBJSEL, this)),
-    regWH0(memory->AttachIoRegister(eRegWH0, this)),
-    regWH1(memory->AttachIoRegister(eRegWH1, this)),
-    regWH2(memory->AttachIoRegister(eRegWH2, this)),
-    regWH3(memory->AttachIoRegister(eRegWH3, this)),
-    regWBGLOG(memory->AttachIoRegister(eRegWBGLOG, this)),
-    regWOBJLOG(memory->AttachIoRegister(eRegWOBJLOG, this)),
-    regTM(memory->AttachIoRegister(eRegTM, this)),
-    regTS(memory->AttachIoRegister(eRegTS, this)),
-    regTMW(memory->AttachIoRegister(eRegTMW, this)),
-    regTSW(memory->AttachIoRegister(eRegTSW, this)),
-    regCGWSEL(memory->AttachIoRegister(eRegCGWSEL, this)),
-    regCGADSUB(memory->AttachIoRegister(eRegCGADSUB, this)),
-    regCOLDATA(memory->AttachIoRegister(eRegCOLDATA, this)),
-    regSETINI(memory->AttachIoRegister(eRegSETINI, this)),
-    regMPYL(memory->AttachIoRegister(eRegMPYL, this)),
-    regMPYM(memory->AttachIoRegister(eRegMPYM, this)),
-    regMPYH(memory->AttachIoRegister(eRegMPYH, this)),
-    regSLHV(memory->AttachIoRegister(eRegSLHV, this)),
-    regRDOAM(memory->AttachIoRegister(eRegRDOAM, this)),
-    regRDVRAML(memory->AttachIoRegister(eRegRDVRAML, this)),
-    regRDVRAMH(memory->AttachIoRegister(eRegRDVRAMH, this)),
-    regRDCGRAM(memory->AttachIoRegister(eRegRDCGRAM, this)),
-    regOPHCT(memory->AttachIoRegister(eRegOPHCT, this)),
-    regOPVCT(memory->AttachIoRegister(eRegOPVCT, this)),
-    regSTAT77(memory->AttachIoRegister(eRegSTAT77, this)),
-    regSTAT78(memory->AttachIoRegister(eRegSTAT78, this))
+    regINIDISP(memory->RequestOwnership(eRegINIDISP, this)),
+    regOBSEL(memory->RequestOwnership(eRegOBSEL, this)),
+    regOAMADDL(memory->RequestOwnership(eRegOAMADDL, this)),
+    regOAMADDH(memory->RequestOwnership(eRegOAMADDH, this)),
+    regOAMDATA(memory->RequestOwnership(eRegOAMDATA, this)),
+    regBGMODE(memory->RequestOwnership(eRegBGMODE, this)),
+    regMOSAIC(memory->RequestOwnership(eRegMOSAIC, this)),
+    regBG1SC(memory->RequestOwnership(eRegBG1SC, this)),
+    regBG2SC(memory->RequestOwnership(eRegBG2SC, this)),
+    regBG3SC(memory->RequestOwnership(eRegBG3SC, this)),
+    regBG4SC(memory->RequestOwnership(eRegBG4SC, this)),
+    regBG12NBA(memory->RequestOwnership(eRegBG12NBA, this)),
+    regBG34NBA(memory->RequestOwnership(eRegBG34NBA, this)),
+    regBG1HOFS(memory->RequestOwnership(eRegBG1HOFS, this)),
+    regBG1VOFS(memory->RequestOwnership(eRegBG1VOFS, this)),
+    regBG2HOFS(memory->RequestOwnership(eRegBG2HOFS, this)),
+    regBG2VOFS(memory->RequestOwnership(eRegBG2VOFS, this)),
+    regBG3HOFS(memory->RequestOwnership(eRegBG3HOFS, this)),
+    regBG3VOFS(memory->RequestOwnership(eRegBG3VOFS, this)),
+    regBG4HOFS(memory->RequestOwnership(eRegBG4HOFS, this)),
+    regBG4VOFS(memory->RequestOwnership(eRegBG4VOFS, this)),
+    regVMAIN(memory->RequestOwnership(eRegVMAIN, this)),
+    regVMADDL(memory->RequestOwnership(eRegVMADDL, this)),
+    regVMADDH(memory->RequestOwnership(eRegVMADDH, this)),
+    regVMDATAL(memory->RequestOwnership(eRegVMDATAL, this)),
+    regVMDATAH(memory->RequestOwnership(eRegVMDATAH, this)),
+    regM7SEL(memory->RequestOwnership(eRegM7SEL, this)),
+    regM7A(memory->RequestOwnership(eRegM7A, this)),
+    regM7B(memory->RequestOwnership(eRegM7B, this)),
+    regM7C(memory->RequestOwnership(eRegM7C, this)),
+    regM7D(memory->RequestOwnership(eRegM7D, this)),
+    regM7X(memory->RequestOwnership(eRegM7X, this)),
+    regM7Y(memory->RequestOwnership(eRegM7Y, this)),
+    regCGADD(memory->RequestOwnership(eRegCGADD, this)),
+    regCGDATA(memory->RequestOwnership(eRegCGDATA, this)),
+    regW12SEL(memory->RequestOwnership(eRegW12SEL, this)),
+    regW34SEL(memory->RequestOwnership(eRegW34SEL, this)),
+    regWOBJSEL(memory->RequestOwnership(eRegWOBJSEL, this)),
+    regWH0(memory->RequestOwnership(eRegWH0, this)),
+    regWH1(memory->RequestOwnership(eRegWH1, this)),
+    regWH2(memory->RequestOwnership(eRegWH2, this)),
+    regWH3(memory->RequestOwnership(eRegWH3, this)),
+    regWBGLOG(memory->RequestOwnership(eRegWBGLOG, this)),
+    regWOBJLOG(memory->RequestOwnership(eRegWOBJLOG, this)),
+    regTM(memory->RequestOwnership(eRegTM, this)),
+    regTS(memory->RequestOwnership(eRegTS, this)),
+    regTMW(memory->RequestOwnership(eRegTMW, this)),
+    regTSW(memory->RequestOwnership(eRegTSW, this)),
+    regCGWSEL(memory->RequestOwnership(eRegCGWSEL, this)),
+    regCGADSUB(memory->RequestOwnership(eRegCGADSUB, this)),
+    regCOLDATA(memory->RequestOwnership(eRegCOLDATA, this)),
+    regSETINI(memory->RequestOwnership(eRegSETINI, this)),
+    regMPYL(memory->RequestOwnership(eRegMPYL, this)),
+    regMPYM(memory->RequestOwnership(eRegMPYM, this)),
+    regMPYH(memory->RequestOwnership(eRegMPYH, this)),
+    regSLHV(memory->RequestOwnership(eRegSLHV, this)),
+    regRDOAM(memory->RequestOwnership(eRegRDOAM, this)),
+    regRDVRAML(memory->RequestOwnership(eRegRDVRAML, this)),
+    regRDVRAMH(memory->RequestOwnership(eRegRDVRAMH, this)),
+    regRDCGRAM(memory->RequestOwnership(eRegRDCGRAM, this)),
+    regOPHCT(memory->RequestOwnership(eRegOPHCT, this)),
+    regOPVCT(memory->RequestOwnership(eRegOPVCT, this)),
+    regSTAT77(memory->RequestOwnership(eRegSTAT77, this)),
+    regSTAT78(memory->RequestOwnership(eRegSTAT78, this))
 {
-    timerSubject->AttachObserver(this);
+    timer->AttachObserver(this);
 }
 
 
@@ -621,63 +622,34 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
 void Ppu::UpdateTimer(uint32_t value)
 {
-    clockCounter += value;
+    (void)value;
 
-    if (clockCounter > 4 && clockCounter < 1096)
-    {
-        isHBlank = false;
-        // Clear HBlank flag.
-        *memory->GetBytePtr(eRegHVBJOY) &= 0xBF;
-    }
-    else if (clockCounter >= 1096 && clockCounter < 1364)
-    {
-        isHBlank = true;
-        // Set HBlank flag.
-        *memory->GetBytePtr(eRegHVBJOY) |= 0x40;
-    }
-    else if (clockCounter >= 1364)
-    {
-        clockCounter -= 1364;
+    bool oldHBlank = isHBlank;
+    bool oldVBlank = isVBlank;
 
+    isHBlank = timer->GetIsHBlank();
+    isVBlank = timer->GetIsVBlank();
+
+    if (!isHBlank && oldHBlank)
+    {
+        // We started a new scanline.
+        scanline = timer->GetVCount();
+    }
+    else if (isHBlank && !oldHBlank)
+    {
+        // We reached the end of the scanline, so draw it.
         // TODO: Check for number of scanlines per screen in regSETINI.
-
         if (scanline < 224)
             DrawScanline(scanline);
+    }
 
-        scanline++;
-        if (scanline == 225)
-        {
-            isVBlank = true;
-            // Set VBlank flags.
-            *memory->GetBytePtr(eRegRDNMI) |= 0x80;
-            *memory->GetBytePtr(eRegHVBJOY) |= 0x80;
+    if (isVBlank && !oldVBlank)
+    {
+        // Reset the Oam address value on VBlank, but not when in forced VBlank.
+        if (!isForcedBlank)
+            oamRwAddr = Bytes::Make16Bit((*regOAMADDH) & 0x01, *regOAMADDL) << 1; // Word address.
 
-            // If joypad auto read is enabled, toggle the busy flag.
-            // TODO: This doesn't belong in the PPU, move it somewhere better.
-            if (Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegNMITIMEN)))
-                *memory->GetBytePtr(eRegHVBJOY) |= 0x01;
-
-            // Reset the Oam address value on VBlank, but not when in forced VBlank.
-            if (!isForcedBlank)
-                oamRwAddr = Bytes::Make16Bit((*regOAMADDH) & 0x01, *regOAMADDL) << 1; // Word address.
-
-            DrawScreen();
-        }
-        else if (scanline == 228)
-        {
-            // If joypad auto read is enabled, toggle the busy flag.
-            // TODO: This doesn't belong in the PPU, move it somewhere better.
-            if (Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegNMITIMEN)))
-                *memory->GetBytePtr(eRegHVBJOY) &= ~0x01;
-        }
-        else if (scanline == 262)
-        {
-            scanline = 0;
-            isVBlank = false;
-            // Clear VBlank flags.
-            *memory->GetBytePtr(eRegRDNMI) &= 0x7F;
-            *memory->GetBytePtr(eRegHVBJOY) &= 0x7F;
-        }
+        DrawScreen();
     }
 }
 

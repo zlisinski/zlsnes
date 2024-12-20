@@ -86,24 +86,6 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
-                    case eRegRDNMI: // 0x4210
-                        {
-                            uint8_t value = ioPorts42[addr & 0xFF];
-                            if (value & 0x80)
-                            {
-                                // VBlank NMI flag gets reset after reads.
-                                ioPorts42[addr & 0xFF] &= 0x7F;
-                                if (debuggerInterface != nullptr)
-                                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
-                            }
-
-                            // Bits 4-6 are open bus.
-                            value = (value & 0x8F) | (openBusValue & 0x70);
-
-                            return value;
-                        }
-                    case eRegHVBJOY: // 0x4212
-                        return ioPorts42[addr & 0xFF];
                     default:
                         throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 }
@@ -219,10 +201,6 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
-                    case eRegNMITIMEN: // 0x4200
-                        ioPorts42[addr & 0xFF] = value;
-                        LogMemory("NMITIMEN=%02X", value);
-                        break;
                     case eRegWRIO: // 0x4201
                         ioPorts42[addr & 0xFF] = value;
                         LogMemory("WRIO=%02X NYI", value);
@@ -246,22 +224,6 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     case eRegWRDIVB: // 0x4206
                         ioPorts42[addr & 0xFF] = value;
                         LogMemory("WRDIVB=%02X NYI", value);
-                        break;
-                    case eRegHTIMEL: // 0x4207
-                        ioPorts42[addr & 0xFF] = value;
-                        LogMemory("HTIMEL=%02X NYI", value);
-                        break;
-                    case eRegHTIMEH: // 0x4208
-                        ioPorts42[addr & 0xFF] = value;
-                        LogMemory("HTIMEH=%02X NYI", value);
-                        break;
-                    case eRegVTIMEL: // 0x4209
-                        ioPorts42[addr & 0xFF] = value;
-                        LogMemory("VTIMEL=%02X NYI", value);
-                        break;
-                    case eRegVTIMEH: // 0x420A
-                        ioPorts42[addr & 0xFF] = value;
-                        LogMemory("VTIMEH=%02X NYI", value);
                         break;
                     case eRegMDMAEN: // 0x420B
                         ioPorts42[addr & 0xFF] = value;

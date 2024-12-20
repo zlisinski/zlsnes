@@ -61,7 +61,7 @@ bool Emulator::LoadRom(const std::string &filename)
 
     memory = new Memory(infoInterface, debuggerInterface);
     //interrupts = new Interrupt(memory);
-    timer = new Timer(/*memory, interrupts*/);
+    timer = new Timer(memory/*, interrupts*/);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
     input = new Input(memory, timer/*, interrupts*/);
     cpu = new Cpu(/*interrupts,*/ memory, timer);

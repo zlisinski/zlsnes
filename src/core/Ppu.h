@@ -7,6 +7,7 @@
 
 class DebuggerInterface;
 class Memory;
+class Timer;
 
 const size_t OAM_SIZE = 544;
 const size_t VRAM_SIZE = 0xFFFF;
@@ -15,7 +16,7 @@ const size_t CGRAM_SIZE = 512;
 class Ppu : public IoRegisterProxy, public TimerObserver
 {
 public:
-    Ppu(Memory *memory, TimerSubject *timerSubject, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface = nullptr);
+    Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Ppu() {}
 
     // Inherited from IoRegisterProxy.
@@ -37,19 +38,19 @@ private:
     void DrawScreen();
     void DrawFullScreen(); // Used when debugging to update the screen.
 
-    Memory *memory;
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;
     std::array<uint8_t, CGRAM_SIZE> cgram;
     std::array<uint32_t, CGRAM_SIZE / 2> palette;
     std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer;
 
+    Memory *memory;
+    Timer *timer;
     DebuggerInterface *debuggerInterface;
     DisplayInterface *displayInterface;
 
     bool isHBlank;
     bool isVBlank;
-    uint32_t clockCounter;
     uint32_t scanline;
 
     bool isForcedBlank;

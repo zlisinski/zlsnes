@@ -8,14 +8,14 @@ Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts
     //interrupts(interrupts),
     buttonData(),
     lastAutoReadFlag(false),
-    regJOY1L(memory->AttachIoRegister(eRegJOY1L, this)),
-    regJOY1H(memory->AttachIoRegister(eRegJOY1H, this)),
-    regJOY2L(memory->AttachIoRegister(eRegJOY2L, this)),
-    regJOY2H(memory->AttachIoRegister(eRegJOY2H, this)),
-    regJOY3L(memory->AttachIoRegister(eRegJOY3L, this)),
-    regJOY3H(memory->AttachIoRegister(eRegJOY3H, this)),
-    regJOY4L(memory->AttachIoRegister(eRegJOY4L, this)),
-    regJOY4H(memory->AttachIoRegister(eRegJOY4H, this))
+    regJOY1L(memory->RequestOwnership(eRegJOY1L, this)),
+    regJOY1H(memory->RequestOwnership(eRegJOY1H, this)),
+    regJOY2L(memory->RequestOwnership(eRegJOY2L, this)),
+    regJOY2H(memory->RequestOwnership(eRegJOY2H, this)),
+    regJOY3L(memory->RequestOwnership(eRegJOY3L, this)),
+    regJOY3H(memory->RequestOwnership(eRegJOY3H, this)),
+    regJOY4L(memory->RequestOwnership(eRegJOY4L, this)),
+    regJOY4H(memory->RequestOwnership(eRegJOY4H, this))
 {
     // Start out with all buttons released.
     *regJOY1L = 0;

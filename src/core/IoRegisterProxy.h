@@ -7,8 +7,8 @@
 
 
 // This is kind of a mix of Observer and Proxy patterns. Is there already a named patern for this?
-// The Subject holds pointers to IoRegisterProxy objects that handle reads and writes to a specific address.
-// The classes that inherit from IoRegisterProxy will call AttachIoRegister to add themselves to list of known proxies for a specific address.
+// The Subject holds pointers to IoRegisterProxy objects that own IO ports and handle reads and writes to that port.
+// The classes that inherit from IoRegisterProxy will call RequestOwnership to add themselves to list of known proxies for a specific address.
 
 class IoRegisterProxy
 {
@@ -26,8 +26,10 @@ private:
 class IoRegisterSubject
 {
 public:
-    uint8_t *AttachIoRegister(EIORegisters ioReg, IoRegisterProxy *proxy)
+    uint8_t *RequestOwnership(EIORegisters ioReg, IoRegisterProxy *proxy)
     {
+        if (ioRegisterProxies.count(ioReg) != 0)
+            throw std::runtime_error(fmt("IO port %02X is already owned", ioReg));
         ioRegisterProxies.insert({ioReg, proxy});
         return GetIoRegisterPtr(ioReg);
     }

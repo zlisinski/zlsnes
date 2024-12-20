@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <unordered_map>
 
+// Include the mocks first so they override subsequent includes.
+#include "mock/Timer.h"
+
 #include "Memory.h"
-#include "Timer.h"
 
 
 class MemoryTest : public ::testing::Test
@@ -302,8 +304,8 @@ public:
 TEST_F(MemoryTest, TEST_Dma1)
 {
     FakeIo fakePpu;
-    memory->AttachIoRegister(eRegVMDATAL, &fakePpu);
-    memory->AttachIoRegister(eRegVMDATAH, &fakePpu);
+    memory->RequestOwnership(eRegVMDATAL, &fakePpu);
+    memory->RequestOwnership(eRegVMDATAH, &fakePpu);
 
     wram[0x1234] = 0x11;
     wram[0x1235] = 0x22;

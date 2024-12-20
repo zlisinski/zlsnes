@@ -45,6 +45,7 @@ LogWindow::LogWindow(QWidget *parent) :
     ui->chkPpu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::ePpu));
     ui->chkMemory->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eMemory));
     ui->chkInput->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eInput));
+    ui->chkTimer->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eTimer));
 
     connect(this, SIGNAL(SignalLogWindowClosed()), parent, SLOT(SlotLogWindowClosed()));
     connect(this, SIGNAL(SignalMessageReady()), this, SLOT(SlotOutputMessage()));
@@ -109,6 +110,7 @@ void LogWindow::SetInstructionCheckboxEnabled(bool enable)
     ui->chkPpu->setEnabled(enable);
     ui->chkMemory->setEnabled(enable);
     ui->chkInput->setEnabled(enable);
+    ui->chkTimer->setEnabled(enable);
 }
 
 
@@ -207,6 +209,20 @@ void LogWindow::on_chkInput_clicked(bool checked)
         newLevel |= static_cast<uint32_t>(InstructionLogLevel::eInput);
     else
         newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eInput);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_chkTimer_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eTimer);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eTimer);
 
     settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
     Logger::SetInstructionLogLevel(newLevel);

@@ -21,7 +21,8 @@ enum class InstructionLogLevel
     eCpu = 0x01,
     ePpu = 0x02,
     eMemory = 0x04,
-    eInput = 0x08
+    eInput = 0x08,
+    eTimer = 0x10
 };
 
 
@@ -109,4 +110,5 @@ private:
 #define LogPpu(...)         do {Logger::InstructionLog(InstructionLogLevel::ePpu, __VA_ARGS__);} while (0)
 #define LogMemory(...)      do {Logger::InstructionLog(InstructionLogLevel::eMemory, __VA_ARGS__);} while (0)
 #define LogInput(...)       do {Logger::InstructionLog(InstructionLogLevel::eInput, __VA_ARGS__);} while (0)
+#define LogTimer(...)       do {Logger::InstructionLog(InstructionLogLevel::eTimer, __VA_ARGS__);} while (0)
 #define LogAudio(...)       do {} while (0)
