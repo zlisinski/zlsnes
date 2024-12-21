@@ -32,8 +32,6 @@ void Timer::AddCycle(uint8_t clocks)
     clockCounter += clocks;
     hCount = clockCounter / CLOCKS_PER_H;
 
-    LogTimer("cc=%d h=%d v=%d", clockCounter, hCount, vCount);
-
     if (hCount > 1 && hCount < 274)
     {
         isHBlank = false;
