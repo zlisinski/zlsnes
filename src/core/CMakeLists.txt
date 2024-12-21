@@ -5,6 +5,7 @@ set(CORE_SRC
     Cpu.cpp
     Emulator.cpp
     Input.cpp
+    Interrupt.cpp
     Logger.cpp
     Memory.cpp
     Ppu.cpp

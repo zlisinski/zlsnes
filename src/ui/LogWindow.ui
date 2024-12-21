@@ -20,52 +20,10 @@
       <string>Log Level</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="rbWarning">
-        <property name="text">
-         <string>&amp;Warning</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="rbInfo">
-        <property name="text">
-         <string>&amp;Info</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QRadioButton" name="rbInstruction">
-        <property name="text">
-         <string>I&amp;nstruction</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QRadioButton" name="rbDebug">
-        <property name="text">
-         <string>&amp;Debug</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="rbError">
-        <property name="text">
-         <string>&amp;Error</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0">
        <widget class="QCheckBox" name="chkCpu">
         <property name="text">
          <string>CPU</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="chkPpu">
-        <property name="text">
-         <string>PPU</string>
         </property>
        </widget>
       </item>
@@ -76,10 +34,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="chkMemory">
+      <item row="0" column="4">
+       <widget class="QRadioButton" name="rbInstruction">
         <property name="text">
-         <string>Memory</string>
+         <string>I&amp;nstruction</string>
         </property>
        </widget>
       </item>
@@ -87,6 +45,55 @@
        <widget class="QCheckBox" name="chkTimer">
         <property name="text">
          <string>Timer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="chkPpu">
+        <property name="text">
+         <string>PPU</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="rbInfo">
+        <property name="text">
+         <string>&amp;Info</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rbError">
+        <property name="text">
+         <string>&amp;Error</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="chkMemory">
+        <property name="text">
+         <string>Memory</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QRadioButton" name="rbDebug">
+        <property name="text">
+         <string>&amp;Debug</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="rbWarning">
+        <property name="text">
+         <string>&amp;Warning</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QCheckBox" name="chkInterrupt">
+        <property name="text">
+         <string>Interrupt</string>
         </property>
        </widget>
       </item>

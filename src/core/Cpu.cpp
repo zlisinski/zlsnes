@@ -2,6 +2,7 @@
 
 #include "AddressMode.h"
 #include "Cpu.h"
+#include "Interrupt.h"
 #include "Memory.h"
 #include "Timer.h"
 
@@ -17,10 +18,12 @@
 #define LogInstMp(name) LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
 
 
-Cpu::Cpu(Memory *memory, Timer *timer) :
+Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
     reg(),
     memory(memory),
-    timer(timer)
+    timer(timer),
+    interrupts(interrupts),
+    waiting(false)
 {
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);
     addressModes[0x01] = std::make_unique<AddressModeDirectIndexedIndirect>(this, memory);
@@ -146,8 +149,54 @@ void Cpu::UpdateRegistersAfterFlagChange()
 }
 
 
+void Cpu::ProcessInterrupt()
+{
+    if (reg.emulationMode)
+    {
+        const uint32_t vectors[] = {0xFFFA, 0xFFEA}; // NMI, IRQ
+        Push16Bit(reg.pc);
+        Push8Bit(reg.p);
+        reg.pb = 0;
+        reg.pc = memory->Read16Bit(vectors[interrupts->IsNmi()]);
+        reg.flags.i = 1;
+        reg.flags.d = 0;
+    }
+    else
+    {
+        const uint32_t vectors[] = {0xFFFE, 0xFFEE}; // NMI, IRQ
+        Push8Bit(reg.pb);
+        Push16Bit(reg.pc);
+        Push8Bit(reg.p);
+        reg.pb = 0;
+        reg.pc = memory->Read16Bit(vectors[interrupts->IsNmi()]);
+        reg.flags.i = 1;
+        reg.flags.d = 0;
+    }
+
+    LogCpu("Jump to %s interrupt vector %06X", interrupts->IsNmi() ? "NMI" : "IRQ", GetFullPC().ToUint());
+}
+
+
 void Cpu::ProcessOpCode()
 {
+    if (waiting)
+    {
+        if (interrupts->CheckInterrupts())
+        {
+            // Always leave wait state. If interrupts are disabled, just continue on to next opcode.
+            waiting = false;
+
+            if (!reg.flags.i)
+                ProcessInterrupt();
+        }
+        else
+        {
+            timer->AddCycle(eClockInternal);
+        }
+
+        return;
+    }
+
     uint8_t opcode = ReadPC8Bit();
 
     switch (opcode)
@@ -1751,7 +1800,14 @@ void Cpu::ProcessOpCode()
 //                                                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        case 0xCB: NotYetImplemented(0xCB); break; // WAI
+        // WAI - Wait
+        case 0xCB:
+            {
+                timer->AddCycle(3 * eClockInternal);
+                waiting = true;
+            }
+            break;
+
         case 0xDB: NotYetImplemented(0xDB); break; // STP
     }
 }

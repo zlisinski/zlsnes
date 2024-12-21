@@ -1,4 +1,5 @@
 #include "Timer.h"
+#include "Interrupt.h"
 #include "Memory.h"
 
 
@@ -7,13 +8,14 @@ const uint32_t CLOCKS_PER_V = 1364;
 const uint32_t H_PER_V = CLOCKS_PER_V / CLOCKS_PER_H; // 341
 
 
-Timer::Timer(Memory *memory) :
+Timer::Timer(Memory *memory, Interrupt *interrupts) :
     clockCounter(0),
     hCount(0),
     vCount(0),
     isHBlank(true),
     isVBlank(false),
     memory(memory),
+    interrupts(interrupts),
     regNMITIMEN(memory->RequestOwnership(eRegNMITIMEN, this)),
     regHTIMEL(memory->RequestOwnership(eRegHTIMEL, this)),
     regHTIMEH(memory->RequestOwnership(eRegHTIMEH, this)),
@@ -58,6 +60,10 @@ void Timer::AddCycle(uint8_t clocks)
             // Set VBlank flags.
             Bytes::SetBit<7>(regRDNMI);
             Bytes::SetBit<7>(regHVBJOY);
+
+            // Request VBlank interrupt if enabled.
+            if (Bytes::GetBit<7>(regNMITIMEN))
+                interrupts->RequestNmi();
 
             // If joypad auto read is enabled, toggle the busy flag.
             if (Bytes::GetBit<0>(regNMITIMEN))
@@ -126,6 +132,9 @@ bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegNMITIMEN: // 0x4200
             regNMITIMEN = byte;
             LogTimer("NMITIMEN=%02X", byte);
+            // Request VBlank interrupt if enabled while in VBlank.
+            if (Bytes::GetBit<7>(regNMITIMEN) && Bytes::GetBit<7>(regRDNMI))
+                interrupts->RequestNmi();
             return true;
         case eRegHTIMEL: // 0x4207
             regHTIMEL = byte;

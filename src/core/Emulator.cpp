@@ -7,6 +7,7 @@
 #include "Emulator.h"
 #include "InfoInterface.h"
 #include "Input.h"
+#include "Interrupt.h"
 #include "Memory.h"
 #include "Ppu.h"
 #include "Timer.h"
@@ -26,7 +27,7 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     cartridge(),
     cpu(NULL),
     input(NULL),
-    //interrupts(NULL),
+    interrupts(NULL),
     memory(NULL),
     ppu(NULL),
     timer(NULL)
@@ -60,11 +61,11 @@ bool Emulator::LoadRom(const std::string &filename)
     quit = false;
 
     memory = new Memory(infoInterface, debuggerInterface);
-    //interrupts = new Interrupt(memory);
-    timer = new Timer(memory/*, interrupts*/);
+    interrupts = new Interrupt();
+    timer = new Timer(memory, interrupts);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
     input = new Input(memory, timer/*, interrupts*/);
-    cpu = new Cpu(/*interrupts,*/ memory, timer);
+    cpu = new Cpu(memory, timer, interrupts);
     //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
 
     // This can't be done in the Memory constructor since Timer doesn't exist yet.

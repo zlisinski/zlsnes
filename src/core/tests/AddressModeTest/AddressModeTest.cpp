@@ -6,6 +6,7 @@
 
 #include "AddressMode.h"
 #include "Bytes.h"
+#include "Interrupt.h"
 #include "Timer.h"
 
 const uint16_t A_VALUE = 0x1234;
@@ -30,6 +31,7 @@ protected:
     uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
 
     Cpu *cpu;
+    Interrupt *interrupts;
     Memory *memory_;
     Timer *timer;
 
@@ -41,13 +43,15 @@ AddressModeTest::AddressModeTest()
 {
     memory_ = new Memory();
     timer = new Timer();
-    cpu = new Cpu(memory_, timer);
+    interrupts = new Interrupt();
+    cpu = new Cpu(memory_, timer, interrupts);
     memory_->SetTimer(timer);
 }
 
 AddressModeTest::~AddressModeTest()
 {
     delete cpu;
+    delete interrupts;
     delete timer;
     delete memory_;
 }

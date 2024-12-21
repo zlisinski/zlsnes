@@ -10,6 +10,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core)
 add_executable(CpuTest
     CpuTest.cpp
     ../../Cpu.cpp
+    ../../Interrupt.cpp
     ../../Logger.cpp
     ../../Utils.cpp
     mock/Memory.cpp

@@ -12,6 +12,7 @@
 
 #include "Bytes.h"
 #include "Cpu.h"
+#include "Interrupt.h"
 #include "Timer.h"
 
 const uint16_t A_VALUE = 0x1234;
@@ -53,6 +54,7 @@ protected:
     void UpdateRegistersAfterFlagChange() {cpu->UpdateRegistersAfterFlagChange();}
 
     Cpu *cpu;
+    Interrupt *interrupts;
     Memory *memory;
     Timer *timer;
 };
@@ -62,12 +64,14 @@ CpuTest::CpuTest()
 {
     memory = new Memory();
     timer = new Timer();
-    cpu = new Cpu(memory, timer);
+    interrupts = new Interrupt;
+    cpu = new Cpu(memory, timer, interrupts);
 }
 
 CpuTest::~CpuTest()
 {
     delete cpu;
+    delete interrupts;
     delete timer;
     delete memory;
 }
@@ -127,6 +131,7 @@ void CpuTest::RunInstructionTest(const QString &opcodeName, const QString &opcod
         cpu->reg.pb = initial["pbr"].toInt();
         cpu->reg.sp = initial["s"].toInt();
         cpu->reg.pc = initial["pc"].toInt();
+        cpu->waiting = false;
         SetEmulationMode(emulationMode);
 
         // Set RAM initial values.
@@ -2042,4 +2047,12 @@ TEST_F(CpuTest, TEST_WDM)
 {
     this->RunInstructionTest(this->test_info_->name(), "42", false);
     this->RunInstructionTest(this->test_info_->name(), "42", true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+TEST_F(CpuTest, TEST_WAI)
+{
+    this->RunInstructionTest(this->test_info_->name(), "CB", false);
+    this->RunInstructionTest(this->test_info_->name(), "CB", true);
 }

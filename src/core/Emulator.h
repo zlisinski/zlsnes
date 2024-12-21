@@ -14,7 +14,7 @@ class DisplayInterface;
 //class GameSpeedSubject;
 class InfoInterface;
 class Input;
-//class Interrupt;
+class Interrupt;
 class Memory;
 class Ppu;
 class Timer;
@@ -61,7 +61,7 @@ private:
     Cartridge cartridge;
     Cpu *cpu;
     Input *input;
-    //Interrupt *interrupts;
+    Interrupt *interrupts;
     Memory *memory;
     Ppu *ppu;
     Timer *timer;

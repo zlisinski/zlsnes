@@ -15,12 +15,13 @@ enum EClockSpeed
     eClockOther = 12
 };
 
+class Interrupt;
 class Memory;
 
 class Timer : public TimerSubject, public IoRegisterProxy
 {
 public:
-    Timer(Memory *memory);
+    Timer(Memory *memory, Interrupt *interrupts);
     virtual ~Timer() {}
 
     void AddCycle(uint8_t clocks);
@@ -43,6 +44,7 @@ private:
     bool isVBlank;
 
     Memory *memory;
+    Interrupt *interrupts;
 
     uint8_t &regNMITIMEN; // 0x4200
     uint8_t &regHTIMEL; // 0x4207
