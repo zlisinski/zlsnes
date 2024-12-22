@@ -130,12 +130,16 @@ bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
     switch (ioReg)
     {
         case eRegNMITIMEN: // 0x4200
-            regNMITIMEN = byte;
+        {
             LogTimer("NMITIMEN=%02X", byte);
-            // Request VBlank interrupt if enabled while in VBlank.
-            if (Bytes::GetBit<7>(regNMITIMEN) && Bytes::GetBit<7>(regRDNMI))
+
+            // Request VBlank interrupt if the enable flag changes while in VBlank.
+            if (!Bytes::GetBit<7>(regNMITIMEN) && Bytes::GetBit<7>(byte) && Bytes::GetBit<7>(regRDNMI))
                 interrupts->RequestNmi();
+
+            regNMITIMEN = byte;
             return true;
+        }
         case eRegHTIMEL: // 0x4207
             regHTIMEL = byte;
             LogTimer("HTIMEL=%02X NYI", byte);

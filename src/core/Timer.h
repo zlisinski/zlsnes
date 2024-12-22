@@ -54,6 +54,8 @@ private:
     uint8_t &regRDNMI; // 0x4210
     uint8_t &regTIMEUP; // 0x4211
     uint8_t &regHVBJOY; // 0x4212
+
+    friend class TimerTest;
 };
 
 #endif
