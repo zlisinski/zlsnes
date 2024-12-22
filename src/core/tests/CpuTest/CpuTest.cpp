@@ -22,7 +22,7 @@ const uint16_t D_VALUE = 0xDEF0;
 const uint8_t P_VALUE = 0x00;
 const uint8_t DB_VALUE = 0x12;
 const uint8_t PB_VALUE = 0x34;
-const uint16_t SP_VALUE = 0xFFFF;
+const uint16_t SP_VALUE = 0x1FFF;
 
 const QString JSON_PATH = "./test_data/65816/v1/";
 
@@ -485,6 +485,81 @@ TEST_F(CpuTest, TEST_SetEmulationMode)
     EXPECT_EQ(cpu->reg.x, X_VALUE & 0x00FF);
     EXPECT_EQ(cpu->reg.y, Y_VALUE & 0x00FF);
     EXPECT_EQ(cpu->reg.sp, (SP_VALUE & 0x00FF) | 0x0100);
+}
+
+TEST_F(CpuTest, TEST_ProcessInterruptNmiNativeMode)
+{
+    cpu->reg.pc = 0x2345;
+    memory->Write8Bit(0xFFEA, 0x99);
+    memory->Write8Bit(0xFFEB, 0x88);
+    interrupts->RequestNmi();
+    cpu->ProcessOpCode();
+    EXPECT_EQ(cpu->reg.pc, 0x8899);
+    EXPECT_EQ(cpu->reg.flags.d, 0);
+    EXPECT_EQ(cpu->reg.flags.i, 1);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 1), P_VALUE);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 2), 0x45);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 3), 0x23);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 4), PB_VALUE);
+}
+
+TEST_F(CpuTest, TEST_ProcessInterruptNmiEmulationMode)
+{
+    cpu->reg.pc = 0x2345;
+    cpu->reg.emulationMode = true;
+    memory->Write8Bit(0xFFFA, 0x99);
+    memory->Write8Bit(0xFFFB, 0x88);
+    interrupts->RequestNmi();
+    cpu->ProcessOpCode();
+    EXPECT_EQ(cpu->reg.pc, 0x8899);
+    EXPECT_EQ(cpu->reg.flags.d, 0);
+    EXPECT_EQ(cpu->reg.flags.i, 1);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 1), P_VALUE);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 2), 0x45);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 3), 0x23);
+}
+
+TEST_F(CpuTest, TEST_ProcessInterruptIrqNativeMode)
+{
+    cpu->reg.pc = 0x2345;
+    memory->Write8Bit(0xFFEE, 0x99);
+    memory->Write8Bit(0xFFEF, 0x88);
+    interrupts->RequestIrq();
+    cpu->ProcessOpCode();
+    EXPECT_EQ(cpu->reg.pc, 0x8899);
+    EXPECT_EQ(cpu->reg.flags.d, 0);
+    EXPECT_EQ(cpu->reg.flags.i, 1);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 1), P_VALUE);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 2), 0x45);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 3), 0x23);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 4), PB_VALUE);
+}
+
+TEST_F(CpuTest, TEST_ProcessInterruptIrqEmulationMode)
+{
+    cpu->reg.pc = 0x2345;
+    cpu->reg.emulationMode = true;
+    memory->Write8Bit(0xFFFE, 0x99);
+    memory->Write8Bit(0xFFFF, 0x88);
+    interrupts->RequestIrq();
+    cpu->ProcessOpCode();
+    EXPECT_EQ(cpu->reg.pc, 0x8899);
+    EXPECT_EQ(cpu->reg.flags.d, 0);
+    EXPECT_EQ(cpu->reg.flags.i, 1);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 1), P_VALUE);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 2), 0x45);
+    EXPECT_EQ(memory->Read8Bit(cpu->reg.sp + 3), 0x23);
+}
+
+TEST_F(CpuTest, TEST_IrqWithInterruptsDisabled)
+{
+    cpu->reg.pb = 0;
+    cpu->reg.pc = 0x2345;
+    cpu->reg.flags.i = 1;
+    memory->Write8Bit(0x2345, 0xAA); // TAX
+    interrupts->RequestIrq();
+    cpu->ProcessOpCode();
+    EXPECT_EQ(cpu->reg.pc, 0x2346);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2055,4 +2130,10 @@ TEST_F(CpuTest, TEST_WAI)
 {
     this->RunInstructionTest(this->test_info_->name(), "CB", false);
     this->RunInstructionTest(this->test_info_->name(), "CB", true);
+}
+
+TEST_F(CpuTest, TEST_STP)
+{
+    this->RunInstructionTest(this->test_info_->name(), "DB", false);
+    this->RunInstructionTest(this->test_info_->name(), "DB", true);
 }

@@ -153,7 +153,7 @@ void Cpu::ProcessInterrupt()
 {
     if (reg.emulationMode)
     {
-        const uint32_t vectors[] = {0xFFFA, 0xFFEA}; // NMI, IRQ
+        const uint32_t vectors[] = {0xFFFE, 0xFFFA}; // IRQ, NMI
         Push16Bit(reg.pc);
         Push8Bit(reg.p);
         reg.pb = 0;
@@ -163,7 +163,7 @@ void Cpu::ProcessInterrupt()
     }
     else
     {
-        const uint32_t vectors[] = {0xFFFE, 0xFFEE}; // NMI, IRQ
+        const uint32_t vectors[] = {0xFFEE, 0xFFEA}; // IRQ, NMI
         Push8Bit(reg.pb);
         Push16Bit(reg.pc);
         Push8Bit(reg.p);
@@ -174,26 +174,34 @@ void Cpu::ProcessInterrupt()
     }
 
     LogCpu("Jump to %s interrupt vector %06X", interrupts->IsNmi() ? "NMI" : "IRQ", GetFullPC().ToUint());
+
+    // Irqs must be manually cleared by reading from regTIMEUP.
+    if (interrupts->IsNmi())
+        interrupts->ClearNmi();
 }
 
 
 void Cpu::ProcessOpCode()
 {
-    if (waiting)
+    if (interrupts->CheckInterrupts())
     {
-        if (interrupts->CheckInterrupts())
+        // If interrupts are disabled in wait state, just leave wait and continue execution without processing interrupt.
+        if (waiting && reg.flags.i)
         {
-            // Always leave wait state. If interrupts are disabled, just continue on to next opcode.
             waiting = false;
-
-            if (!reg.flags.i)
-                ProcessInterrupt();
-        }
-        else
-        {
             timer->AddCycle(eClockInternal);
+            return;
         }
-
+        else if (interrupts->IsNmi() || (!reg.flags.i && interrupts->IsIrq()))
+        {
+            ProcessInterrupt();
+            return;
+        }
+    }
+    else if (waiting)
+    {
+        LogCpu("Waiting");
+        timer->AddCycle(eClockInternal);
         return;
     }
 
@@ -1803,12 +1811,21 @@ void Cpu::ProcessOpCode()
         // WAI - Wait
         case 0xCB:
             {
+                LogInst("WAI");
                 timer->AddCycle(3 * eClockInternal);
                 waiting = true;
             }
             break;
 
-        case 0xDB: NotYetImplemented(0xDB); break; // STP
+        // STP - Stop
+        case 0xDB:
+            {
+                // Documentation says that only a reset should wake up stop, but test roms and other emulators seem to treat it the same as WAI.
+                LogInst("STP");
+                timer->AddCycle(3 * eClockInternal);
+                waiting = true;
+            }
+            break;
     }
 }
 
