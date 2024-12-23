@@ -86,6 +86,11 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
+                    case eRegRDDIVH:
+                    case eRegRDDIVL:
+                    case eRegRDMPYH:
+                    case eRegRDMPYL:
+                        return ioPorts42[addr & 0xFF];
                     default:
                         throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 }
@@ -213,24 +218,43 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                         break;
                     case eRegWRMPYA: // 0x4202
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("WRMPYA=%02X NYI", value);
                         break;
                     case eRegWRMPYB: // 0x4203
+                    {
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("WRMPYB=%02X NYI", value);
+                        uint16_t result = value * ioPorts42[eRegWRMPYA & 0xFF];
+                        ioPorts42[eRegRDMPYH & 0xFF] = Bytes::GetByte<1>(result);
+                        ioPorts42[eRegRDMPYL & 0xFF] = Bytes::GetByte<0>(result);
                         break;
+                    }
                     case eRegWRDIVL: // 0x4204
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("WRDIVL=%02X NYI", value);
                         break;
                     case eRegWRDIVH: // 0x4205
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("WRDIVH=%02X NYI", value);
                         break;
                     case eRegWRDIVB: // 0x4206
+                    {
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("WRDIVB=%02X NYI", value);
+                        if (value != 0)
+                        {
+                            uint16_t dividend = Bytes::Make16Bit(ioPorts42[eRegWRDIVH & 0xFF], ioPorts42[eRegWRDIVL & 0xFF]);
+                            uint16_t result = dividend / value;
+                            uint16_t remain = dividend % value;
+                            ioPorts42[eRegRDDIVH & 0xFF] = Bytes::GetByte<1>(result);
+                            ioPorts42[eRegRDDIVL & 0xFF] = Bytes::GetByte<0>(result);
+                            ioPorts42[eRegRDMPYH & 0xFF] = Bytes::GetByte<1>(remain);
+                            ioPorts42[eRegRDMPYL & 0xFF] = Bytes::GetByte<0>(remain);
+                        }
+                        else
+                        {
+                            ioPorts42[eRegRDDIVH & 0xFF] = 0xFF;
+                            ioPorts42[eRegRDDIVL & 0xFF] = 0xFF;
+                            ioPorts42[eRegRDMPYH & 0xFF] = ioPorts42[eRegWRDIVH & 0xFF];
+                            ioPorts42[eRegRDMPYL & 0xFF] = ioPorts42[eRegWRDIVL & 0xFF];
+                        }
                         break;
+                    }
                     case eRegMDMAEN: // 0x420B
                         ioPorts42[addr & 0xFF] = value;
                         RunDma();
