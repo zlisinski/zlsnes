@@ -704,24 +704,31 @@ void Ppu::DrawScanline(uint8_t scanline)
         frameBuffer[pixelOffset + SCREEN_X] = palette[0];
     }
 
-    DrawBackgroundScanline(scanline);
+    if (Bytes::GetBit<0>(regTM))
+        DrawBackgroundScanline(scanline, regBG1SC, regBG12NBA & 0x0F, 0);
+    if (Bytes::GetBit<1>(regTM))
+        DrawBackgroundScanline(scanline, regBG2SC, regBG12NBA >> 4, 0x20);
+    if (Bytes::GetBit<2>(regTM))
+        DrawBackgroundScanline(scanline, regBG3SC, regBG34NBA & 0x0F, 0x40);
+    if (Bytes::GetBit<3>(regTM))
+        DrawBackgroundScanline(scanline, regBG4SC, regBG34NBA >> 4, 0x60);
 }
 
 
-void Ppu::DrawBackgroundScanline(uint8_t scanline)
+void Ppu::DrawBackgroundScanline(uint8_t scanline, uint8_t bgsc, uint8_t bgnba, uint8_t paletteOffset)
 {
     // Draw only Mode0 BG1 for now.
     // TODO: Check tile size in BGMODE
     // TODO: Check tile size in BGnSC
 
     // tilesetData is the actual pixel/palette-index data for a tile.
-    const uint16_t tilesetDataOffset = (regBG12NBA & 0x0F) << 13;
+    const uint16_t tilesetDataOffset = bgnba << 13;
     const uint8_t *tilesetData = &vram[tilesetDataOffset];
 
     // tilemap is an index into tileData, as well as priority and flip data.
-    //const uint8_t hTilemapCount = Bytes::GetBit<0>(regBG1SC);
-    //const uint8_t vTilemapCount = Bytes::GetBit<1>(regBG1SC);
-    const uint16_t tilemapOffset = (regBG1SC & 0xFC) << 9;
+    //const uint8_t hTilemapCount = Bytes::GetBit<0>(bgsc);
+    //const uint8_t vTilemapCount = Bytes::GetBit<1>(bgsc);
+    const uint16_t tilemapOffset = (bgsc & 0xFC) << 9;
     const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[tilemapOffset]);
 
     const uint32_t TILE_SIZE = 8; // TODO: check actual tile size.
@@ -747,7 +754,7 @@ void Ppu::DrawBackgroundScanline(uint8_t scanline)
         if (pixelVal == 0)
             continue;
 
-        uint32_t color = palette[pixelVal + (paletteId * 4)];
+        uint32_t color = palette[pixelVal + (paletteId * 4) + paletteOffset];
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
         frameBuffer[pixelOffset] = color;
