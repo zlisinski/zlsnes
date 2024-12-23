@@ -46,6 +46,7 @@ private slots:
     void on_chkInput_clicked(bool checked);
     void on_chkTimer_clicked(bool checked);
     void on_chkInterrupt_clicked(bool checked);
+    void on_chkApu_clicked(bool checked);
     void on_btnClear_clicked();
     void on_btnSave_clicked();
 

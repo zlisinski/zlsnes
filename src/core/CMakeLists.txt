@@ -1,6 +1,7 @@
 find_package(Threads REQUIRED)
 
 set(CORE_SRC
+    Apu.cpp
     Cartridge.cpp
     Cpu.cpp
     Emulator.cpp

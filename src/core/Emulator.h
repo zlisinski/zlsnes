@@ -6,7 +6,7 @@
 #include "Buttons.h"
 #include "Cartridge.h"
 
-//class Audio;
+class Apu;
 //class AudioInterface;
 class Cpu;
 class DebuggerInterface;
@@ -56,7 +56,7 @@ private:
     DebuggerInterface *debuggerInterface;
     //GameSpeedSubject *gameSpeedSubject;
 
-    //Audio *audio;
+    Apu *apu;
     Buttons buttons;
     Cartridge cartridge;
     Cpu *cpu;

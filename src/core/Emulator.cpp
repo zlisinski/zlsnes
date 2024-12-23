@@ -1,5 +1,5 @@
 #include "Zlsnes.h"
-//#include "Audio.h"
+#include "Apu.h"
 #include "Cartridge.h"
 #include "Cpu.h"
 #include "DebuggerInterface.h"
@@ -21,8 +21,8 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     //audioInterface(audioInterface),
     infoInterface(infoInterface),
     debuggerInterface(debuggerInterface),
-    /*gameSpeedSubject(gameSpeedSubject),
-    audio(NULL),*/
+    //gameSpeedSubject(gameSpeedSubject),
+    apu(NULL),
     buttons(),
     cartridge(),
     cpu(NULL),
@@ -66,7 +66,7 @@ bool Emulator::LoadRom(const std::string &filename)
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
     input = new Input(memory, timer/*, interrupts*/);
     cpu = new Cpu(memory, timer, interrupts);
-    //audio = new Audio(memory, timer, audioInterface, gameSpeedSubject);
+    apu = new Apu(memory/*, timer, audioInterface, gameSpeedSubject*/);
 
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
     memory->SetTimer(timer);
@@ -207,8 +207,8 @@ void Emulator::ThreadFunc()
     if (debuggerInterface)
         debuggerInterface->SetEmulatorObjects(nullptr, nullptr, nullptr);
 
-    //delete audio;
-    //audio = NULL;
+    delete apu;
+    apu = NULL;
     delete cpu;
     cpu = NULL;
     delete ppu;

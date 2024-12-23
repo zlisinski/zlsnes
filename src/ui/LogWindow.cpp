@@ -47,6 +47,7 @@ LogWindow::LogWindow(QWidget *parent) :
     ui->chkInput->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eInput));
     ui->chkTimer->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eTimer));
     ui->chkInterrupt->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eInterrupt));
+    ui->chkApu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eApu));
 
     connect(this, SIGNAL(SignalLogWindowClosed()), parent, SLOT(SlotLogWindowClosed()));
     connect(this, SIGNAL(SignalMessageReady()), this, SLOT(SlotOutputMessage()));
@@ -113,6 +114,7 @@ void LogWindow::SetInstructionCheckboxEnabled(bool enable)
     ui->chkInput->setEnabled(enable);
     ui->chkTimer->setEnabled(enable);
     ui->chkInterrupt->setEnabled(enable);
+    ui->chkApu->setEnabled(enable);
 }
 
 
@@ -239,6 +241,20 @@ void LogWindow::on_chkInterrupt_clicked(bool checked)
         newLevel |= static_cast<uint32_t>(InstructionLogLevel::eInterrupt);
     else
         newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eInterrupt);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
+}
+
+
+void LogWindow::on_chkApu_clicked(bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eApu);
+    else
+        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eApu);
 
     settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
     Logger::SetInstructionLogLevel(newLevel);

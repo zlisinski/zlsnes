@@ -27,6 +27,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="5">
+       <widget class="QCheckBox" name="chkInterrupt">
+        <property name="text">
+         <string>Interrupt</string>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="3">
        <widget class="QCheckBox" name="chkInput">
         <property name="text">
@@ -90,10 +97,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="5">
-       <widget class="QCheckBox" name="chkInterrupt">
+      <item row="1" column="6">
+       <widget class="QCheckBox" name="chkApu">
         <property name="text">
-         <string>Interrupt</string>
+         <string>APU</string>
         </property>
        </widget>
       </item>
