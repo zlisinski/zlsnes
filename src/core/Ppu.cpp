@@ -458,7 +458,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegM7SEL:
             regM7SEL = byte;
-            return false;
+            LogPpu("M7SEL=%02X. NYI", byte);
+            return true;
         case eRegM7A: // 0x211B
             regM7A = byte;
             LogPpu("M7A=%02X. NYI", byte);

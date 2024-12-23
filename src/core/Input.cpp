@@ -8,6 +8,8 @@ Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts
     //interrupts(interrupts),
     buttonData(),
     lastAutoReadFlag(false),
+    regJOYA(memory->RequestOwnership(eRegJOYA, this)),
+    regJOYB(memory->RequestOwnership(eRegJOYB, this)),
     regJOY1L(memory->RequestOwnership(eRegJOY1L, this)),
     regJOY1H(memory->RequestOwnership(eRegJOY1H, this)),
     regJOY2L(memory->RequestOwnership(eRegJOY2L, this)),
@@ -18,6 +20,8 @@ Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts
     regJOY4H(memory->RequestOwnership(eRegJOY4H, this))
 {
     // Start out with all buttons released.
+    regJOYA = 0;
+    regJOYB = 0;
     regJOY1L = 0;
     regJOY1H = 0;
     regJOY2L = 0;
@@ -44,25 +48,16 @@ void Input::SetButtons(const Buttons &buttons)
 }
 
 
-bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
-{
-   LogInput("Input::WriteByte %04X, %02X", ioReg, byte);
-
-    switch (ioReg)
-    {
-        // These are all read-only.
-        default:
-            return false;
-    }
-}
-
-
 uint8_t Input::ReadRegister(EIORegisters ioReg) const
 {
     LogInput("Input::ReadByte %04X", ioReg);
 
     switch (ioReg)
     {
+        case eRegJOYA:
+            return (regJOYA & 0x03) | (memory->GetOpenBusValue() & 0xFC);
+        case eRegJOYB:
+            return (regJOYB & 0x03) | 0x1C | (memory->GetOpenBusValue() & 0xE0);
         case eRegJOY1L:
             return regJOY1L;
         case eRegJOY1H:
@@ -81,6 +76,21 @@ uint8_t Input::ReadRegister(EIORegisters ioReg) const
             return regJOY4H;
         default:
             throw std::range_error(fmt("Input doesnt handle reads to 0x%04X", ioReg));
+    }
+}
+
+
+bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
+{
+   LogInput("Input::WriteByte %04X, %02X", ioReg, byte);
+
+    switch (ioReg)
+    {
+        case eRegJOYWR:
+            return true;
+        // The rest are all read-only.
+        default:
+            return false;
     }
 }
 

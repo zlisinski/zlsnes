@@ -91,7 +91,6 @@ static const IoRegData ioRegData[] = {
     {"2181 WMADDL", 0x2181},
     {"2182 WMADDM", 0x2182},
     {"2183 WMADDH", 0x2183},
-    {"4016 JOYWR", 0x4016},
     {"4016 JOYA", 0x4016},
     {"4017 JOYB", 0x4017},
     {"4200 NMITIMEN", 0x4200},
