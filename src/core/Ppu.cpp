@@ -696,6 +696,14 @@ void Ppu::DrawScanline(uint8_t scanline)
         return;
     }
 
+    // Start with the backdrop using color 0 of cgram.
+    for (int i = 0; i < SCREEN_X; i++)
+    {
+        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
+        frameBuffer[pixelOffset] = palette[0];
+        frameBuffer[pixelOffset + SCREEN_X] = palette[0];
+    }
+
     DrawBackgroundScanline(scanline);
 }
 
@@ -726,14 +734,20 @@ void Ppu::DrawBackgroundScanline(uint8_t scanline)
 
         uint16_t tilemapEntry = tilemap[tileX + (tileY * TILEMAP_WIDTH)];
         uint32_t tileId = (tilemapEntry & 0x3FF) << 1; // Word address
-        // TODO: Handle priority, palette, and H/V flip.
+        uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
+        // TODO: Handle priority and H/V flip.
         uint32_t tileDataOffset = (tileId * TILE_SIZE) + ((scanline & 0x07) * 2);
         const uint8_t *tileData = &tilesetData[tileDataOffset];
 
         uint8_t lowBit = ((tileData[0] >> (7 - (x & 7))) & 0x01);
         uint8_t highBit = ((tileData[1] >> (7 - (x & 7))) & 0x01);
         uint8_t pixelVal = lowBit | (highBit << 1);
-        uint32_t color = palette[pixelVal];
+
+        // Color 0 in each palette is transparent.
+        if (pixelVal == 0)
+            continue;
+
+        uint32_t color = palette[pixelVal + (paletteId * 4)];
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
         frameBuffer[pixelOffset] = color;
