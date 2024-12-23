@@ -125,6 +125,7 @@ public:
     inline Address GetFullPC() const {return Address(reg.pb, reg.pc);}
 
     Registers reg;
+    uint8_t opcode;
 
 private:
 

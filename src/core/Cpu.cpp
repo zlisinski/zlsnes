@@ -10,16 +10,15 @@
 #define LogInst(name) LogCpu("%02X: %s", opcode, (name))
 
 // This requires the opcode case to have an AddressMode variable named 'mode'.
-// Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode,Read8Bit() or mode.Read16Bit().
 #define LogInstM(name) LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
 
 // This requires the opcode case to have an AddressMode pointer named 'mode'.
-// Call this at the end, since Immediate mode doesn't know the correct size until after a call to mode->Read8Bit() or mode->Read16Bit().
 #define LogInstMp(name) LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
 
 
 Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
     reg(),
+    opcode(0),
     memory(memory),
     timer(timer),
     interrupts(interrupts),
@@ -205,7 +204,7 @@ void Cpu::ProcessOpCode()
         return;
     }
 
-    uint8_t opcode = ReadPC8Bit();
+    opcode = ReadPC8Bit();
 
     switch (opcode)
     {
@@ -218,123 +217,123 @@ void Cpu::ProcessOpCode()
 
         case 0xAA: // TAX - Transfer A to X.
             {
+                LogInst("TAX");
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.a);
                 else
                     LoadRegister(&reg.xl, reg.al);
-                LogInst("TAX");
             }
             break;
 
         case 0xA8: // TAY - Transfer A to Y.
             {
+                LogInst("TAY");
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, reg.a);
                 else
                     LoadRegister(&reg.yl, reg.al);
-                LogInst("TAY");
             }
             break;
 
         case 0xBA: // TSX - Transfer SP to X.
             {
+                LogInst("TSX");
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.sp);
                 else
                     LoadRegister(&reg.xl, reg.sl);
-                LogInst("TSX");
             }
             break;
 
         case 0x8A: // TXA - Transfer X to A.
             {
+                LogInst("TXA");
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, reg.x);
                 else
                     LoadRegister(&reg.al, reg.xl);
-                LogInst("TXA");
             }
             break;
 
         case 0x9A: // TXS - Transfer X to SP.
             {
+                LogInst("TXS");
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
                     reg.sp = 0x0100 | reg.xl;
                 else
                     reg.sp = reg.x;
-                LogInst("TXS");
             }
             break;
 
         case 0x9B: // TXY - Transfer X to Y.
             {
+                LogInst("TXY");
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, reg.x);
                 else
                     LoadRegister(&reg.yl, reg.xl);
-                LogInst("TXY");
             }
             break;
 
         case 0x98: // TYA - Transfer Y to A.
             {
+                LogInst("TYA");
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, reg.y);
                 else
                     LoadRegister(&reg.al, reg.yl);
-                LogInst("TYA");
             }
             break;
 
         case 0xBB: // TYX - Transfer Y to X.
             {
+                LogInst("TYX");
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, reg.y);
                 else
                     LoadRegister(&reg.xl, reg.yl);
-                LogInst("TYX");
             }
             break;
 
         case 0x5B: // TCD/TAD - Transfer A to D.
             {
-                LoadRegister(&reg.d, reg.a);
                 LogInst("TCD");
+                LoadRegister(&reg.d, reg.a);
             }
             break;
 
         case 0x1B: // TCS/TAS - Transfer A to SP.
             {
+                LogInst("TCS");
                 // No flags are set. High byte of sp is always 0x01 in emulation mode.
                 if (reg.emulationMode)
                     reg.sp = 0x0100 | reg.al;
                 else
                     reg.sp = reg.a;
-                LogInst("TCS");
             }
             break;
 
         case 0x7B: // TDC/TDA - Transfer D to A.
             {
-                LoadRegister(&reg.a, reg.d);
                 LogInst("TDC");
+                LoadRegister(&reg.a, reg.d);
             }
             break;
 
         case 0x3B: // TSC/TSA - Transfer SP to A.
             {
-                LoadRegister(&reg.a, reg.sp);
                 LogInst("TSC");
+                LoadRegister(&reg.a, reg.sp);
             }
             break;
 
         case 0xEB: // XBA - Swap al and ah
             {
+                LogInst("XBA");
                 std::swap(reg.ah, reg.al);
                 SetNFlag(reg.al);
                 SetZFlag(reg.al);
-                LogInst("XBA");
             }
             break;
 
@@ -363,11 +362,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("LDA");
+
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, mode->Read16Bit());
                 else
                     LoadRegister(&reg.al, mode->Read8Bit());
-                LogInstMp("LDA");
             }
             break;
 
@@ -381,11 +381,12 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0xB6 and 0xBE are special cases.
                 AddressModePtr &mode = (opcode & 0x10 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
+                LogInstMp("LDX");
+
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, mode->Read16Bit());
                 else
                     LoadRegister(&reg.xl, mode->Read8Bit());
-                LogInstMp("LDX");
             }
             break;
 
@@ -398,11 +399,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("LDY");
+
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, mode->Read16Bit());
                 else
                     LoadRegister(&reg.yl, mode->Read8Bit());
-                LogInstMp("LDY");
             }
             break;
 
@@ -430,11 +432,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("STA");
+
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(reg.a);
                 else
                     mode->Write8Bit(reg.al);
-                LogInstMp("STA");
             }
             break;
 
@@ -446,11 +449,12 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0x96 is a special case.
                 AddressModePtr &mode = (opcode == 0x96 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
+                LogInstMp("STX");
+
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.x);
                 else
                     mode->Write8Bit(reg.xl);
-                LogInstMp("STX");
             }
             break;
 
@@ -461,11 +465,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("STY");
+
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.y);
                 else
                     mode->Write8Bit(reg.yl);
-                LogInstMp("STY");
             }
             break;
 
@@ -478,11 +483,12 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0x9C is a special case.
                 AddressModePtr &mode = (opcode == 0x9C ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
+                LogInstMp("STZ");
+
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(0);
                 else
                     mode->Write8Bit(0);
-                LogInstMp("STZ");
             }
             break;
 
@@ -494,67 +500,67 @@ void Cpu::ProcessOpCode()
 
         case 0x48: // PHA - Push A
             {
+                LogInst("PHA");
                 if (IsAccumulator16Bit())
                     Push16Bit(reg.a);
                 else
                     Push8Bit(reg.al);
-                LogInst("PHA");
             }
             break;
 
         case 0xDA: // PHX - Push X
             {
+                LogInst("PHX");
                 if (IsIndex16Bit())
                     Push16Bit(reg.x);
                 else
                     Push8Bit(reg.xl);
-                LogInst("PHX");
             }
             break;
 
         case 0x5A: // PHY - Push Y
             {
+                LogInst("PHY");
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
                     Push8Bit(reg.yl);
-                LogInst("PHY");
             }
             break;
 
         case 0x8B: // PHB - Push DB
             {
-                Push8Bit(reg.db);
                 LogInst("PHB");
+                Push8Bit(reg.db);
             }
             break;
 
         case 0x0B: // PHD - Push D
             {
-                Push16Bit(reg.d);
                 LogInst("PHD");
+                Push16Bit(reg.d);
             }
             break;
 
         case 0x4B: // PHK - Push PB
             {
-                Push8Bit(reg.pb);
                 LogInst("PHK");
+                Push8Bit(reg.pb);
             }
             break;
 
         case 0x08: // PHP - Push P
             {
-                Push8Bit(reg.p);
                 LogInst("PHP");
+                Push8Bit(reg.p);
             }
             break;
 
         case 0xF4: // PEA - Push Effective Address
             {
                 uint16_t value = ReadPC16Bit();
-                Push16Bit(value);
                 LogCpu("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                Push16Bit(value);
             }
             break;
 
@@ -562,21 +568,22 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeDirect mode(this, memory);
                 mode.LoadAddress();
-                Push16Bit(mode.Read16Bit());
                 LogInstM("PEI");
+                Push16Bit(mode.Read16Bit());
             }
             break;
 
         case 0x62: // PER - Push Effective Relative Address
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
-                Push16Bit(reg.pc + value);
                 LogCpu("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                Push16Bit(reg.pc + value);
             }
             break;
 
         case 0x68: // PLA - Pull/Pop A
             {
+                LogInst("PLA");
                 if (IsAccumulator16Bit())
                 {
                     reg.a = Pop16Bit();
@@ -589,12 +596,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInst("PLA");
             }
             break;
 
         case 0xFA: // PLX - Pull/Pop X
             {
+                LogInst("PLX");
                 if (IsIndex16Bit())
                 {
                     reg.x = Pop16Bit();
@@ -607,12 +614,12 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
-                LogInst("PLX");
             }
             break;
 
         case 0x7A: // PLY - Pull/Pop Y
             {
+                LogInst("PLY");
                 if (IsIndex16Bit())
                 {
                     reg.y = Pop16Bit();
@@ -625,33 +632,32 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
-                LogInst("PLY");
             }
             break;
 
         case 0xAB: // PLB - Pull/Pop DB
             {
+                LogInst("PLB");
                 reg.db = Pop8Bit();
                 SetNFlag(reg.db);
                 SetZFlag(reg.db);
-                LogInst("PLB");
             }
             break;
 
         case 0x2B: // PLD - Pull/Pop D
             {
+                LogInst("PLD");
                 reg.d = Pop16Bit();
                 SetNFlag(reg.d);
                 SetZFlag(reg.d);
-                LogInst("PLD");
             }
             break;
 
         case 0x28: // PLP - Pull/Pop P
             {
+                LogInst("PLP");
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
-                LogInst("PLP");
             }
             break;
 
@@ -680,6 +686,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("AND");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -694,7 +702,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInstMp("AND");
             }
             break;
 
@@ -717,6 +724,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("EOR");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -731,7 +740,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInstMp("EOR");
             }
             break;
 
@@ -754,6 +762,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("ORA");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -768,7 +778,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInstMp("ORA");
             }
             break;
 
@@ -797,6 +806,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("ADC");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t operand = mode->Read16Bit();
@@ -861,7 +872,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInstMp("ADC");
             }
             break;
 
@@ -884,6 +894,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("SBC");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t operand = ~mode->Read16Bit();
@@ -948,7 +960,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.al);
                     SetZFlag(reg.al);
                 }
-                LogInstMp("SBC");
             }
             break;
 
@@ -960,6 +971,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("DEC");
 
                 if (IsAccumulator16Bit())
                 {
@@ -977,12 +989,13 @@ void Cpu::ProcessOpCode()
                     SetNFlag(value);
                     SetZFlag(value);
                 }
-                LogInstMp("DEC");
             }
             break;
 
         case 0xCA: // DEX
             {
+                LogInst("DEX");
+
                 if (IsIndex16Bit())
                 {
                     reg.x--;
@@ -995,12 +1008,13 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
-                LogInst("DEX");
             }
             break;
 
         case 0x88: // DEY
             {
+                LogInst("DEY");
+
                 if (IsIndex16Bit())
                 {
                     reg.y--;
@@ -1013,7 +1027,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
-                LogInst("DEY");
             }
             break;
 
@@ -1025,6 +1038,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("INC");
 
                 if (IsAccumulator16Bit())
                 {
@@ -1042,12 +1056,13 @@ void Cpu::ProcessOpCode()
                     SetNFlag(value);
                     SetZFlag(value);
                 }
-                LogInstMp("INC");
             }
             break;
 
         case 0xE8: // INX
             {
+                LogInst("INX");
+
                 if (IsIndex16Bit())
                 {
                     reg.x++;
@@ -1060,12 +1075,13 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
-                LogInst("INX");
             }
             break;
 
         case 0xC8: // INY
             {
+                LogInst("INY");
+
                 if (IsIndex16Bit())
                 {
                     reg.y++;
@@ -1078,7 +1094,6 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
-                LogInst("INY");
             }
             break;
 
@@ -1107,13 +1122,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("CMP");
 
                 if (IsAccumulator16Bit())
                     Compare(reg.a, mode->Read16Bit());
                 else
                     Compare(reg.al, mode->Read8Bit());
-
-                LogInstMp("CMP");
             }
             break;
 
@@ -1124,13 +1138,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("CPX");
 
                 if (IsIndex16Bit())
                     Compare(reg.x, mode->Read16Bit());
                 else
                     Compare(reg.xl, mode->Read8Bit());
-
-                LogInstMp("CPX");
             }
             break;
 
@@ -1141,13 +1154,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("CPY");
 
                 if (IsIndex16Bit())
                     Compare(reg.y, mode->Read16Bit());
                 else
                     Compare(reg.yl, mode->Read8Bit());
-
-                LogInstMp("CPY");
             }
             break;
 
@@ -1165,6 +1177,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("BIT");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -1187,7 +1201,6 @@ void Cpu::ProcessOpCode()
                     reg.flags.v = (value & 0x40) != 0;
                     SetZFlag(result);
                 }
-                LogInstMp("BIT");
             }
             break;
 
@@ -1195,6 +1208,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeImmediate mode(this, memory);
                 mode.LoadAddress();
+                LogInstM("BIT");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode.Read16Bit();
@@ -1211,7 +1226,6 @@ void Cpu::ProcessOpCode()
                     // N and V flags are not changed.
                     SetZFlag(result);
                 }
-                LogInstM("BIT");
             }
             break;
 
@@ -1222,6 +1236,8 @@ void Cpu::ProcessOpCode()
                 // TRB is a special case, use 0x0F for masking.
                 AddressModePtr &mode = addressModes[opcode & 0x0F];
                 mode->LoadAddress();
+                LogInstMp("TRB");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -1240,7 +1256,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
                     mode->Write8Bit(result);
                 }
-                LogInstMp("TRB");
             }
             break;
 
@@ -1250,6 +1265,8 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("TSB");
+
                 if (IsAccumulator16Bit())
                 {
                     uint16_t value = mode->Read16Bit();
@@ -1268,7 +1285,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
                     mode->Write8Bit(result);
                 }
-                LogInstMp("TSB");
             }
             break;
 
@@ -1287,6 +1303,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("ASL");
 
                 if (IsAccumulator16Bit())
                 {
@@ -1308,7 +1325,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
-                LogInstMp("ASL");
             }
             break;
 
@@ -1321,6 +1337,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("LSR");
 
                 if (IsAccumulator16Bit())
                 {
@@ -1342,7 +1359,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
-                LogInstMp("LSR");
             }
             break;
 
@@ -1355,6 +1371,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("ROL");
 
                 if (IsAccumulator16Bit())
                 {
@@ -1376,7 +1393,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
-                LogInstMp("ROL");
             }
             break;
 
@@ -1389,6 +1405,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
+                LogInstMp("ROR");
 
                 if (IsAccumulator16Bit())
                 {
@@ -1410,7 +1427,6 @@ void Cpu::ProcessOpCode()
                     SetZFlag(result);
                     mode->Write8Bit(result);
                 }
-                LogInstMp("ROR");
             }
             break;
 
@@ -1456,6 +1472,8 @@ void Cpu::ProcessOpCode()
         case 0xF0: // BEQ - Branch if Equal (z flag set)
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
+                const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
+                LogCpu("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
 
                 // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
                 // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.
@@ -1466,9 +1484,6 @@ void Cpu::ProcessOpCode()
                 {
                     reg.pc += offset;
                 }
-
-                const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-                LogCpu("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
             }
             break;
 
@@ -1485,8 +1500,9 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
-                uint16_t newPc = mode->GetAddress().GetOffset();
                 LogInstMp("JMP");
+
+                uint16_t newPc = mode->GetAddress().GetOffset();
 
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
@@ -1504,9 +1520,10 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
+                LogInstMp("JMP");
+
                 uint8_t newPb = mode->GetAddress().GetBank();
                 uint16_t newPc = mode->GetAddress().GetOffset();
-                LogInstMp("JMP");
 
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
@@ -1525,9 +1542,10 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
+                LogInstMp("JSR");
+
                 Push16Bit(reg.pc - 1);
                 reg.pc = mode->GetAddress().GetOffset();
-                LogInstMp("JSR");
             }
             break;
 
@@ -1536,11 +1554,12 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeAbsoluteLong mode(this, memory);
                 mode.LoadAddress();
+                LogInstM("JSL");
+
                 Push8Bit(reg.pb);
                 Push16Bit(reg.pc - 1);
                 reg.pb = mode.GetAddress().GetBank();
                 reg.pc = mode.GetAddress().GetOffset();
-                LogInstM("JSL");
             }
             break;
 
@@ -1553,17 +1572,17 @@ void Cpu::ProcessOpCode()
         // RTS - Return from subroutine
         case 0x60:
             {
-                reg.pc = Pop16Bit() + 1;
                 LogInst("RTS");
+                reg.pc = Pop16Bit() + 1;
             }
             break;
 
         // RTL - Return from subroutine long
         case 0x6B:
             {
+                LogInst("RTL");
                 reg.pc = Pop16Bit() + 1;
                 reg.pb = Pop8Bit();
-                LogInst("RTL");
             }
             break;
 
@@ -1576,6 +1595,9 @@ void Cpu::ProcessOpCode()
         case 0x00: // BRK - Breakpoint
         case 0x02: // COP - Coprocessor
             {
+                const char *names[] = {"BRK", "COP"};
+                LogInst(names[opcode >> 1]);
+
                 if (reg.emulationMode)
                 {
                     const uint32_t vectors[] = {0xFFFE, 0xFFF4};
@@ -1597,20 +1619,17 @@ void Cpu::ProcessOpCode()
                     reg.flags.i = 1;
                     reg.flags.d = 0;
                 }
-
-                const char *names[] = {"BRK", "COP"};
-                LogInst(names[opcode >> 1]);
             }
             break;
 
         case 0x40: // RTI - Return from interrupt
             {
+                LogInst("RTI");
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
                 reg.pc = Pop16Bit();
                 if (!reg.emulationMode)
                     reg.pb = Pop8Bit();
-                LogInst("RTI");
             }
             break;
 
@@ -1680,9 +1699,11 @@ void Cpu::ProcessOpCode()
         case 0xC2:
             {
                 AddressModeImmediate mode(this, memory);
+                mode.LoadAddress();
+                LogInstM("REP");
+
                 reg.p &= ~mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
-                LogInstM("REP");
             }
             break;
 
@@ -1690,20 +1711,23 @@ void Cpu::ProcessOpCode()
         case 0xE2:
             {
                 AddressModeImmediate mode(this, memory);
+                mode.LoadAddress();
+                LogInstM("SEP");
+
                 reg.p |= mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
-                LogInstM("SEP");
             }
             break;
 
         // XCE - Exchange c and e
         case 0xFB:
             {
+                LogInst("XCE");
+
                 uint8_t carry = reg.flags.c;
                 reg.flags.c = reg.emulationMode;
                 reg.emulationMode = carry;
                 UpdateRegistersAfterFlagChange();
-                LogInst("XCE");
             }
             break;
 
@@ -1716,13 +1740,10 @@ void Cpu::ProcessOpCode()
         // MVP - Move Memory Positive
         case 0x44:
             {
-                LogCpu("%02X: MVP", opcode);
-                // Technically this instruction uses its own address mode, but Immediate works too.
-                AddressModeImmediate mode(this, memory);
-                // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.
-                uint16_t banks = mode.Read16Bit();
-                uint8_t dstBank = Bytes::GetByte<0>(banks);
-                uint8_t srcBank = Bytes::GetByte<1>(banks);
+                uint8_t dstBank = ReadPC8Bit();
+                uint8_t srcBank = ReadPC8Bit();
+                LogCpu("%02X %02X %02X: MVP", opcode, dstBank, srcBank);
+
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
 
@@ -1741,21 +1762,16 @@ void Cpu::ProcessOpCode()
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
-
-                LogInstM("MVP");
             }
             break;
 
         // MVN - Move Memory Negative
         case 0x54:
             {
-                LogCpu("%02X: MVN", opcode);
-                // Technically this instruction uses its own address mode, but Immediate works too.
-                AddressModeImmediate mode(this, memory);
-                // Use Read16Bit instead of 2 Read8Bit so that instruction logging works correctly.
-                uint16_t banks = mode.Read16Bit();
-                uint8_t dstBank = Bytes::GetByte<0>(banks);
-                uint8_t srcBank = Bytes::GetByte<1>(banks);
+                uint8_t dstBank = ReadPC8Bit();
+                uint8_t srcBank = ReadPC8Bit();
+                LogCpu("%02X %02X %02X: MVN", opcode, dstBank, srcBank);
+
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
 
@@ -1774,8 +1790,6 @@ void Cpu::ProcessOpCode()
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
-
-                LogInst("MVN");
             }
             break;
 
@@ -1796,9 +1810,11 @@ void Cpu::ProcessOpCode()
         case 0x42:
             {
                 AddressModeImmediate mode(this, memory);
+                mode.LoadAddress();
+                LogInstM("WDM");
+
                 uint8_t nopData = mode.Read8Bit();
                 (void)nopData;
-                LogInstM("WDM");
             }
             break;
 

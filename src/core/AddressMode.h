@@ -70,6 +70,8 @@ protected:
         uint32_t data24;
         uint8_t dataBytes[4];
     };
+
+    friend class AddressModeTest;
 };
 
 
@@ -418,22 +420,30 @@ public:
     {}
 
     // Does nothing.
-    virtual void LoadAddress() override {}
+    virtual void LoadAddress() override
+    {
+        // Immediate mode reads different amount of bytes depending on accumulator/index size.
+        if ((((cpu->opcode & 0x1F) == 0x09) && cpu->reg.flags.m == 0) || // A, opcode == 0x[02468ACE]9
+            ((((cpu->opcode & 0x9F) == 0x80) || (cpu->opcode == 0xA2)) && cpu->reg.flags.x == 0)) // X/Y, opcode == 0xA2 or 0x[ACE]0
+        {
+            dataLen = 2;
+            formatStr = "#%04X";
+            data16 = cpu->ReadPC16Bit();
+        }
+        else
+        {
+            dataLen = 1;
+            formatStr = "#%02X";
+            data8 = cpu->ReadPC8Bit();
+        }
+    }
 
     virtual uint8_t Read8Bit() override
     {
-        // Immediate mode reads different amount of bytes depending on accumulator/index size.
-        dataLen = 1;
-        formatStr = "#%02X";
-        data8 = cpu->ReadPC8Bit();
         return data8;
     }
     virtual uint16_t Read16Bit() override
     {
-        // Immediate mode reads different amount of bytes depending on accumulator/index size.
-        dataLen = 2;
-        formatStr = "#%04X";
-        data16 = cpu->ReadPC16Bit();
         return data16;
     }
     virtual void Write8Bit(uint8_t value) override {(void)value; throw std::logic_error("Can't write to AddressModeImmediate");}

@@ -321,18 +321,88 @@ TEST_F(AddressModeTest, TEST_AddressModeDirectIndirectLongIndexed) // [d],y - [D
     ASSERT_EQ(result, 0x1234);
 }
 
-TEST_F(AddressModeTest, TEST_AddressModeDirectImmediate) // Immediate
+TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
 {
+    AddressModeImmediate mode(cpu, memory_);
+
+    // 0x[02468ACE]9 look at the m flag.
+    for (int i = 0; i < 8; i++)
+    {
+        uint8_t opcode = (i << 5) | 0x09;
+        std::string msg = fmt("opcode=%02X", opcode);
+
+        ResetState();
+        cpu->opcode = opcode;
+        cpu->reg.flags.m = 0;
+        memory[GetPC()] = 0xCD;
+        memory[GetPC() + 1] = 0xAB;
+        mode.LoadAddress();
+        EXPECT_EQ(mode.FormatArgs(), "#ABCD") << msg;
+        EXPECT_EQ(cpu->reg.pc, 2) << msg;
+
+        ResetState();
+        cpu->opcode = opcode;
+        cpu->reg.flags.m = 1;
+        memory[GetPC()] = 0xCD;
+        memory[GetPC() + 1] = 0xAB;
+        mode.LoadAddress();
+        EXPECT_EQ(mode.FormatArgs(), "#CD") << msg;
+        EXPECT_EQ(cpu->reg.pc, 1) << msg;
+    }
+
+    // These look at the x flag.
+    uint8_t xOpcodes[] {0xA0, 0xA2, 0xE0, 0xC0};
+    for (int i = 0; i < 4; i++)
+    {
+        uint8_t opcode = xOpcodes[i];
+        std::string msg = fmt("opcode=%02X", opcode);
+
+        ResetState();
+        cpu->opcode = opcode;
+        cpu->reg.flags.x = 0;
+        memory[GetPC()] = 0xCD;
+        memory[GetPC() + 1] = 0xAB;
+        mode.LoadAddress();
+        EXPECT_EQ(mode.FormatArgs(), "#ABCD") << msg;
+        EXPECT_EQ(cpu->reg.pc, 2) << msg;
+
+        ResetState();
+        cpu->opcode = opcode;
+        cpu->reg.flags.x = 1;
+        memory[GetPC()] = 0xCD;
+        memory[GetPC() + 1] = 0xAB;
+        mode.LoadAddress();
+        EXPECT_EQ(mode.FormatArgs(), "#CD") << msg;
+        EXPECT_EQ(cpu->reg.pc, 1) << msg;
+    }
+
+    // Anything else should be 8-bit.
+    ResetState();
+    cpu->opcode = 0xC2;
+    cpu->reg.flags.x = 1;
     memory[GetPC()] = 0xCD;
     memory[GetPC() + 1] = 0xAB;
-
-    AddressModeImmediate mode(cpu, memory_);
     mode.LoadAddress();
-    Address addr = mode.GetAddress();
-    ASSERT_EQ(addr.ToUint(), 0x00);
+    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_EQ(cpu->reg.pc, 1);
 
-    uint16_t result = mode.Read16Bit();
-    ASSERT_EQ(result, 0xABCD);
+    ResetState();
+    cpu->opcode = 0xE2;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0xCD;
+    memory[GetPC() + 1] = 0xAB;
+    mode.LoadAddress();
+    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_EQ(cpu->reg.pc, 1);
+
+    ResetState();
+    cpu->opcode = 0x42;
+    cpu->reg.flags.x = 1;
+    memory[GetPC()] = 0xCD;
+    memory[GetPC() + 1] = 0xAB;
+    mode.LoadAddress();
+    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_EQ(cpu->reg.pc, 1);
 }
 
 TEST_F(AddressModeTest, TEST_AddressModeAbsoluteLong) // al - Long
