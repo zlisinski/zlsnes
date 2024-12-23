@@ -600,7 +600,7 @@ void MainWindow::SlotDrawFrame()
         frameCount++;
     }
 
-    QImage img((uchar *)(&frameBuffer[0]), SCREEN_X, SCREEN_Y, QImage::Format_RGB32);
+    QImage img((uchar *)(&frameBuffer[0]), SCREEN_X, SCREEN_Y, QImage::Format_ARGB32);
     graphicsView->scene()->clear();
     QGraphicsPixmapItem *pixmap = graphicsView->scene()->addPixmap(QPixmap::fromImage(img));
     pixmap->setScale(displayScale);

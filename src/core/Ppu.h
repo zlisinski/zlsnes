@@ -33,6 +33,7 @@ public:
 
 private:
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
+    void AdjustBrightness(uint8_t brightness);
     void DrawScanline(uint8_t scanline);
     void DrawBackgroundScanline(uint8_t scanline);
     void DrawScreen();

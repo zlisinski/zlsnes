@@ -253,6 +253,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             regINIDISP = byte;
             isForcedBlank = byte & 0x80;
             brightness = byte & 0x0F;
+            AdjustBrightness(brightness);
             // TODO: reset oamRwAddr if this is written on the first scanline of vblank (225/240).
             LogPpu("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
@@ -672,8 +673,29 @@ uint32_t Ppu::ConvertBGR555toARGB888(uint16_t bgrColor)
 }
 
 
+void Ppu::AdjustBrightness(uint8_t brightness)
+{
+    // Update alpha value of each palette entry.
+    for (uint32_t i = 0; i < palette.size(); i++)
+    {
+        palette[i] = ((brightness * 17) << 24) | (palette[i] & 0xFFFFFF);
+    }
+}
+
+
 void Ppu::DrawScanline(uint8_t scanline)
 {
+    if (isForcedBlank)
+    {
+        for (int i = 0; i < SCREEN_X; i++)
+        {
+            uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
+            frameBuffer[pixelOffset] = 0;
+            frameBuffer[pixelOffset + SCREEN_X] = 0;
+        }
+        return;
+    }
+
     DrawBackgroundScanline(scanline);
 }
 
