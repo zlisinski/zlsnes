@@ -774,14 +774,24 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 
         for (int x = 0; x < TILE_WIDTH; x++)
         {
-            uint8_t lowBit = ((tileData[0] >> (7 - (x & 7))) & 0x01);
-            uint8_t highBit = ((tileData[1] >> (7 - (x & 7))) & 0x01);
-            uint8_t pixelVal = lowBit | (highBit << 1);
+            uint8_t bit = 7 - (x & 7);
+
+            uint8_t lowBit = (tileData[0] >> bit) & 0x01;
+            uint8_t highBit = (tileData[1] >> bit) & 0x01;
+            uint8_t pixelVal = (highBit << 1) | lowBit;
             if (bpp >= 4)
             {
-                uint8_t lowBit2 = ((tileData[16] >> (7 - (x & 7))) & 0x01);
-                uint8_t highBit2 = ((tileData[17] >> (7 - (x & 7))) & 0x01);
-                pixelVal |= (lowBit2 << 2) | (highBit2 << 3);
+                uint8_t lowBit2 = (tileData[0x10] >> bit) & 0x01;
+                uint8_t highBit2 = (tileData[0x11] >> bit) & 0x01;
+                pixelVal |= (highBit2 << 3) | (lowBit2 << 2);
+            }
+            if (bpp == 8)
+            {
+                uint8_t lowBit3 = (tileData[0x20] >> bit) & 0x01;
+                uint8_t highBit3 = (tileData[0x21] >> bit) & 0x01;
+                uint8_t lowBit4 = (tileData[0x30] >> bit) & 0x01;
+                uint8_t highBit4 = (tileData[0x31] >> bit) & 0x01;
+                pixelVal |= (highBit4 << 7) | (lowBit4 << 6) | (highBit3 << 5) | (lowBit3 << 4);
             }
 
             // Color 0 in each palette is transparent.
