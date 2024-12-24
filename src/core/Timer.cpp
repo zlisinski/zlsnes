@@ -91,7 +91,7 @@ void Timer::AddCycle(uint8_t clocks)
 
 uint8_t Timer::ReadRegister(EIORegisters ioReg) const
 {
-    LogPpu("Timer::ReadRegister %04X", ioReg);
+    LogTimer("Timer::ReadRegister %04X", ioReg);
 
     switch (ioReg)
     {
@@ -125,7 +125,7 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg) const
 
 bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
 {
-    LogPpu("Timer::WriteRegister %04X", ioReg);
+    LogTimer("Timer::WriteRegister %04X", ioReg);
 
     switch (ioReg)
     {
