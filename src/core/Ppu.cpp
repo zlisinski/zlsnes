@@ -768,29 +768,39 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
         uint16_t tilemapEntry = tilemap[tileX + (tileY * TILEMAP_WIDTH)];
         uint32_t tileId = tilemapEntry & 0x3FF;
         uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
-        // TODO: Handle priority and H/V flip.
-        uint32_t tileDataOffset = (tileId * TILE_DATA_SIZE) + ((scanline & 0x07) * 2);
+        bool flipX = Bytes::GetBit<14>(tilemapEntry);
+        bool flipY = Bytes::GetBit<15>(tilemapEntry);
+        // TODO: Handle priority.
+
+        int yOff = (scanline & (TILE_HEIGHT - 1));
+        if (flipY)
+            yOff = (TILE_HEIGHT - 1) - yOff;
+        uint32_t tileDataOffset = (tileId * TILE_DATA_SIZE) + (yOff * 2);
         const uint8_t *tileData = &tilesetData[tileDataOffset];
 
         for (int x = 0; x < TILE_WIDTH; x++)
         {
-            uint8_t bit = 7 - (x & 7);
+            uint8_t xOff;
+            if (!flipX)
+                xOff = (TILE_WIDTH - 1) - (x & (TILE_WIDTH - 1));
+            else
+                xOff = x & (TILE_WIDTH - 1);
 
-            uint8_t lowBit = (tileData[0] >> bit) & 0x01;
-            uint8_t highBit = (tileData[1] >> bit) & 0x01;
+            uint8_t lowBit = (tileData[0] >> xOff) & 0x01;
+            uint8_t highBit = (tileData[1] >> xOff) & 0x01;
             uint8_t pixelVal = (highBit << 1) | lowBit;
             if (bpp >= 4)
             {
-                uint8_t lowBit2 = (tileData[0x10] >> bit) & 0x01;
-                uint8_t highBit2 = (tileData[0x11] >> bit) & 0x01;
+                uint8_t lowBit2 = (tileData[0x10] >> xOff) & 0x01;
+                uint8_t highBit2 = (tileData[0x11] >> xOff) & 0x01;
                 pixelVal |= (highBit2 << 3) | (lowBit2 << 2);
             }
             if (bpp == 8)
             {
-                uint8_t lowBit3 = (tileData[0x20] >> bit) & 0x01;
-                uint8_t highBit3 = (tileData[0x21] >> bit) & 0x01;
-                uint8_t lowBit4 = (tileData[0x30] >> bit) & 0x01;
-                uint8_t highBit4 = (tileData[0x31] >> bit) & 0x01;
+                uint8_t lowBit3 = (tileData[0x20] >> xOff) & 0x01;
+                uint8_t highBit3 = (tileData[0x21] >> xOff) & 0x01;
+                uint8_t lowBit4 = (tileData[0x30] >> xOff) & 0x01;
+                uint8_t highBit4 = (tileData[0x31] >> xOff) & 0x01;
                 pixelVal |= (highBit4 << 7) | (lowBit4 << 6) | (highBit3 << 5) | (lowBit3 << 4);
             }
 
