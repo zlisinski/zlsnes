@@ -347,22 +347,22 @@ void InfoWindow::UpdateMemoryView()
     ui->labelBG4Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
     
     value = ioPorts21[eRegBG1SC & 0xFF];
-    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
                                  " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
                                  " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
 
     value = ioPorts21[eRegBG2SC & 0xFF];
-    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
                                  " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
                                  " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
 
     value = ioPorts21[eRegBG3SC & 0xFF];
-    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
                                  " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
                                  " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
 
     value = ioPorts21[eRegBG4SC & 0xFF];
-    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 11) +
+    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
                                  " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
                                  " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
 }
