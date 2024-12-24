@@ -5,6 +5,19 @@
 #include "Timer.h"
 
 
+// Bits-per-pixel for each background layer for each mode.
+static const uint8_t BG_BPP_LOOKUP[8][4] = {
+    {2, 2, 2, 2}, // mode 0
+    {4, 4, 2, 0}, // mode 1
+    {4, 4, 0, 0}, // mode 2
+    {8, 4, 0, 0}, // mode 3
+    {8, 2, 0, 0}, // mode 4
+    {4, 2, 0, 0}, // mode 5
+    {4, 0, 0, 0}, // mode 6
+    {8, 0, 0, 0}, // mode 7
+};
+
+
 Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     oam{0},
     vram{0},
@@ -96,7 +109,9 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     regOPHCT(memory->RequestOwnership(eRegOPHCT, this)),
     regOPVCT(memory->RequestOwnership(eRegOPVCT, this)),
     regSTAT77(memory->RequestOwnership(eRegSTAT77, this)),
-    regSTAT78(memory->RequestOwnership(eRegSTAT78, this))
+    regSTAT78(memory->RequestOwnership(eRegSTAT78, this)),
+    regBGSCLookup{&regBG1SC, &regBG2SC, &regBG3SC, &regBG4SC},
+    regBGNBALookup{&regBG12NBA, &regBG34NBA}
 {
     timer->AttachObserver(this);
 }
@@ -705,21 +720,31 @@ void Ppu::DrawScanline(uint8_t scanline)
     }
 
     if (Bytes::GetBit<0>(regTM))
-        DrawBackgroundScanline(scanline, regBG1SC, regBG12NBA & 0x0F, 0);
-    if (Bytes::GetBit<1>(regTM))
-        DrawBackgroundScanline(scanline, regBG2SC, regBG12NBA >> 4, 0x20);
-    if (Bytes::GetBit<2>(regTM))
-        DrawBackgroundScanline(scanline, regBG3SC, regBG34NBA & 0x0F, 0x40);
-    if (Bytes::GetBit<3>(regTM))
-        DrawBackgroundScanline(scanline, regBG4SC, regBG34NBA >> 4, 0x60);
+        DrawBackgroundScanline(0, scanline);
+
+    if (Bytes::GetBit<1>(regTM) && BG_BPP_LOOKUP[bgMode][1] != 0)
+        DrawBackgroundScanline(1, scanline);
+
+    if (Bytes::GetBit<2>(regTM) && BG_BPP_LOOKUP[bgMode][2] != 0)
+        DrawBackgroundScanline(2, scanline);
+
+    if (Bytes::GetBit<3>(regTM) && BG_BPP_LOOKUP[bgMode][3] != 0)
+        DrawBackgroundScanline(3, scanline);
 }
 
 
-void Ppu::DrawBackgroundScanline(uint8_t scanline, uint8_t bgsc, uint8_t bgnba, uint8_t paletteOffset)
+void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 {
-    // Draw only Mode0 BG1 for now.
     // TODO: Check tile size in BGMODE
     // TODO: Check tile size in BGnSC
+    uint8_t bgsc = *regBGSCLookup[bg];
+    uint8_t bgnba = (*regBGNBALookup[bg >> 1] >> ((bg & 0x01) * 4) & 0x0F);
+    uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
+
+    uint8_t paletteOffset = 0;
+    // In mode 0, each bg layer has their own palettes.
+    if (bgMode == 0)
+        paletteOffset = bg * 0x20;
 
     // tilesetData is the actual pixel/palette-index data for a tile.
     const uint16_t tilesetDataOffset = bgnba << 13;
@@ -731,34 +756,46 @@ void Ppu::DrawBackgroundScanline(uint8_t scanline, uint8_t bgsc, uint8_t bgnba, 
     const uint16_t tilemapOffset = (bgsc & 0xFC) << 9;
     const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[tilemapOffset]);
 
-    const uint32_t TILE_SIZE = 8; // TODO: check actual tile size.
-    const uint32_t TILEMAP_WIDTH = 32;
-    uint32_t tileY = scanline / TILE_SIZE;
-    for (int i = 0; i < SCREEN_X; i++)
-    {
-        uint32_t x = i / 2; // in 256 resolution mode.
-        uint32_t tileX = x / TILE_SIZE;
+    const int TILE_WIDTH = 8; // TODO: check actual tile size.
+    const int TILE_HEIGHT = 8; // TODO: check actual tile size.
+    const int TILE_DATA_SIZE = TILE_WIDTH * bpp;
+    const int TILEMAP_WIDTH = 32;
+    const int TILES_PER_SCREEN = (SCREEN_X / 2) / TILE_WIDTH; // in 256 resolution mode.
 
+    int tileY = scanline / TILE_HEIGHT;
+    for (int tileX = 0; tileX < TILES_PER_SCREEN; tileX++)
+    {
         uint16_t tilemapEntry = tilemap[tileX + (tileY * TILEMAP_WIDTH)];
-        uint32_t tileId = (tilemapEntry & 0x3FF) << 1; // Word address
+        uint32_t tileId = tilemapEntry & 0x3FF;
         uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
         // TODO: Handle priority and H/V flip.
-        uint32_t tileDataOffset = (tileId * TILE_SIZE) + ((scanline & 0x07) * 2);
+        uint32_t tileDataOffset = (tileId * TILE_DATA_SIZE) + ((scanline & 0x07) * 2);
         const uint8_t *tileData = &tilesetData[tileDataOffset];
 
-        uint8_t lowBit = ((tileData[0] >> (7 - (x & 7))) & 0x01);
-        uint8_t highBit = ((tileData[1] >> (7 - (x & 7))) & 0x01);
-        uint8_t pixelVal = lowBit | (highBit << 1);
+        for (int x = 0; x < TILE_WIDTH; x++)
+        {
+            uint8_t lowBit = ((tileData[0] >> (7 - (x & 7))) & 0x01);
+            uint8_t highBit = ((tileData[1] >> (7 - (x & 7))) & 0x01);
+            uint8_t pixelVal = lowBit | (highBit << 1);
+            if (bpp >= 4)
+            {
+                uint8_t lowBit2 = ((tileData[16] >> (7 - (x & 7))) & 0x01);
+                uint8_t highBit2 = ((tileData[17] >> (7 - (x & 7))) & 0x01);
+                pixelVal |= (lowBit2 << 2) | (highBit2 << 3);
+            }
 
-        // Color 0 in each palette is transparent.
-        if (pixelVal == 0)
-            continue;
+            // Color 0 in each palette is transparent.
+            if (pixelVal == 0)
+                continue;
 
-        uint32_t color = palette[pixelVal + (paletteId * 4) + paletteOffset];
+            uint32_t color = palette[pixelVal + (paletteId * (1 << bpp)) + paletteOffset];
 
-        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
-        frameBuffer[pixelOffset] = color;
-        frameBuffer[pixelOffset + (SCREEN_X)] = color;
+            uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (tileX * TILE_WIDTH * 2) + (x * 2);
+            frameBuffer[pixelOffset] = color;
+            frameBuffer[pixelOffset + 1] = color;
+            frameBuffer[pixelOffset + SCREEN_X] = color;
+            frameBuffer[pixelOffset + SCREEN_X + 1] = color;
+        }
     }
 }
 

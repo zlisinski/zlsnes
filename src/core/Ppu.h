@@ -35,7 +35,7 @@ private:
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
     void AdjustBrightness(uint8_t brightness);
     void DrawScanline(uint8_t scanline);
-    void DrawBackgroundScanline(uint8_t scanline, uint8_t bgsc, uint8_t bgnba, uint8_t paletteOffset);
+    void DrawBackgroundScanline(uint8_t bg, uint8_t scanline);
     void DrawScreen();
     void DrawFullScreen(); // Used when debugging to update the screen.
 
@@ -141,6 +141,9 @@ private:
     uint8_t &regOPVCT;   // 0x213D PPU2 Vertical Counter Latch   (read-twice)
     uint8_t &regSTAT77;  // 0x213E PPU1 Status and PPU1 Version Number
     uint8_t &regSTAT78;  // 0x213F PPU2 Status and PPU2 Version Number
+
+    const uint8_t *regBGSCLookup[4];
+    const uint8_t *regBGNBALookup[2];
 
     friend class PpuTest;
     friend class InfoWindow;
