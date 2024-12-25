@@ -800,12 +800,13 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
     // tilesetData is the actual pixel/palette-index data for a tile.
     const uint8_t *tilesetData = &vram[bgChrAddr[bg]];
 
-    const int TILE_WIDTH = 8; // TODO: check actual tile size.
-    const int TILE_HEIGHT = 8; // TODO: check actual tile size.
+    const int TILE_WIDTH = bgChrSize[bg];
+    const int TILE_HEIGHT = bgChrSize[bg];
     const int TILE_DATA_SIZE = TILE_WIDTH * bpp;
     const int TILES_PER_SCREEN = (SCREEN_X / 2) / TILE_WIDTH; // in 256 resolution mode.
 
-    int tileY = scanline / TILE_HEIGHT;
+    int tileY = (scanline + bgVOffset[bg]) / TILE_HEIGHT;
+    int tileYOff = ((scanline + bgVOffset[bg]) & (TILE_HEIGHT - 1));
     for (int tileX = 0; tileX < TILES_PER_SCREEN; tileX++)
     {
         uint16_t tilemapEntry = GetTilemapEntry(bg, tileX, tileY);
@@ -815,7 +816,7 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
         bool flipY = Bytes::GetBit<15>(tilemapEntry);
         // TODO: Handle priority.
 
-        int yOff = (scanline & (TILE_HEIGHT - 1));
+        int yOff = tileYOff;
         if (flipY)
             yOff = (TILE_HEIGHT - 1) - yOff;
         uint32_t tileDataOffset = (tileId * TILE_DATA_SIZE) + (yOff * 2);
