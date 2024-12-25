@@ -807,9 +807,11 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 
     int tileY = (scanline + bgVOffset[bg]) / TILE_HEIGHT;
     int tileYOff = ((scanline + bgVOffset[bg]) & (TILE_HEIGHT - 1));
-    for (int tileX = 0; tileX < TILES_PER_SCREEN; tileX++)
+    int tileX = bgHOffset[bg] / TILE_WIDTH;
+    int tileXOff = bgHOffset[bg] & (TILE_WIDTH - 1);
+    for (int tileX_i = 0; tileX_i < TILES_PER_SCREEN; tileX_i++)
     {
-        uint16_t tilemapEntry = GetTilemapEntry(bg, tileX, tileY);
+        uint16_t tilemapEntry = GetTilemapEntry(bg, tileX + tileX_i, tileY);
         uint32_t tileId = tilemapEntry & 0x3FF;
         uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
         bool flipX = Bytes::GetBit<14>(tilemapEntry);
@@ -824,11 +826,9 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 
         for (int x = 0; x < TILE_WIDTH; x++)
         {
-            uint8_t xOff;
+            uint8_t xOff = x;
             if (!flipX)
                 xOff = (TILE_WIDTH - 1) - (x & (TILE_WIDTH - 1));
-            else
-                xOff = x & (TILE_WIDTH - 1);
 
             uint8_t lowBit = (tileData[0] >> xOff) & 0x01;
             uint8_t highBit = (tileData[1] >> xOff) & 0x01;
@@ -854,7 +854,7 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 
             uint32_t color = palette[pixelVal + (paletteId * (1 << bpp)) + paletteOffset];
 
-            uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (tileX * TILE_WIDTH * 2) + (x * 2);
+            uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (tileX_i * TILE_WIDTH * 2) + (x * 2);
             frameBuffer[pixelOffset] = color;
             frameBuffer[pixelOffset + 1] = color;
             frameBuffer[pixelOffset + SCREEN_X] = color;
