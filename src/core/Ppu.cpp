@@ -723,6 +723,34 @@ void Ppu::AdjustBrightness(uint8_t brightness)
 }
 
 
+uint16_t Ppu::GetTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
+{
+    // Compute the offset for 32x32 tilemap.
+    uint16_t offset = (tileX & 0x1F) + ((tileY & 0x1F) * 32);
+
+    // Adjust if either dimension is extended to 64, and the tile is in the extened area.
+    if (bgTilemapHExt[bg] && tileX >= 32)
+    {
+        // Add 1K to get to next tilemap.
+        offset += 0x400;
+    }
+    if (bgTilemapVExt[bg] && tileY >= 32)
+    {
+        // Add either 1K or 2K depending on whether the X is extended too.
+        if (bgTilemapHExt[bg])
+            offset += 0x800;
+        else
+            offset += 0x400;
+    }
+
+    // Each tile is word, so double the offset.
+    offset = bgTilemapAddr[bg] + (offset << 1);
+
+    uint16_t tileData = Bytes::Make16Bit(vram[offset + 1], vram[offset]);
+    return tileData;
+}
+
+
 void Ppu::DrawScanline(uint8_t scanline)
 {
     if (isForcedBlank)
@@ -772,19 +800,15 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
     // tilesetData is the actual pixel/palette-index data for a tile.
     const uint8_t *tilesetData = &vram[bgChrAddr[bg]];
 
-    // tilemap is an index into tileData, as well as priority and flip data.
-    const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[bgTilemapAddr[bg]]);
-
     const int TILE_WIDTH = 8; // TODO: check actual tile size.
     const int TILE_HEIGHT = 8; // TODO: check actual tile size.
     const int TILE_DATA_SIZE = TILE_WIDTH * bpp;
-    const int TILEMAP_WIDTH = 32;
     const int TILES_PER_SCREEN = (SCREEN_X / 2) / TILE_WIDTH; // in 256 resolution mode.
 
     int tileY = scanline / TILE_HEIGHT;
     for (int tileX = 0; tileX < TILES_PER_SCREEN; tileX++)
     {
-        uint16_t tilemapEntry = tilemap[tileX + (tileY * TILEMAP_WIDTH)];
+        uint16_t tilemapEntry = GetTilemapEntry(bg, tileX, tileY);
         uint32_t tileId = tilemapEntry & 0x3FF;
         uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
         bool flipX = Bytes::GetBit<14>(tilemapEntry);
