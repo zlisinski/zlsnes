@@ -34,6 +34,12 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     isForcedBlank(false),
     brightness(0),
     bgMode(0),
+    bgMode1Bg3Priority(false),
+    bgChrSize{8, 8, 8, 8},
+    bgTilemapAddr{0, 0, 0, 0},
+    bgTilemapHExt{false, false, false, false},
+    bgTilemapVExt{false, false, false, false},
+    bgChrAddr{0, 0, 0, 0},
     bgOffsetLatch(0),
     bgHOffsetLatch(0),
     bgHOffset{0, 0, 0, 0},
@@ -109,9 +115,7 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     regOPHCT(memory->RequestOwnership(eRegOPHCT, this)),
     regOPVCT(memory->RequestOwnership(eRegOPVCT, this)),
     regSTAT77(memory->RequestOwnership(eRegSTAT77, this)),
-    regSTAT78(memory->RequestOwnership(eRegSTAT78, this)),
-    regBGSCLookup{&regBG1SC, &regBG2SC, &regBG3SC, &regBG4SC},
-    regBGNBALookup{&regBG12NBA, &regBG34NBA}
+    regSTAT78(memory->RequestOwnership(eRegSTAT78, this))
 {
     timer->AttachObserver(this);
 }
@@ -317,7 +321,12 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegBGMODE: // 0x2105
             regBGMODE = byte;
             bgMode = byte & 0x07;
-            LogPpu("bgMode=%d", bgMode);
+            bgMode1Bg3Priority = Bytes::GetBit<3>(bgMode);
+            bgChrSize[0] = 8 << Bytes::GetBit<4>(bgMode);
+            bgChrSize[1] = 8 << Bytes::GetBit<5>(bgMode);
+            bgChrSize[2] = 8 << Bytes::GetBit<6>(bgMode);
+            bgChrSize[3] = 8 << Bytes::GetBit<7>(bgMode);
+            LogPpu("bgMode=%d bg3Prio=%d bgChrSize=%d,%d,%d,%d", bgMode, bgMode1Bg3Priority, bgChrSize[0], bgChrSize[1], bgChrSize[2], bgChrSize[3]);
             return true;
         case eRegMOSAIC: // 0x2106
             regMOSAIC = byte;
@@ -325,27 +334,43 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegBG1SC: // 0x2107
             regBG1SC = byte;
-            LogPpu("Screen1 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
+            bgTilemapAddr[0] = (byte & 0xFC) << 9;
+            bgTilemapHExt[0] = Bytes::GetBit<0>(byte);
+            bgTilemapVExt[0] = Bytes::GetBit<1>(byte);
+            LogPpu("BG1 Address=%04X Size=%dx%d", bgTilemapAddr[0], (32 << bgTilemapHExt[0]), (32 << bgTilemapVExt[0]));
             return true;
         case eRegBG2SC: // 0x2108
             regBG2SC = byte;
-            LogPpu("Screen2 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
+            bgTilemapAddr[1] = (byte & 0xFC) << 9;
+            bgTilemapHExt[1] = Bytes::GetBit<0>(byte);
+            bgTilemapVExt[1] = Bytes::GetBit<1>(byte);
+            LogPpu("BG2 Address=%04X Size=%dx%d", bgTilemapAddr[1], (32 << bgTilemapHExt[1]), (32 << bgTilemapVExt[1]));
             return true;
         case eRegBG3SC: // 0x2109
             regBG3SC = byte;
-            LogPpu("Screen3 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
+            bgTilemapAddr[2] = (byte & 0xFC) << 9;
+            bgTilemapHExt[2] = Bytes::GetBit<0>(byte);
+            bgTilemapVExt[2] = Bytes::GetBit<1>(byte);
+            LogPpu("BG3 Address=%04X Size=%dx%d", bgTilemapAddr[2], (32 << bgTilemapHExt[2]), (32 << bgTilemapVExt[2]));
             return true;
         case eRegBG4SC: // 0x210A
             regBG4SC = byte;
-            LogPpu("Screen4 Address=%04X Size=%dx%d", (byte >> 2), (32 << Bytes::GetBit<0>(byte)), (32 << Bytes::GetBit<1>(byte)));
+            bgTilemapAddr[3] = (byte & 0xFC) << 9;
+            bgTilemapHExt[3] = Bytes::GetBit<0>(byte);
+            bgTilemapVExt[3] = Bytes::GetBit<1>(byte);
+            LogPpu("BG4 Address=%04X Size=%dx%d", bgTilemapAddr[3], (32 << bgTilemapHExt[3]), (32 << bgTilemapVExt[3]));
             return true;
         case eRegBG12NBA: // 0x210B
             regBG12NBA = byte;
-            LogPpu("Tile Address BG1=%02x BG2=%02X", byte & 0x0F, byte >> 4);
+            bgChrAddr[0] = (byte & 0x0F) << 13;
+            bgChrAddr[1] = (byte & 0xF0) << 9;
+            LogPpu("Tile Address BG1=%04x BG2=%04X", bgChrAddr[0], bgChrAddr[1]);
             return true;
         case eRegBG34NBA: // 0x210C
             regBG34NBA = byte;
-            LogPpu("Tile Address BG3=%02x BG4=%02X", byte & 0x0F, byte >> 4);
+            bgChrAddr[2] = (byte & 0x0F) << 13;
+            bgChrAddr[3] = (byte & 0xF0) << 9;
+            LogPpu("Tile Address BG3=%04x BG4=%04X", bgChrAddr[2], bgChrAddr[3]);
             return true;
         case eRegBG1HOFS: // 0x210D
             regBG1HOFS = byte;
@@ -737,8 +762,6 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
 {
     // TODO: Check tile size in BGMODE
     // TODO: Check tile size in BGnSC
-    uint8_t bgsc = *regBGSCLookup[bg];
-    uint8_t bgnba = (*regBGNBALookup[bg >> 1] >> ((bg & 0x01) * 4) & 0x0F);
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
     uint8_t paletteOffset = 0;
@@ -747,14 +770,10 @@ void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
         paletteOffset = bg * 0x20;
 
     // tilesetData is the actual pixel/palette-index data for a tile.
-    const uint16_t tilesetDataOffset = bgnba << 13;
-    const uint8_t *tilesetData = &vram[tilesetDataOffset];
+    const uint8_t *tilesetData = &vram[bgChrAddr[bg]];
 
     // tilemap is an index into tileData, as well as priority and flip data.
-    //const uint8_t hTilemapCount = Bytes::GetBit<0>(bgsc);
-    //const uint8_t vTilemapCount = Bytes::GetBit<1>(bgsc);
-    const uint16_t tilemapOffset = (bgsc & 0xFC) << 9;
-    const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[tilemapOffset]);
+    const uint16_t *tilemap = reinterpret_cast<const uint16_t*>(&vram[bgTilemapAddr[bg]]);
 
     const int TILE_WIDTH = 8; // TODO: check actual tile size.
     const int TILE_HEIGHT = 8; // TODO: check actual tile size.

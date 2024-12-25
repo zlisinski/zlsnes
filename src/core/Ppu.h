@@ -54,9 +54,22 @@ private:
     bool isVBlank;
     uint32_t scanline;
 
+    // INIDISP - 0x2100
     bool isForcedBlank;
     uint8_t brightness;
+
+    // BGMODE - 0x2105
     uint8_t bgMode;
+    bool bgMode1Bg3Priority;
+    uint8_t bgChrSize[4];
+
+    // BGxSC - 0x2107-0x210A
+    uint16_t bgTilemapAddr[4];
+    bool bgTilemapHExt[4];
+    bool bgTilemapVExt[4];
+
+    // BGxyNBA - 0x210B-0x210C
+    uint16_t bgChrAddr[4];
 
     uint8_t bgOffsetLatch;
     uint8_t bgHOffsetLatch;
@@ -141,9 +154,6 @@ private:
     uint8_t &regOPVCT;   // 0x213D PPU2 Vertical Counter Latch   (read-twice)
     uint8_t &regSTAT77;  // 0x213E PPU1 Status and PPU1 Version Number
     uint8_t &regSTAT78;  // 0x213F PPU2 Status and PPU2 Version Number
-
-    const uint8_t *regBGSCLookup[4];
-    const uint8_t *regBGNBALookup[2];
 
     friend class PpuTest;
     friend class InfoWindow;
