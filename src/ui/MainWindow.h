@@ -20,7 +20,7 @@ class Emulator;
 class LogWindow;
 class QLabel;
 
-const int MAX_RECENT_FILES = 10;
+const int MAX_RECENT_FILES = 20;
 
 
 class MainWindow : public QMainWindow, public DisplayInterface//, public AudioInterface, public GameSpeedSubject
