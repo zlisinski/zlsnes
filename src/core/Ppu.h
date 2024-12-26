@@ -69,6 +69,15 @@ private:
     bool isForcedBlank;
     uint8_t brightness;
 
+    // OBJSEL - 0x2101
+    uint8_t objSize;
+    uint16_t objBaseAddr[2];
+
+    // OAMADDL/OAMADDH - 0x2102/0x2103
+    uint16_t oamRwAddr;
+    uint8_t oamLatch;
+    bool objPriorityRotation;
+
     // BGMODE - 0x2105
     uint8_t bgMode;
     bool bgMode1Bg3Priority;
@@ -82,25 +91,29 @@ private:
     // BGxyNBA - 0x210B-0x210C
     uint16_t bgChrAddr[4];
 
+    // BGxHOFS/BGxVOFS - 0x210D-0x2114
     uint8_t bgOffsetLatch;
     uint8_t bgHOffsetLatch;
     uint16_t bgHOffset[4];
     uint16_t bgVOffset[4];
 
-    uint16_t cgramRwAddr;
-    uint8_t cgramLatch;
-
+    // VMADDL/VMADDH - 0x2116/0x2117
     uint8_t vramIncrement;
     bool isVramIncrementOnHigh;
     uint16_t vramRwAddr;
     uint8_t vramPrefetch[2];
 
-    uint16_t oamRwAddr;
-    uint8_t oamLatch;
+    // CGADD - 0x2121
+    uint16_t cgramRwAddr;
+    uint8_t cgramLatch;
+
+    // TM/TS - 0x212c/0x212D
+    bool mainScreenLayers[5];
+    bool subScreenLayers[5];
 
     //Write-only
     uint8_t &regINIDISP; // 0x2100 Display Control 1
-    uint8_t &regOBSEL;   // 0x2101 Object Size and Object Base
+    uint8_t &regOBJSEL;  // 0x2101 Object Size and Object Base
     uint8_t &regOAMADDL; // 0x2102 OAM Address (lower 8bit)
     uint8_t &regOAMADDH; // 0x2103 OAM Address (upper 1bit) and Priority Rotation
     uint8_t &regOAMDATA; // 0x2104 OAM Data Write (write-twice)

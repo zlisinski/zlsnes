@@ -20,7 +20,7 @@ struct IoRegData
 
 static const IoRegData ioRegData[] = {
     {"2100 INIDISP", 0x2100},
-    {"2101 OBSEL", 0x2101},
+    {"2101 OBJSEL", 0x2101},
     {"2102 OAMADDL", 0x2102},
     {"2103 OAMADDH", 0x2103},
     {"2104 OAMDATA", 0x2104},

@@ -4,7 +4,7 @@ enum EIORegisters
 {
 // PPU Write-Only
     eRegINIDISP  = 0x2100, // Display Control 1
-    eRegOBSEL    = 0x2101, // Object Size and Object Base
+    eRegOBJSEL   = 0x2101, // Object Size and Object Base
     eRegOAMADDL  = 0x2102, // OAM Address (lower 8bit)
     eRegOAMADDH  = 0x2103, // OAM Address (upper 1bit) and Priority Rotation
     eRegOAMDATA  = 0x2104, // OAM Data Write (write-twice)

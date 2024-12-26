@@ -17,6 +17,37 @@ static const uint8_t BG_BPP_LOOKUP[8][4] = {
     {8, 0, 0, 0}, // mode 7
 };
 
+static const uint8_t OBJ_H_SIZE_LOOKUP[8][2] = {
+    {8, 16}, // 0
+    {8, 32}, // 1
+    {8, 64}, // 2
+    {16, 32}, // 3
+    {16, 64}, // 4
+    {32, 64}, // 5
+    {16, 32}, // 6
+    {16, 32}, // 7
+};
+
+static const uint8_t OBJ_V_SIZE_LOOKUP[8][2] = {
+    {8, 16}, // 0
+    {8, 32}, // 1
+    {8, 64}, // 2
+    {16, 32}, // 3
+    {16, 64}, // 4
+    {32, 64}, // 5
+    {32, 64}, // 6
+    {32, 32}, // 7
+};
+
+enum ELayers
+{
+    eBG1,
+    eBG2,
+    eBG3,
+    eBG4,
+    eOBJ
+};
+
 
 Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     oam{0},
@@ -33,6 +64,11 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     scanline(0),
     isForcedBlank(false),
     brightness(0),
+    objSize(0),
+    objBaseAddr{0, 0},
+    oamRwAddr(0),
+    oamLatch(0),
+    objPriorityRotation(false),
     bgMode(0),
     bgMode1Bg3Priority(false),
     bgChrSize{8, 8, 8, 8},
@@ -44,16 +80,16 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     bgHOffsetLatch(0),
     bgHOffset{0, 0, 0, 0},
     bgVOffset{0, 0, 0, 0},
-    cgramRwAddr(0),
-    cgramLatch(0),
     vramIncrement(0),
     isVramIncrementOnHigh(false),
     vramRwAddr(0),
     vramPrefetch{0,0},
-    oamRwAddr(0),
-    oamLatch(0),
+    cgramRwAddr(0),
+    cgramLatch(0),
+    mainScreenLayers{false, false, false, false, false},
+    subScreenLayers{false, false, false, false, false},
     regINIDISP(memory->RequestOwnership(eRegINIDISP, this)),
-    regOBSEL(memory->RequestOwnership(eRegOBSEL, this)),
+    regOBJSEL(memory->RequestOwnership(eRegOBJSEL, this)),
     regOAMADDL(memory->RequestOwnership(eRegOAMADDL, this)),
     regOAMADDH(memory->RequestOwnership(eRegOAMADDH, this)),
     regOAMDATA(memory->RequestOwnership(eRegOAMDATA, this)),
@@ -129,8 +165,8 @@ uint8_t Ppu::ReadRegister(EIORegisters ioReg) const
     {
         case eRegINIDISP:
             return regINIDISP;
-        case eRegOBSEL:
-            return regOBSEL;
+        case eRegOBJSEL:
+            return regOBJSEL;
         case eRegOAMADDL:
             return regOAMADDL;
         case eRegOAMADDH:
@@ -276,9 +312,13 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             // TODO: reset oamRwAddr if this is written on the first scanline of vblank (225/240).
             LogPpu("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
-        case eRegOBSEL: // 0x2101
-            regOBSEL = byte;
-            LogPpu("OBSEL=%02X. NYI", byte);
+        case eRegOBJSEL: // 0x2101
+            regOBJSEL = byte;
+            objSize = byte >> 5;
+            //objGap = (byte >> 3) & 0x03;
+            objBaseAddr[0] = (byte & 0x03) << 14;
+            objBaseAddr[1] = objBaseAddr[0] + ((((byte >> 3) & 0x03) + 1) << 13);
+            LogPpu("OBJSEL=%02X. objSize=%dx%d/%dx%d objBaseAddr[0]=%04X objBaseAddr[1]=%04X", byte, OBJ_H_SIZE_LOOKUP[objSize][0], OBJ_V_SIZE_LOOKUP[objSize][0], OBJ_H_SIZE_LOOKUP[objSize][1], OBJ_H_SIZE_LOOKUP[objSize][1], objBaseAddr[0], objBaseAddr[1]);
             return true;
         case eRegOAMADDL: // 0x2102
             regOAMADDL = byte;
@@ -290,7 +330,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             regOAMADDH = byte;
             // This is a word address, so left shift 1 to get the byte address.
             oamRwAddr = Bytes::Make16Bit(byte & 0x01, regOAMADDL) << 1;
-            LogPpu("oamRwAddr=%04X", oamRwAddr);
+            objPriorityRotation = Bytes::GetBit<7>(byte);
+            LogPpu("OAMADDH=%02X oamRwAddr=%04X objPriorityRotation=%d", byte, oamRwAddr, objPriorityRotation);
             return true;
         case eRegOAMDATA: // 0x2104
             regOAMDATA = byte;
@@ -561,7 +602,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegWOBJSEL: // 0x2125
             regWOBJSEL = byte;
-            LogPpu("OBJSEL=%02X. NYI", byte);
+            LogPpu("WOBJSEL=%02X. NYI", byte);
             return true;
         case eRegWH0: // 0x2126
             regWH0 = byte;
@@ -589,11 +630,21 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegTM: // 0x212C
             regTM = byte;
-            LogPpu("Main Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
+            mainScreenLayers[eBG1] = Bytes::GetBit<0>(byte);
+            mainScreenLayers[eBG2] = Bytes::GetBit<1>(byte);
+            mainScreenLayers[eBG3] = Bytes::GetBit<2>(byte);
+            mainScreenLayers[eBG4] = Bytes::GetBit<3>(byte);
+            mainScreenLayers[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Main Layers=%d,%d,%d,%d,%d", mainScreenLayers[eBG1], mainScreenLayers[eBG2], mainScreenLayers[eBG3], mainScreenLayers[eBG4], mainScreenLayers[eOBJ]);
             return true;
         case eRegTS: // 0x212D
             regTS = byte;
-            LogPpu("Subscreen Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
+            subScreenLayers[eBG1] = Bytes::GetBit<0>(byte);
+            subScreenLayers[eBG2] = Bytes::GetBit<1>(byte);
+            subScreenLayers[eBG3] = Bytes::GetBit<2>(byte);
+            subScreenLayers[eBG4] = Bytes::GetBit<3>(byte);
+            subScreenLayers[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Subscreen Layers=%d,%d,%d,%d,%d", subScreenLayers[eBG1], subScreenLayers[eBG2], subScreenLayers[eBG3], subScreenLayers[eBG4], subScreenLayers[eOBJ]);
             return true;
         case eRegTMW: // 0x212E
             regTMW = byte;
@@ -756,7 +807,7 @@ Ppu::PaletteInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t scre
     PaletteInfo ret;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
-    if (((regTM & (1 << bg)) == 0 && (regTS & (1 << bg)) == 0) || bpp == 0)
+    if ((!mainScreenLayers[bg] && !subScreenLayers[bg]) || bpp == 0)
         return ret;
 
     int tileSize = bgChrSize[bg];
@@ -814,29 +865,29 @@ Ppu::PaletteInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY)
 
     if (bgMode == 1 && bgMode1Bg3Priority)
     {
-        bgInfo[2] = GetBgPixelInfo(2, screenX, screenY);
-        if (bgInfo[2].colorId != 0)
-            return bgInfo[2];
+        bgInfo[eBG3] = GetBgPixelInfo(2, screenX, screenY);
+        if (bgInfo[eBG3].colorId != 0)
+            return bgInfo[eBG3];
     }
 
     // These only have one layer.
     if (bgMode >= 6)
     {
-        bgInfo[0] = GetBgPixelInfo(0, screenX, screenY);
-        return bgInfo[0];
+        bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+        return bgInfo[eBG1];
     }
 
-    bgInfo[0] = GetBgPixelInfo(0, screenX, screenY);
-    bgInfo[1] = GetBgPixelInfo(1, screenX, screenY);
+    bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+    bgInfo[eBG2] = GetBgPixelInfo(1, screenX, screenY);
 
-    if (bgInfo[0].priority && bgInfo[0].colorId != 0)
-        return bgInfo[0];
-    if (bgInfo[1].priority && bgInfo[1].colorId != 0)
-        return bgInfo[1];
-    if (bgInfo[0].colorId != 0)
-        return bgInfo[0];
-    if (bgInfo[1].colorId != 0)
-        return bgInfo[1];
+    if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+        return bgInfo[eBG1];
+    if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+        return bgInfo[eBG2];
+    if (bgInfo[eBG1].colorId != 0)
+        return bgInfo[eBG1];
+    if (bgInfo[eBG2].colorId != 0)
+        return bgInfo[eBG2];
 
     // Modes above 2 only have 2 layers.
     if (bgMode >= 2)
@@ -844,17 +895,17 @@ Ppu::PaletteInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY)
 
     // Skip loading if we already loaded it above.
     if (bgMode != 1 || !bgMode1Bg3Priority)
-        bgInfo[2] = GetBgPixelInfo(2, screenX, screenY);
-    bgInfo[3] = GetBgPixelInfo(3, screenX, screenY);
+        bgInfo[eBG3] = GetBgPixelInfo(2, screenX, screenY);
+    bgInfo[eBG4] = GetBgPixelInfo(3, screenX, screenY);
 
-    if (bgInfo[2].priority && bgInfo[2].colorId != 0)
-        return bgInfo[2];
-    if (bgInfo[3].priority && bgInfo[3].colorId != 0)
-        return bgInfo[3];
-    if (bgInfo[2].colorId != 0)
-        return bgInfo[2];
-    if (bgInfo[3].colorId != 0)
-        return bgInfo[3];
+    if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+        return bgInfo[eBG3];
+    if (bgInfo[eBG4].priority && bgInfo[eBG4].colorId != 0)
+        return bgInfo[eBG4];
+    if (bgInfo[eBG3].colorId != 0)
+        return bgInfo[eBG3];
+    if (bgInfo[eBG4].colorId != 0)
+        return bgInfo[eBG4];
 
     // Nothing drew to this pixel.
     return PaletteInfo();
