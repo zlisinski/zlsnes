@@ -321,11 +321,11 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegBGMODE: // 0x2105
             regBGMODE = byte;
             bgMode = byte & 0x07;
-            bgMode1Bg3Priority = Bytes::GetBit<3>(bgMode);
-            bgChrSize[0] = 8 << Bytes::GetBit<4>(bgMode);
-            bgChrSize[1] = 8 << Bytes::GetBit<5>(bgMode);
-            bgChrSize[2] = 8 << Bytes::GetBit<6>(bgMode);
-            bgChrSize[3] = 8 << Bytes::GetBit<7>(bgMode);
+            bgMode1Bg3Priority = Bytes::GetBit<3>(byte);
+            bgChrSize[0] = 8 << Bytes::GetBit<4>(byte);
+            bgChrSize[1] = 8 << Bytes::GetBit<5>(byte);
+            bgChrSize[2] = 8 << Bytes::GetBit<6>(byte);
+            bgChrSize[3] = 8 << Bytes::GetBit<7>(byte);
             LogPpu("bgMode=%d bg3Prio=%d bgChrSize=%d,%d,%d,%d", bgMode, bgMode1Bg3Priority, bgChrSize[0], bgChrSize[1], bgChrSize[2], bgChrSize[3]);
             return true;
         case eRegMOSAIC: // 0x2106
@@ -751,6 +751,116 @@ uint16_t Ppu::GetTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
 }
 
 
+Ppu::PaletteInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY)
+{
+    PaletteInfo ret;
+    uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
+
+    if (((regTM & (1 << bg)) == 0 && (regTS & (1 << bg)) == 0) || bpp == 0)
+        return ret;
+
+    int tileSize = bgChrSize[bg];
+    int tileX = (screenX + bgHOffset[bg]) / tileSize;
+    int tileY = (screenY + bgVOffset[bg]) / tileSize;
+    int xOff = (screenX + bgHOffset[bg]) & (tileSize - 1);
+    int yOff = (screenY + bgVOffset[bg]) & (tileSize - 1);
+
+    uint16_t tilemapEntry = GetTilemapEntry(bg, tileX, tileY);
+    uint32_t tileId = tilemapEntry & 0x3FF;
+    ret.paletteId = (tilemapEntry >> 10) & 0x07;
+    ret.priority = Bytes::GetBit<13>(tilemapEntry);
+    bool flipX = Bytes::GetBit<14>(tilemapEntry);
+    bool flipY = Bytes::GetBit<15>(tilemapEntry);
+
+    // From here on, tiles are always 8x8.
+    // TODO: Offset if using 16px tiles.
+    const uint8_t *tileData = &vram[bgChrAddr[bg] + (tileId * 8 * bpp)];
+
+    if (!flipX)
+        xOff = 7 - xOff;
+    if (flipY)
+        yOff = 7 - yOff;
+
+    // Two bytes per pixel.
+    yOff = yOff << 1;
+
+    uint8_t lowBit = (tileData[yOff] >> xOff) & 0x01;
+    uint8_t highBit = (tileData[yOff + 1] >> xOff) & 0x01;
+    uint8_t pixelVal = (highBit << 1) | lowBit;
+    if (bpp >= 4)
+    {
+        uint8_t lowBit2 = (tileData[yOff + 0x10] >> xOff) & 0x01;
+        uint8_t highBit2 = (tileData[yOff + 0x11] >> xOff) & 0x01;
+        pixelVal |= (highBit2 << 3) | (lowBit2 << 2);
+    }
+    if (bpp == 8)
+    {
+        uint8_t lowBit3 = (tileData[yOff + 0x20] >> xOff) & 0x01;
+        uint8_t highBit3 = (tileData[yOff + 0x21] >> xOff) & 0x01;
+        uint8_t lowBit4 = (tileData[yOff + 0x30] >> xOff) & 0x01;
+        uint8_t highBit4 = (tileData[yOff + 0x31] >> xOff) & 0x01;
+        pixelVal |= (highBit4 << 7) | (lowBit4 << 6) | (highBit3 << 5) | (lowBit3 << 4);
+    }
+
+    ret.colorId = pixelVal;
+    ret.bg = bg;
+    return ret;
+}
+
+
+Ppu::PaletteInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY)
+{
+    PaletteInfo bgInfo[4];
+
+    if (bgMode == 1 && bgMode1Bg3Priority)
+    {
+        bgInfo[2] = GetBgPixelInfo(2, screenX, screenY);
+        if (bgInfo[2].colorId != 0)
+            return bgInfo[2];
+    }
+
+    // These only have one layer.
+    if (bgMode >= 6)
+    {
+        bgInfo[0] = GetBgPixelInfo(0, screenX, screenY);
+        return bgInfo[0];
+    }
+
+    bgInfo[0] = GetBgPixelInfo(0, screenX, screenY);
+    bgInfo[1] = GetBgPixelInfo(1, screenX, screenY);
+
+    if (bgInfo[0].priority && bgInfo[0].colorId != 0)
+        return bgInfo[0];
+    if (bgInfo[1].priority && bgInfo[1].colorId != 0)
+        return bgInfo[1];
+    if (bgInfo[0].colorId != 0)
+        return bgInfo[0];
+    if (bgInfo[1].colorId != 0)
+        return bgInfo[1];
+
+    // Modes above 2 only have 2 layers.
+    if (bgMode >= 2)
+        return PaletteInfo();
+
+    // Skip loading if we already loaded it above.
+    if (bgMode != 1 || !bgMode1Bg3Priority)
+        bgInfo[2] = GetBgPixelInfo(2, screenX, screenY);
+    bgInfo[3] = GetBgPixelInfo(3, screenX, screenY);
+
+    if (bgInfo[2].priority && bgInfo[2].colorId != 0)
+        return bgInfo[2];
+    if (bgInfo[3].priority && bgInfo[3].colorId != 0)
+        return bgInfo[3];
+    if (bgInfo[2].colorId != 0)
+        return bgInfo[2];
+    if (bgInfo[3].colorId != 0)
+        return bgInfo[3];
+
+    // Nothing drew to this pixel.
+    return PaletteInfo();
+}
+
+
 void Ppu::DrawScanline(uint8_t scanline)
 {
     if (isForcedBlank)
@@ -772,94 +882,24 @@ void Ppu::DrawScanline(uint8_t scanline)
         frameBuffer[pixelOffset + SCREEN_X] = palette[0];
     }
 
-    if (Bytes::GetBit<0>(regTM))
-        DrawBackgroundScanline(0, scanline);
-
-    if (Bytes::GetBit<1>(regTM) && BG_BPP_LOOKUP[bgMode][1] != 0)
-        DrawBackgroundScanline(1, scanline);
-
-    if (Bytes::GetBit<2>(regTM) && BG_BPP_LOOKUP[bgMode][2] != 0)
-        DrawBackgroundScanline(2, scanline);
-
-    if (Bytes::GetBit<3>(regTM) && BG_BPP_LOOKUP[bgMode][3] != 0)
-        DrawBackgroundScanline(3, scanline);
-}
-
-
-void Ppu::DrawBackgroundScanline(uint8_t bg, uint8_t scanline)
-{
-    // TODO: Check tile size in BGMODE
-    // TODO: Check tile size in BGnSC
-    uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
-
-    uint8_t paletteOffset = 0;
-    // In mode 0, each bg layer has their own palettes.
-    if (bgMode == 0)
-        paletteOffset = bg * 0x20;
-
-    // tilesetData is the actual pixel/palette-index data for a tile.
-    const uint8_t *tilesetData = &vram[bgChrAddr[bg]];
-
-    const int TILE_WIDTH = bgChrSize[bg];
-    const int TILE_HEIGHT = bgChrSize[bg];
-    const int TILE_DATA_SIZE = TILE_WIDTH * bpp;
-    const int TILES_PER_SCREEN = (SCREEN_X / 2) / TILE_WIDTH; // in 256 resolution mode.
-
-    int tileY = (scanline + bgVOffset[bg]) / TILE_HEIGHT;
-    int tileYOff = ((scanline + bgVOffset[bg]) & (TILE_HEIGHT - 1));
-    int tileX = bgHOffset[bg] / TILE_WIDTH;
-    int tileXOff = bgHOffset[bg] & (TILE_WIDTH - 1);
-    for (int tileX_i = 0; tileX_i < TILES_PER_SCREEN; tileX_i++)
+    for (int x = 0; x < SCREEN_X / 2; x++)
     {
-        uint16_t tilemapEntry = GetTilemapEntry(bg, tileX + tileX_i, tileY);
-        uint32_t tileId = tilemapEntry & 0x3FF;
-        uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
-        bool flipX = Bytes::GetBit<14>(tilemapEntry);
-        bool flipY = Bytes::GetBit<15>(tilemapEntry);
-        // TODO: Handle priority.
+        PaletteInfo pixel = GetPixelInfo(x, scanline);
 
-        int yOff = tileYOff;
-        if (flipY)
-            yOff = (TILE_HEIGHT - 1) - yOff;
-        uint32_t tileDataOffset = (tileId * TILE_DATA_SIZE) + (yOff * 2);
-        const uint8_t *tileData = &tilesetData[tileDataOffset];
+        if (pixel.colorId == 0)
+            continue;
 
-        for (int x = 0; x < TILE_WIDTH; x++)
-        {
-            uint8_t xOff = x;
-            if (!flipX)
-                xOff = (TILE_WIDTH - 1) - (x & (TILE_WIDTH - 1));
+        uint8_t paletteOffset = 0;
+        // In mode 0, each bg layer has their own palettes.
+        if (bgMode == 0)
+            paletteOffset = pixel.bg * 0x20;
+        uint32_t color = palette[pixel.colorId + (pixel.paletteId * (1 << BG_BPP_LOOKUP[bgMode][pixel.bg])) + paletteOffset];
 
-            uint8_t lowBit = (tileData[0] >> xOff) & 0x01;
-            uint8_t highBit = (tileData[1] >> xOff) & 0x01;
-            uint8_t pixelVal = (highBit << 1) | lowBit;
-            if (bpp >= 4)
-            {
-                uint8_t lowBit2 = (tileData[0x10] >> xOff) & 0x01;
-                uint8_t highBit2 = (tileData[0x11] >> xOff) & 0x01;
-                pixelVal |= (highBit2 << 3) | (lowBit2 << 2);
-            }
-            if (bpp == 8)
-            {
-                uint8_t lowBit3 = (tileData[0x20] >> xOff) & 0x01;
-                uint8_t highBit3 = (tileData[0x21] >> xOff) & 0x01;
-                uint8_t lowBit4 = (tileData[0x30] >> xOff) & 0x01;
-                uint8_t highBit4 = (tileData[0x31] >> xOff) & 0x01;
-                pixelVal |= (highBit4 << 7) | (lowBit4 << 6) | (highBit3 << 5) | (lowBit3 << 4);
-            }
-
-            // Color 0 in each palette is transparent.
-            if (pixelVal == 0)
-                continue;
-
-            uint32_t color = palette[pixelVal + (paletteId * (1 << bpp)) + paletteOffset];
-
-            uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (tileX_i * TILE_WIDTH * 2) + (x * 2);
-            frameBuffer[pixelOffset] = color;
-            frameBuffer[pixelOffset + 1] = color;
-            frameBuffer[pixelOffset + SCREEN_X] = color;
-            frameBuffer[pixelOffset + SCREEN_X + 1] = color;
-        }
+        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
+        frameBuffer[pixelOffset] = color;
+        frameBuffer[pixelOffset + 1] = color;
+        frameBuffer[pixelOffset + SCREEN_X] = color;
+        frameBuffer[pixelOffset + SCREEN_X + 1] = color;
     }
 }
 

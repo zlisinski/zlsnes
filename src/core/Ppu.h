@@ -32,11 +32,21 @@ public:
     uint8_t *GetCgramPtr() {return &cgram[0];}
 
 private:
+    struct PaletteInfo
+    {
+        uint8_t paletteId;
+        uint8_t colorId;
+        uint8_t bg;
+        uint8_t priority;
+        PaletteInfo() : paletteId(0), colorId(0), bg(0), priority(0) {}
+    };
+
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
     void AdjustBrightness(uint8_t brightness);
     uint16_t GetTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY);
+    PaletteInfo GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY);
+    PaletteInfo GetPixelInfo(uint16_t screenX, uint16_t screenY);
     void DrawScanline(uint8_t scanline);
-    void DrawBackgroundScanline(uint8_t bg, uint8_t scanline);
     void DrawScreen();
     void DrawFullScreen(); // Used when debugging to update the screen.
 
