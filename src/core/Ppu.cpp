@@ -16,6 +16,7 @@ static const uint8_t BG_BPP_LOOKUP[8][4] = {
     {4, 0, 0, 0}, // mode 6
     {8, 0, 0, 0}, // mode 7
 };
+static const uint8_t OBJ_BPP = 4;
 
 static const uint8_t OBJ_H_SIZE_LOOKUP[8][2] = {
     {8, 16}, // 0
@@ -774,64 +775,11 @@ void Ppu::AdjustBrightness(uint8_t brightness)
 }
 
 
-uint16_t Ppu::GetTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
+uint8_t Ppu::GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const
 {
-    // Compute the offset for 32x32 tilemap.
-    uint16_t offset = (tileX & 0x1F) + ((tileY & 0x1F) * 32);
+    const uint8_t *tileData = &vram[addr];
 
-    // Adjust if either dimension is extended to 64, and the tile is in the extened area.
-    if (bgTilemapHExt[bg] && tileX >= 32)
-    {
-        // Add 1K to get to next tilemap.
-        offset += 0x400;
-    }
-    if (bgTilemapVExt[bg] && tileY >= 32)
-    {
-        // Add either 1K or 2K depending on whether the X is extended too.
-        if (bgTilemapHExt[bg])
-            offset += 0x800;
-        else
-            offset += 0x400;
-    }
-
-    // Each tile is word, so double the offset.
-    offset = bgTilemapAddr[bg] + (offset << 1);
-
-    uint16_t tileData = Bytes::Make16Bit(vram[offset + 1], vram[offset]);
-    return tileData;
-}
-
-
-Ppu::PaletteInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY)
-{
-    PaletteInfo ret;
-    uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
-
-    if ((!mainScreenLayers[bg] && !subScreenLayers[bg]) || bpp == 0)
-        return ret;
-
-    int tileSize = bgChrSize[bg];
-    int tileX = (screenX + bgHOffset[bg]) / tileSize;
-    int tileY = (screenY + bgVOffset[bg]) / tileSize;
-    int xOff = (screenX + bgHOffset[bg]) & (tileSize - 1);
-    int yOff = (screenY + bgVOffset[bg]) & (tileSize - 1);
-
-    uint16_t tilemapEntry = GetTilemapEntry(bg, tileX, tileY);
-    uint32_t tileId = tilemapEntry & 0x3FF;
-    ret.paletteId = (tilemapEntry >> 10) & 0x07;
-    ret.priority = Bytes::GetBit<13>(tilemapEntry);
-    bool flipX = Bytes::GetBit<14>(tilemapEntry);
-    bool flipY = Bytes::GetBit<15>(tilemapEntry);
-
-    // From here on, tiles are always 8x8.
-    // TODO: Offset if using 16px tiles.
-    const uint8_t *tileData = &vram[bgChrAddr[bg] + (tileId * 8 * bpp)];
-
-    if (!flipX)
-        xOff = 7 - xOff;
-    if (flipY)
-        yOff = 7 - yOff;
-
+    xOff = 7 - xOff;
     // Two bytes per pixel.
     yOff = yOff << 1;
 
@@ -853,62 +801,338 @@ Ppu::PaletteInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t scre
         pixelVal |= (highBit4 << 7) | (lowBit4 << 6) | (highBit3 << 5) | (lowBit3 << 4);
     }
 
+    return pixelVal;
+}
+
+
+uint16_t Ppu::GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
+{
+    // Compute the offset for 32x32 tilemap.
+    uint16_t offset = (tileX & 0x1F) + ((tileY & 0x1F) * 32);
+
+    // Adjust if either dimension is extended to 64, and the tile is in the extened area.
+    if (bgTilemapHExt[bg] && tileX >= 32)
+    {
+        // Add 1K to get to next tilemap.
+        offset += 0x400;
+    }
+    if (bgTilemapVExt[bg] && tileY >= 32)
+    {
+        // Add either 1K or 2K depending on whether the X is extended too.
+        if (bgTilemapHExt[bg])
+            offset += 0x800;
+        else
+            offset += 0x400;
+    }
+
+    // Each tile is a word, so double the offset.
+    offset = bgTilemapAddr[bg] + (offset << 1);
+
+    uint16_t tileData = Bytes::Make16Bit(vram[offset + 1], vram[offset]);
+    return tileData;
+}
+
+
+Ppu::PixelInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY)
+{
+    PixelInfo ret;
+    uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
+
+    if ((!mainScreenLayers[bg] && !subScreenLayers[bg]) || bpp == 0)
+        return ret;
+
+    int tileSize = bgChrSize[bg];
+    int tileX = (screenX + bgHOffset[bg]) / tileSize;
+    int tileY = (screenY + bgVOffset[bg]) / tileSize;
+    int xOff = (screenX + bgHOffset[bg]) & (tileSize - 1);
+    int yOff = (screenY + bgVOffset[bg]) & (tileSize - 1);
+
+    uint16_t tilemapEntry = GetBgTilemapEntry(bg, tileX, tileY);
+    uint32_t tileId = tilemapEntry & 0x3FF;
+    ret.paletteId = (tilemapEntry >> 10) & 0x07;
+    ret.priority = Bytes::GetBit<13>(tilemapEntry);
+    bool flipX = Bytes::GetBit<14>(tilemapEntry);
+    bool flipY = Bytes::GetBit<15>(tilemapEntry);
+
+    // From here on, tiles are always 8x8.
+    // TODO: Offset if using 16px tiles.
+
+    if (flipX)
+        xOff = 7 - xOff;
+    if (flipY)
+        yOff = 7 - yOff;
+
+    uint16_t addr = bgChrAddr[bg] + (tileId * 8 * bpp);
+    uint8_t pixelVal = GetTilePixelData(addr, xOff, yOff, bpp);
+
     ret.colorId = pixelVal;
     ret.bg = bg;
     return ret;
 }
 
 
-Ppu::PaletteInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY)
+int Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites)
 {
-    PaletteInfo bgInfo[4];
+    int count = 0;
 
-    if (bgMode == 1 && bgMode1Bg3Priority)
+    // TODO: Handle sprite priority rotation.
+    for (int i = 0; i < 128 && count < 32; i++)
     {
-        bgInfo[eBG3] = GetBgPixelInfo(2, screenX, screenY);
-        if (bgInfo[eBG3].colorId != 0)
-            return bgInfo[eBG3];
+        uint16_t spriteOffset = i * 4;
+        uint16_t spriteOffsetExt = 512 + (i / 4);
+        uint8_t spriteDataExt = (oam[spriteOffsetExt] >> ((i & 0x03) * 2)) & 0x03;
+
+        uint8_t spriteHeight = OBJ_V_SIZE_LOOKUP[objSize][spriteDataExt >> 1];
+        uint8_t spriteY = oam[spriteOffset + 1];
+        if (scanline < spriteY || scanline > (spriteY + spriteHeight - 1))
+            continue;
+
+        uint8_t signExtend[2] = {0, 0xFF};
+        uint8_t spriteWidth = OBJ_H_SIZE_LOOKUP[objSize][spriteDataExt >> 1];
+        // if the high bit of x is set, extend the negative sign across the entire top byte.
+        int16_t spriteX = static_cast<int16_t>(Bytes::Make16Bit(signExtend[spriteDataExt & 0x01], oam[spriteOffset]));
+        // Sprites with x == -256 still count due to a bug in the PPU.
+        if (spriteX != -256 && (spriteX + spriteWidth - 1) < 0)
+            continue;
+
+        sprites[count].xPos = spriteX;
+        sprites[count].yPos = spriteY;
+        sprites[count].tileId = oam[spriteOffset + 2];
+        sprites[count].isUpperTable = oam[spriteOffset + 3] & 0x01;
+        sprites[count].paletteId = (oam[spriteOffset + 3] >> 1) & 0x07;
+        sprites[count].priority = (oam[spriteOffset + 3] >> 4) & 0x03;
+        sprites[count].flipX = Bytes::GetBit<6>(oam[spriteOffset + 3]);
+        sprites[count].flipY = Bytes::GetBit<7>(oam[spriteOffset + 3]);
+        sprites[count].width = spriteWidth;
+        sprites[count].height = spriteHeight;
+
+        count++;
     }
 
-    // These only have one layer.
-    if (bgMode >= 6)
+    return count;
+}
+
+
+Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites)
+{
+    PixelInfo ret;
+
+    if (!mainScreenLayers[eOBJ] && !subScreenLayers[eOBJ])
+        return ret;
+
+    for (int i = 0; i < 32; i++)
     {
-        bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-        return bgInfo[eBG1];
+        Sprite &cur = sprites[i];
+
+        if (screenX < cur.xPos || screenX > (cur.xPos + cur.width - 1))
+            continue;
+
+        uint8_t tileX = (screenX - cur.xPos) / 8;
+        uint8_t tileY = (screenY - cur.yPos) / 8;
+        uint8_t xOff = (screenX - cur.xPos) & 0x07;
+        uint8_t yOff = (screenY - cur.yPos) & 0x07;
+
+        if (cur.flipX)
+        {
+            uint8_t tilesPerX = cur.width / 8;
+            tileX = (tilesPerX - 1) - tileX;
+            xOff = 7 - xOff;
+        }
+        if (cur.flipY)
+        {
+            uint8_t tilesPerY = cur.height / 8;
+            tileX = (tilesPerY - 1) - tileX;
+            yOff = 7 - yOff;
+        }
+
+        // The sprite table is a 16x16 table. cur.tileId is the top left tile of the sprite, so add the tileX/tileY offsets to
+        // get the tile that contains the pixel we want. The tileId is stored as rrrrcccc where rrrr is the row and cccc is the column.
+        // Rows and columns above F wrap to 0.
+        uint8_t tileId = (((cur.tileId >> 4) + tileY) << 4) | ((cur.tileId + tileX) & 0x0F);
+        uint16_t tileAddr = objBaseAddr[cur.isUpperTable] + (tileId * 8 * OBJ_BPP);
+
+        uint8_t pixelVal = GetTilePixelData(tileAddr, xOff, yOff, OBJ_BPP);
+        if (pixelVal != 0)
+        {
+            ret.paletteId = cur.paletteId;
+            ret.colorId = pixelVal;
+            ret.bg = eOBJ;
+            ret.priority = cur.priority;
+            break;
+        }
     }
 
-    bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-    bgInfo[eBG2] = GetBgPixelInfo(1, screenX, screenY);
+    return ret;
+}
 
-    if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
-        return bgInfo[eBG1];
-    if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
-        return bgInfo[eBG2];
-    if (bgInfo[eBG1].colorId != 0)
-        return bgInfo[eBG1];
-    if (bgInfo[eBG2].colorId != 0)
-        return bgInfo[eBG2];
 
-    // Modes above 2 only have 2 layers.
-    if (bgMode >= 2)
-        return PaletteInfo();
+Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites)
+{
+    PixelInfo bgInfo[4];
+    PixelInfo spriteInfo = GetSpritePixelInfo(screenX, screenY, sprites);
 
-    // Skip loading if we already loaded it above.
-    if (bgMode != 1 || !bgMode1Bg3Priority)
-        bgInfo[eBG3] = GetBgPixelInfo(2, screenX, screenY);
-    bgInfo[eBG4] = GetBgPixelInfo(3, screenX, screenY);
-
-    if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
-        return bgInfo[eBG3];
-    if (bgInfo[eBG4].priority && bgInfo[eBG4].colorId != 0)
-        return bgInfo[eBG4];
-    if (bgInfo[eBG3].colorId != 0)
-        return bgInfo[eBG3];
-    if (bgInfo[eBG4].colorId != 0)
-        return bgInfo[eBG4];
+    switch (bgMode)
+    {
+        case 0:
+            // Sprites with priority 3
+            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 1
+            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // BG2 tiles with priority 1
+            bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            // Sprites with priority 2
+            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 0
+            if (bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // BG2 tiles with priority 0
+            if (bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            // Sprites with priority 1
+            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG3 tiles with priority 1
+            bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
+            if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+                return bgInfo[eBG3];
+            // BG4 tiles with priority 1
+            bgInfo[eBG4] = GetBgPixelInfo(eBG4, screenX, screenY);
+            if (bgInfo[eBG4].priority && bgInfo[eBG4].colorId != 0)
+                return bgInfo[eBG4];
+            // Sprites with priority 0
+            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG3 tiles with priority 0
+            if (bgInfo[eBG3].colorId != 0)
+                return bgInfo[eBG3];
+            // BG4 tiles with priority 0
+            if (bgInfo[eBG4].colorId != 0)
+                return bgInfo[eBG4];
+            break;
+        case 1:
+            // BG3 tiles with priority 1 if bit 3 of regBGMODE is set
+            if (bgMode1Bg3Priority)
+            {
+                bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
+                if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+                    return bgInfo[eBG3];
+            }
+            // Sprites with priority 3
+            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 1
+            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // BG2 tiles with priority 1
+            bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            // Sprites with priority 2
+            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 0
+            if (bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // BG2 tiles with priority 0
+            if (bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            // Sprites with priority 1
+            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // Skip loading if we already loaded it above.
+            if (!bgMode1Bg3Priority)
+                bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
+            // BG3 tiles with priority 1 if bit 3 of regBGMODE is clear
+            if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+                return bgInfo[eBG3];
+            // Sprites with priority 0
+            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG3 tiles with priority 0
+            if (bgInfo[eBG3].colorId != 0)
+                return bgInfo[eBG3];
+            break;
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+            // Sprites with priority 3
+            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 1
+            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // Sprites with priority 2
+            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG2 tiles with priority 1
+            bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            // Sprites with priority 1
+            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 0
+            if (bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // Sprites with priority 0
+            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG2 tiles with priority 0
+            if (bgInfo[eBG2].colorId != 0)
+                return bgInfo[eBG2];
+            break;
+        case 6:
+            // Sprites with priority 3
+            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 1
+            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // Sprites with priority 2
+            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // Sprites with priority 1
+            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1 tiles with priority 0
+            if (bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // Sprites with priority 0
+            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            break;
+        case 7:
+            // Sprites with priority 3
+            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // Sprites with priority 2
+            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // Sprites with priority 1
+            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            // BG1
+            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            if (bgInfo[eBG1].colorId != 0)
+                return bgInfo[eBG1];
+            // Sprites with priority 0
+            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+                return spriteInfo;
+            break;
+    }
 
     // Nothing drew to this pixel.
-    return PaletteInfo();
+    return PixelInfo();
 }
 
 
@@ -925,26 +1149,25 @@ void Ppu::DrawScanline(uint8_t scanline)
         return;
     }
 
-    // Start with the backdrop using color 0 of cgram.
-    for (int i = 0; i < SCREEN_X; i++)
-    {
-        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + i;
-        frameBuffer[pixelOffset] = palette[0];
-        frameBuffer[pixelOffset + SCREEN_X] = palette[0];
-    }
+    std::array<Sprite, 32> sprites;
+    int spriteCount = GetSpritesOnScanline(scanline, sprites);
 
     for (int x = 0; x < SCREEN_X / 2; x++)
     {
-        PaletteInfo pixel = GetPixelInfo(x, scanline);
-
-        if (pixel.colorId == 0)
-            continue;
+        PixelInfo pixel = GetPixelInfo(x, scanline, sprites);
 
         uint8_t paletteOffset = 0;
-        // In mode 0, each bg layer has their own palettes.
-        if (bgMode == 0)
-            paletteOffset = pixel.bg * 0x20;
-        uint32_t color = palette[pixel.colorId + (pixel.paletteId * (1 << BG_BPP_LOOKUP[bgMode][pixel.bg])) + paletteOffset];
+        if (pixel.colorId != 0)
+        {
+            if (pixel.bg == eOBJ)
+                paletteOffset = (pixel.paletteId << OBJ_BPP) + 128;
+            else if (bgMode == 0)
+                paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]) + (pixel.bg * 0x20);
+            else
+                paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]);
+        }
+
+        uint32_t color = palette[pixel.colorId + paletteOffset];
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
         frameBuffer[pixelOffset] = color;

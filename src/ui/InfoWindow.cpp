@@ -10,15 +10,37 @@
 
 #include "core/Cartridge.h"
 #include "core/Memory.h"
+#include "core/Ppu.h"
+
+
+static const uint8_t OBJ_H_SIZE_LOOKUP[8][2] = {
+    {8, 16}, // 0
+    {8, 32}, // 1
+    {8, 64}, // 2
+    {16, 32}, // 3
+    {16, 64}, // 4
+    {32, 64}, // 5
+    {16, 32}, // 6
+    {16, 32}, // 7
+};
+
+static const uint8_t OBJ_V_SIZE_LOOKUP[8][2] = {
+    {8, 16}, // 0
+    {8, 32}, // 1
+    {8, 64}, // 2
+    {16, 32}, // 3
+    {16, 64}, // 4
+    {32, 64}, // 5
+    {32, 64}, // 6
+    {32, 32}, // 7
+};
 
 
 InfoWindow::InfoWindow(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::InfoWindow),
     ioPorts21(nullptr),
-    vram(nullptr),
-    oam(nullptr),
-    cgram(nullptr),
+    ppu(nullptr),
     paletteData{0}
 {
     ui->setupUi(this);
@@ -28,6 +50,11 @@ InfoWindow::InfoWindow(QWidget *parent) :
     scene = new QGraphicsScene(this);
     ui->gvPalette->setScene(scene);
 
+    scene = new QGraphicsScene(this);
+    ui->gvObjTable1->setScene(scene);
+    scene = new QGraphicsScene(this);
+    ui->gvObjTable2->setScene(scene);
+
     QSettings settings;
     restoreGeometry(settings.value(SETTINGS_INFOWINDOW_GEOMETRY).toByteArray());
 
@@ -36,10 +63,6 @@ InfoWindow::InfoWindow(QWidget *parent) :
 
     ClearWidgets();
     DrawFrame();
-
-    // Use a timer for updating the tilemap images until I get actual frames rendering.
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(SlotDrawFrame()));
 }
 
 
@@ -104,17 +127,12 @@ void InfoWindow::DrawFrame()
 
 void InfoWindow::showEvent(QShowEvent *event)
 {
-    timer->start(100);
-
     QWidget::showEvent(event);
 }
 
 
 void InfoWindow::closeEvent(QCloseEvent *event)
 {
-    // No need to keep updating if the window isn't open.
-    timer->stop();
-
     QSettings settings;
     settings.setValue(SETTINGS_INFOWINDOW_GEOMETRY, saveGeometry());
 
@@ -166,6 +184,10 @@ void InfoWindow::ClearWidgets()
     ui->labelBG2Tilemap->setText("");
     ui->labelBG3Tilemap->setText("");
     ui->labelBG4Tilemap->setText("");
+
+    ui->labelObjTable1Addr->setText("");
+    ui->labelObjTable2Addr->setText("");
+    ui->labelObjSizes->setText("");
 }
 
 
@@ -218,13 +240,13 @@ QString InfoWindow::GetChipsetString(uint8_t chipset)
 
 void InfoWindow::GeneratePalette()
 {
-    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+    if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
     // Convert BGR555 to ARGB8888
     for (int i = 0; i < 256; i++)
     {
-        uint16_t color = Bytes::Make16Bit(cgram[(i * 2) + 1], cgram[i * 2]);
+        uint16_t color = Bytes::Make16Bit(ppu->cgram[(i * 2) + 1], ppu->cgram[i * 2]);
 
         uint8_t r = color & 0x1F;
         r = (r << 3) | ((r >> 2) & 0x07);
@@ -244,12 +266,12 @@ void InfoWindow::GeneratePalette()
 
 void InfoWindow::UpdateTileView()
 {
-    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+    if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
     const int SCALE = 3;
     const uint16_t bg1TileOffset = (ioPorts21[eRegBG12NBA & 0xFF] & 0x0F) << 13;
-    const uint8_t *tilesetData = &vram[bg1TileOffset];
+    const uint8_t *tilesetData = &ppu->vram[bg1TileOffset];
 
     ui->gvTiles->scene()->clear();
     ui->gvTiles->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
@@ -318,7 +340,7 @@ void InfoWindow::UpdatePaletteView()
 
 void InfoWindow::UpdateMemoryView()
 {
-    if (ioPorts21 == nullptr || vram == nullptr || oam == nullptr || cgram == nullptr)
+    if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
     uint8_t value;
@@ -368,10 +390,74 @@ void InfoWindow::UpdateMemoryView()
 }
 
 
+void InfoWindow::UpdateSpriteTab()
+{
+    if (ppu == nullptr || ioPorts21 == nullptr)
+        return;
+
+    ui->labelObjTable1Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[0]));
+    ui->labelObjTable2Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[1]));
+
+    QString str = QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][0]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][0]) + ", " +
+                  QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][1]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][1]);
+    ui->labelObjSizes->setText(str);
+
+    DrawSpriteTable(ppu->objBaseAddr[0], ui->gvObjTable1);
+    DrawSpriteTable(ppu->objBaseAddr[1], ui->gvObjTable2);
+}
+
+
+void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
+{
+    if (ppu == nullptr || ioPorts21 == nullptr)
+        return;
+
+    const int SCALE = 3;
+
+    gv->scene()->clear();
+    gv->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
+    QPen pen(Qt::green, 1);
+
+    // Draw grid.
+    for (int i = 0; i < 17; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        gv->scene()->addLine(0, len, 400, len, pen);
+    }
+    for (int i = 0; i < 17; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        gv->scene()->addLine(len, 0, len, 400, pen);
+    }
+
+    for (int tileId = 0; tileId < 256; tileId++)
+    {
+        QImage img(8, 8, QImage::Format_RGB32);
+
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                uint16_t tileAddr = baseAddr + (tileId * 8  * 4); // 8px width * 4bpp;
+                uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, 4);
+                img.setPixel(x, y, paletteData[pixelVal + 128]);
+            }
+        }
+
+        QGraphicsPixmapItem *pixmap = gv->scene()->addPixmap(QPixmap::fromImage(img));
+        pixmap->setScale(SCALE);
+        int xpos = 1 + ((tileId % 16) * 8 * SCALE) + (tileId % 16);
+        int ypos = 1 + ((tileId / 16) * 8 * SCALE) + (tileId / 16);
+        pixmap->setPos(xpos, ypos);
+    }
+}
+
+
 void InfoWindow::SlotDrawFrame()
 {
     GeneratePalette();
     UpdateTileView();
     UpdatePaletteView();
     UpdateMemoryView();
+    UpdateSpriteTab();
 }

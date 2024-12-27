@@ -8,6 +8,7 @@ namespace Ui {
 class InfoWindow;
 }
 
+class QGraphicsView;
 class QTimer;
 
 class InfoWindow : public QDialog, public InfoInterface
@@ -19,9 +20,7 @@ public:
     ~InfoWindow();
 
     void SetIoPorts21(const uint8_t *ioPorts21) override {this->ioPorts21 = ioPorts21;}
-    void SetVram(const uint8_t *vram) override {this->vram = vram;}
-    void SetOam(const uint8_t *oam) override {this->oam = oam;}
-    void SetCgram(const uint8_t *cgram) override {this->cgram = cgram;}
+    void SetPpu(const Ppu *ppu) override {this->ppu = ppu;}
     void UpdateCartridgeInfo(const Cartridge &cartridge) override;
 
     void ClearWidgets();
@@ -37,17 +36,15 @@ private:
     void UpdateTileView();
     void UpdatePaletteView();
     void UpdateMemoryView();
+    void UpdateSpriteTab();
+    void DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv);
 
     Ui::InfoWindow *ui;
 
     const uint8_t *ioPorts21;
-    const uint8_t *vram;
-    const uint8_t *oam;
-    const uint8_t *cgram;
+    const Ppu *ppu;
 
     uint32_t paletteData[256];
-
-    QTimer *timer;
 
 private slots:
     void SlotDrawFrame();

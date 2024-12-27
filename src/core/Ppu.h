@@ -32,20 +32,43 @@ public:
     uint8_t *GetCgramPtr() {return &cgram[0];}
 
 private:
-    struct PaletteInfo
+    struct PixelInfo
     {
         uint8_t paletteId;
         uint8_t colorId;
         uint8_t bg;
         uint8_t priority;
-        PaletteInfo() : paletteId(0), colorId(0), bg(0), priority(0) {}
+        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0) {}
+    };
+
+    struct Sprite
+    {
+        int16_t xPos;
+        uint8_t yPos;
+        uint8_t tileId;
+        bool isUpperTable;
+        uint8_t paletteId;
+        uint8_t priority;
+        bool flipX;
+        bool flipY;
+        uint8_t width;
+        uint8_t height;
+        Sprite() : xPos(0), yPos(0), tileId(0), isUpperTable(false), paletteId(0), priority(0), flipX(0), flipY(0), width(0), height(0) {}
     };
 
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
     void AdjustBrightness(uint8_t brightness);
-    uint16_t GetTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY);
-    PaletteInfo GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY);
-    PaletteInfo GetPixelInfo(uint16_t screenX, uint16_t screenY);
+
+    uint8_t GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const;
+
+    uint16_t GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY);
+    PixelInfo GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY);
+
+    int GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
+    PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites);
+
+    PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites);
+
     void DrawScanline(uint8_t scanline);
     void DrawScreen();
     void DrawFullScreen(); // Used when debugging to update the screen.

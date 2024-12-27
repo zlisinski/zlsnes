@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tabTiles">
       <attribute name="title">
@@ -603,6 +603,88 @@
         </item>
         <item row="9" column="1">
          <widget class="QLabel" name="labelInterleaved">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tabSprites">
+      <attribute name="title">
+       <string>Sprites</string>
+      </attribute>
+      <widget class="QGraphicsView" name="gvObjTable1">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>260</y>
+         <width>431</width>
+         <height>431</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QGraphicsView" name="gvObjTable2">
+       <property name="geometry">
+        <rect>
+         <x>510</x>
+         <y>260</y>
+         <width>431</width>
+         <height>431</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QGroupBox" name="groupBox_7">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>10</y>
+         <width>221</width>
+         <height>131</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Sprite Info</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_8">
+        <item row="0" column="1">
+         <widget class="QLabel" name="labelObjTable1Addr">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_33">
+          <property name="text">
+           <string>Table 1 Address</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_37">
+          <property name="text">
+           <string>Table 2 Address</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLabel" name="labelObjTable2Addr">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="label_40">
+          <property name="text">
+           <string>Sprite Sizes</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="labelObjSizes">
           <property name="text">
            <string>TextLabel</string>
           </property>
