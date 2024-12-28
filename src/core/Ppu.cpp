@@ -745,6 +745,15 @@ void Ppu::UpdateTimer(uint32_t value)
 
         DrawScreen();
     }
+    else if (!isVBlank && oldVBlank)
+    {
+        // Clear sprite overflow flags.
+        if (!isForcedBlank)
+        {
+            Bytes::ClearBit<6>(regSTAT77);
+            Bytes::ClearBit<7>(regSTAT77);
+        }
+    }
 }
 
 
@@ -871,12 +880,13 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screen
 }
 
 
-int Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites)
+uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites)
 {
-    int count = 0;
+    uint8_t count = 0;
+    uint8_t tileCount = 0;
 
     // TODO: Handle sprite priority rotation.
-    for (int i = 0; i < 128 && count < 32; i++)
+    for (int i = 0; i < 128; i++)
     {
         uint16_t spriteOffset = i * 4;
         uint16_t spriteOffsetExt = 512 + (i / 4);
@@ -895,32 +905,46 @@ int Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites)
         if (spriteX != -256 && (spriteX + spriteWidth - 1) < 0)
             continue;
 
-        sprites[count].xPos = spriteX;
-        sprites[count].yPos = spriteY;
-        sprites[count].tileId = oam[spriteOffset + 2];
-        sprites[count].isUpperTable = oam[spriteOffset + 3] & 0x01;
-        sprites[count].paletteId = (oam[spriteOffset + 3] >> 1) & 0x07;
-        sprites[count].priority = (oam[spriteOffset + 3] >> 4) & 0x03;
-        sprites[count].flipX = Bytes::GetBit<6>(oam[spriteOffset + 3]);
-        sprites[count].flipY = Bytes::GetBit<7>(oam[spriteOffset + 3]);
-        sprites[count].width = spriteWidth;
-        sprites[count].height = spriteHeight;
+        if (count < 32)
+        {
+            sprites[count].xPos = spriteX;
+            sprites[count].yPos = spriteY;
+            sprites[count].tileId = oam[spriteOffset + 2];
+            sprites[count].isUpperTable = oam[spriteOffset + 3] & 0x01;
+            sprites[count].paletteId = (oam[spriteOffset + 3] >> 1) & 0x07;
+            sprites[count].priority = (oam[spriteOffset + 3] >> 4) & 0x03;
+            sprites[count].flipX = Bytes::GetBit<6>(oam[spriteOffset + 3]);
+            sprites[count].flipY = Bytes::GetBit<7>(oam[spriteOffset + 3]);
+            sprites[count].width = spriteWidth;
+            sprites[count].height = spriteHeight;
+            count++;
 
-        count++;
+            // For now, just report that there are too many tiles per scanline. We'll still draw them.
+            // TODO: Don't draw these.
+            tileCount += spriteWidth / 8;
+            if (tileCount > 34)
+                Bytes::SetBit<7>(regSTAT77);
+        }
+        else
+        {
+            // If we got here it means there are more than 32 sprites on the scanline.
+            Bytes::SetBit<6>(regSTAT77);
+            break;
+        }
     }
 
     return count;
 }
 
 
-Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites)
+Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo ret;
 
     if (!mainScreenLayers[eOBJ] && !subScreenLayers[eOBJ])
         return ret;
 
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < spriteCount; i++)
     {
         Sprite &cur = sprites[i];
 
@@ -966,10 +990,10 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
 }
 
 
-Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites)
+Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo bgInfo[4];
-    PixelInfo spriteInfo = GetSpritePixelInfo(screenX, screenY, sprites);
+    PixelInfo spriteInfo = GetSpritePixelInfo(screenX, screenY, sprites, spriteCount);
 
     switch (bgMode)
     {
@@ -1154,7 +1178,7 @@ void Ppu::DrawScanline(uint8_t scanline)
 
     for (int x = 0; x < SCREEN_X / 2; x++)
     {
-        PixelInfo pixel = GetPixelInfo(x, scanline, sprites);
+        PixelInfo pixel = GetPixelInfo(x, scanline, sprites, spriteCount);
 
         uint8_t paletteOffset = 0;
         if (pixel.colorId != 0)

@@ -64,10 +64,10 @@ private:
     uint16_t GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY);
     PixelInfo GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY);
 
-    int GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
-    PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites);
+    uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
+    PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
-    PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites);
+    PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
     void DrawScanline(uint8_t scanline);
     void DrawScreen();
