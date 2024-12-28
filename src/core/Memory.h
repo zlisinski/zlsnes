@@ -134,6 +134,9 @@ protected:
 
     uint32_t wramRWAddr;
 
+    // regMEMSEL - 0x420D
+    bool isFastSpeed;
+
     // Some register bits are not connected and return the last value read from the data bus.
     uint8_t openBusValue;
 

@@ -9,6 +9,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core)
 
 add_executable(MemoryTest
     MemoryTest.cpp
+    ../../Cartridge.cpp
     ../../Logger.cpp
     ../../Memory.cpp
     ../../Utils.cpp

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "Zlsnes.h"
+#include "Address.h"
 
 
 class Cartridge
@@ -49,6 +50,9 @@ public:
     bool LoadRom(const std::string &filename);
     void Reset();
 
+    uint8_t ReadByte(uint32_t addr);
+    void WriteByte(uint32_t addr, uint8_t byte);
+
     const std::vector<uint8_t> &GetRom() const {return rom;}
     const StandardHeader &GetStandardHeader() const {return standardHeader;}
     const ExtendedHeader &GetExtendedHeader() const {return extendedHeader;}
@@ -62,6 +66,7 @@ protected:
     bool FindHeader(size_t headerOffset);
 
     std::vector<uint8_t> rom;
+    std::vector<uint8_t> sram;
 
     StandardHeader standardHeader;
     ExtendedHeader extendedHeader;

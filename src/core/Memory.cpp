@@ -12,6 +12,7 @@ Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterfac
     ioPorts43(),
     expansion(),
     wramRWAddr(0),
+    isFastSpeed(false),
     openBusValue(0),
     cart(NULL),
     debuggerInterface(debuggerInterface),
@@ -116,25 +117,12 @@ uint8_t Memory::Read8Bit(uint32_t addr)
         return openBusValue;
     }
 
-    if (addr & 0x8000)
-    {
-        // TODO: Figure out if this is slow or fast
+    if ((addr & 0x800000) == 0x800000 && isFastSpeed)
         timer->AddCycle(EClockSpeed::eClockFastRom);
+    else
+        timer->AddCycle(EClockSpeed::eClockSlowRom);
 
-        // Assume LoROM for now.
-        // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
-        uint32_t mappedAddr = (((addr & 0xFF0000) >> 1) | (addr & 0x7FFF));
-        // Save value for later open bus reads.
-        openBusValue = cart->GetRom()[mappedAddr];
-        return openBusValue;
-    }
-
-    // TODO: Figure out if this is slow or fast
-    timer->AddCycle(EClockSpeed::eClockFastRom);
-
-    LogError("Read from HiROM area %06X", addr);
-    throw NotYetImplementedException(fmt("Read from HiROM area %06X", addr));
-    return 0;
+    return cart->ReadByte(addr);
 }
 
 
@@ -265,7 +253,11 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                         break;
                     case eRegMEMSEL: // 0x420D
                         ioPorts42[addr & 0xFF] = value;
-                        LogMemory("MEMSEL: %s. NYI", (value & 0x01) ? "false" : "slow");
+                        if ((value & 0x01) && cart->IsFastSpeed())
+                            isFastSpeed = true;
+                        else
+                            isFastSpeed = false;
+                        LogMemory("MEMSEL: %s %s", (value & 0x01) ? "false" : "slow", isFastSpeed ? "false" : "slow");
                         break;
                     default:
                         throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
@@ -301,25 +293,12 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
         return;
     }
 
-    if (addr & 0x8000)
-    {
-        // TODO: Figure out if this is slow or fast
+    if ((addr & 0x800000) == 0x800000 && isFastSpeed)
         timer->AddCycle(EClockSpeed::eClockFastRom);
+    else
+        timer->AddCycle(EClockSpeed::eClockSlowRom);
 
-        // Assume LoROM for now.
-        // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
-        uint32_t mappedAddr = (((addr & 0xFF0000) >> 1) | (addr & 0x7FFF));
-        LogError("Attempting to write to ROM at %06X", mappedAddr);
-        throw NotYetImplementedException("Attempting to write to ROM");
-        return;
-    }
-
-    // TODO: Figure out if this is slow or fast
-    timer->AddCycle(EClockSpeed::eClockFastRom);
-
-    LogError("Write to HiROM area %06X", addr);
-    throw NotYetImplementedException("Write to HiROM");
-    return;
+    cart->WriteByte(addr, value);
 }
 
 
