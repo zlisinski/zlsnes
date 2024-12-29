@@ -39,13 +39,10 @@ public:
 private:
     void ThreadFunc();
 
-    void SetBootState(Memory *memory, Cpu *cpu);
-
     bool paused;
     bool quit;
 
     std::string romFilename;
-    std::string ramFilename;
 
     std::thread workThread;
     std::mutex saveStateMutex;

@@ -50,10 +50,11 @@ public:
     bool LoadRom(const std::string &filename);
     void Reset();
 
+    uint32_t MapAddress(uint32_t addr, std::vector<uint8_t> **mem);
     uint8_t ReadByte(uint32_t addr);
     void WriteByte(uint32_t addr, uint8_t byte);
 
-    const std::vector<uint8_t> &GetRom() const {return rom;}
+    uint8_t *GetBytePtr(uint32_t addr);
     const StandardHeader &GetStandardHeader() const {return standardHeader;}
     const ExtendedHeader &GetExtendedHeader() const {return extendedHeader;}
     ERomType GetRomType() const {return romType;}

@@ -50,10 +50,6 @@ void DisassemblyModel::AddRow(Address pc, const uint8_t *memoryAtPc, const Regis
 {
     uint32_t origUintPc = pc.ToUint();
 
-    // Only support LoROM for now. TODO: HiROM support.
-    if ((origUintPc & 0x408000) != 0x8000)
-        throw NotYetImplementedException(fmt("Disassembly when PC is not in LoROM: 0x%06X", origUintPc));
-
     if (addresses.contains(origUintPc))
         return;
 

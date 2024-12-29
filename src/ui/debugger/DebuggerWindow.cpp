@@ -187,6 +187,9 @@ void DebuggerWindow::UpdateStack()
 
 void DebuggerWindow::UpdateWidgets(Address pc)
 {
+    if (!debuggingEnabled)
+        return;
+
     // This assumes we are executing code from a ROM bank. This could cause problems if the pc points to a wram mirror.
     disassemblyModel->AddRow(pc, memory->GetBytePtr(pc.ToUint()), &cpu->reg);
 

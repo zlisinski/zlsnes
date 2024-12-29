@@ -46,7 +46,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
     // Note: Only store the openBusValue on reads from ROM and RAM (assuming that code can be executed from RAM).
     // IO registers should never be part of the instruction.
 
-    if ((addr & 0x408000) == 0) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x7FFF.
+    if ((addr & 0x40E000) < 0x6000) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x5FFF.
     {
         if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
             return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
@@ -128,7 +128,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
 
 void Memory::Write8Bit(uint32_t addr, uint8_t value)
 {
-    if ((addr & 0x408000) == 0) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x7FFF.
+    if ((addr & 0x40E000) < 0x6000) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x5FFF.
     {
         // Let observers handle the update. If there are no observers for this address, continue with normal processing.
         if (WriteIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF), value))
@@ -304,11 +304,6 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
 
 uint8_t *Memory::GetBytePtr(uint32_t addr)
 {
-    // LoROM
-    if ((addr & 0x408000) == 0x8000)
-        // TODO: fix this cast.
-        return const_cast<uint8_t *>(&cart->GetRom()[((addr & 0xFF0000) >> 1) | (addr & 0x7FFF)]);
-
     // WRAM mirror.
     if ((addr & 0x40E000) == 0)
         return &wram[addr & 0x1FFF];
@@ -333,7 +328,7 @@ uint8_t *Memory::GetBytePtr(uint32_t addr)
     if ((addr & 0x40FF00) == 0x4300)
         return &ioPorts43[addr & 0xFF];
 
-    throw std::range_error(fmt("GetBytePtr(): Invalid address %06X", addr));
+    return cart->GetBytePtr(addr);
 }
 
 

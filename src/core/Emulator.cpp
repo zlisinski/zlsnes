@@ -56,7 +56,6 @@ bool Emulator::LoadRom(const std::string &filename)
         infoInterface->UpdateCartridgeInfo(cartridge);
 
     romFilename = filename;
-    ramFilename = romFilename + ".ram";
 
     quit = false;
 
@@ -70,10 +69,7 @@ bool Emulator::LoadRom(const std::string &filename)
 
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
     memory->SetTimer(timer);
-
     memory->SetCartridge(&cartridge);
-    SetBootState(memory, cpu);
-    //memory->LoadRam(ramFilename);
 
     workThread = std::thread(&Emulator::ThreadFunc, this);
 
@@ -158,9 +154,7 @@ void Emulator::ThreadFunc()
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        // Immediately quit, for now.
-        //cpu->PrintState();
-        //quit = true;
+        cpu->Reset();
 
         while (!quit)
         {
@@ -218,11 +212,4 @@ void Emulator::ThreadFunc()
     delete memory;
     memory = NULL;
     cartridge.Reset();
-}
-
-
-void Emulator::SetBootState(Memory *memory, Cpu *cpu)
-{
-    (void)memory;
-    (void)cpu;
 }

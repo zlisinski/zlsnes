@@ -2,6 +2,7 @@
 #include <unordered_set>
 
 #include "Cartridge.h"
+#include "Bytes.h"
 
 static const size_t LOROM_HEADER_OFFSET = 0x7FC0;
 static const size_t HIROM_HEADER_OFFSET = 0xFFC0;
@@ -42,7 +43,7 @@ bool Cartridge::LoadRom(const std::string &filename)
     if (standardHeader.ramSize != 0)
     {
         uint32_t ramSize = (1 << standardHeader.ramSize) * 1024;
-        std::string ramFilename = filename + ".ram";
+        std::string ramFilename = filename + ".srm";
         std::ifstream file(ramFilename, std::ios::binary);
         if (file)
         {
@@ -78,63 +79,92 @@ void Cartridge::Reset()
 }
 
 
-uint8_t Cartridge::ReadByte(uint32_t addr)
+uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
 {
     if (isLoRom)
     {
-        if ((addr & 0x408000) == 0x8000)
+        if ((addr & 0x8000) == 0x8000 && (addr & 0xFE0000) != 0x7E0000)
         {
-            // This is a read from ROM. 00-3F:8000-FFFF, 80-BF:8000-FFFF
+            // This is a read from ROM. 00-7D:8000-FFFF, 80-FF:8000-FFFF
+            *mem = &rom;
 
             // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
             // Ignore the high bit of bank, which selects WS1/WS2.
             uint32_t mappedAddr = ((addr & 0x7F0000) >> 1) | (addr & 0x7FFF);
-            return rom[mappedAddr];
+            return mappedAddr;
         }
-        else if ((addr & 0x708000) == 0x700000 && (addr & 0x0E0000) != 0x0E0000)
+        else if ((addr & 0x708000) == 0x700000 && (addr & 0xFE0000) != 0x7E0000)
         {
             // This is a read from SRAM. 70-7D:0000-7FFF, F0-FF:0000-7FFF
+            *mem = &sram;
 
             // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
             // Ignore the high nybble of bank.
             uint32_t mappedAddr = ((addr & 0x0F0000) >> 1) | (addr & 0x7FFF);
-            return sram[mappedAddr];
+            return mappedAddr;
         }
         else
             throw std::range_error(fmt("Address %06X is not valid for LoROM", addr));
     }
     else
     {
-        throw NotYetImplementedException(fmt("Read from HiROM area %06X NYI", addr));
+        if ((addr & 0x400000) == 0x400000 && (addr & 0xFE0000) != 0x7E0000)
+        {
+            // This is a read from ROM. 40-7D:0000-FFFF, C0-FF:0000-FFFF
+            *mem = &rom;
+
+            // Clear bits 22 and 23.
+            uint32_t mappedAddr = addr & 0x3FFFFF;
+            return mappedAddr;
+        }
+        if ((addr & 0x408000) == 0x008000)
+        {
+            // This is a read from LoROM area. 00-3F:8000-FFFF, 80-BF:8000-FFFF
+            *mem = &rom;
+
+            // Clear bits 22 and 23.
+            uint32_t mappedAddr = addr & 0x3FFFFF;
+            return mappedAddr;
+        }
+        else if ((addr & 0x40E000) == 0x006000)
+        {
+            // This is a read from SRAM. 30-3F:6000-7FFF, B0-BF:6000-7FFF
+            *mem = &sram;
+
+            // Shift the bank down to fill the unused top 3 bits of the offset.
+            uint32_t mappedAddr = ((addr & 0xFF0000) >> 3) | (addr & 0x1FFF);
+            return mappedAddr;
+        }
+        else
+            throw std::range_error(fmt("Address %06X is not valid for HiROM", addr));
     }
+}
+
+
+uint8_t Cartridge::ReadByte(uint32_t addr)
+{
+    std::vector<uint8_t> *mem;
+    uint32_t mappedAddr = MapAddress(addr, &mem);
+
+    return (*mem)[mappedAddr];
 }
 
 
 void Cartridge::WriteByte(uint32_t addr, uint8_t byte)
 {
-    if (isLoRom)
-    {
-        if ((addr & 0x408000) == 0x8000)
-        {
-            // This is a write to ROM. 00-3F:8000-FFFF, 80-BF:8000-FFFF
-            throw std::range_error(fmt("Attempting to write to ROM address %06X", addr));
-        }
-        else if ((addr & 0x708000) == 0x700000 && (addr & 0x0E0000) != 0x0E0000)
-        {
-            // This is a write to SRAM. 70-7D:0000-7FFF, F0-FF:0000-7FFF
+    std::vector<uint8_t> *mem;
+    uint32_t mappedAddr = MapAddress(addr, &mem);
 
-            // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
-            // Ignore the high nybble of bank.
-            uint32_t mappedAddr = ((addr & 0x0F0000) >> 1) | (addr & 0x7FFF);
-            sram[mappedAddr] = byte;
-        }
-        else
-            throw std::range_error(fmt("Address %06X is not valid for LoROM", addr));
-    }
-    else
-    {
-        throw NotYetImplementedException(fmt("Write to HiROM area %06X NYI", addr));
-    }
+    (*mem)[mappedAddr] = byte;
+}
+
+
+uint8_t *Cartridge::GetBytePtr(uint32_t addr)
+{
+    std::vector<uint8_t> *mem;
+    uint32_t mappedAddr = MapAddress(addr, &mem);
+
+    return &(*mem)[mappedAddr];
 }
 
 

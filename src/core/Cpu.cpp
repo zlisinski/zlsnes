@@ -180,6 +180,14 @@ void Cpu::ProcessInterrupt()
 }
 
 
+void Cpu::Reset()
+{
+    reg = Registers();
+    // Start at the reset vector.
+    reg.pc = memory->Read16Bit(0xFFFC);
+}
+
+
 void Cpu::ProcessOpCode()
 {
     if (interrupts->CheckInterrupts())

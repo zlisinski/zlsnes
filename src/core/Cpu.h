@@ -20,7 +20,7 @@ struct Registers
         sp(0x01FF),
         db(0),
         pb(0),
-        pc(0x8000),
+        pc(0),
         p(0x34),
         breakFlag(false),
         emulationMode(true)
@@ -113,6 +113,7 @@ public:
     uint16_t ReadPC16Bit();
     uint32_t ReadPC24Bit();
 
+    void Reset();
     void ProcessOpCode();
 
     inline void PrintState() const
