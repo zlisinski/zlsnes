@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1160</width>
-    <height>769</height>
+    <height>851</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tabTiles">
       <attribute name="title">
@@ -49,7 +49,7 @@
          <x>0</x>
          <y>9</y>
          <width>251</width>
-         <height>607</height>
+         <height>791</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -82,17 +82,10 @@
            <string>BG1</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_21">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_22">
              <property name="text">
-              <string>Tileset (BG12NBA)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_28">
-             <property name="text">
-              <string>Chr Size (BGMODE)</string>
+              <string>Tilemap (BG1SC)</string>
              </property>
             </widget>
            </item>
@@ -110,10 +103,10 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_22">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_35">
              <property name="text">
-              <string>Tilemap (BG1SC)</string>
+              <string>H Offset (BG1HOFS)</string>
              </property>
             </widget>
            </item>
@@ -131,8 +124,43 @@
              </property>
             </widget>
            </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>Chr Size (BGMODE)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="labelBG1HOFS">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="1">
             <widget class="QLabel" name="labelBG1Enabled">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>Tileset (BG12NBA)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_41">
+             <property name="text">
+              <string>V Offset (BG1HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="labelBG1VOFS">
              <property name="text">
               <string>TextLabel</string>
              </property>
@@ -147,38 +175,10 @@
            <string>BG2</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_5">
-           <item row="2" column="1">
-            <widget class="QLabel" name="labelBG2Tileset">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_31">
              <property name="text">
               <string>Chr Size (BGMODE)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="labelBG2Tilemap">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_24">
-             <property name="text">
-              <string>Tilemap (BG2SC)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="labelBG2ChrSize">
-             <property name="text">
-              <string>TextLabel</string>
              </property>
             </widget>
            </item>
@@ -189,6 +189,34 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="labelBG2Enabled">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="labelBG2HOFS">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_43">
+             <property name="text">
+              <string>H Offset (BG2HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="labelBG2ChrSize">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_34">
              <property name="text">
@@ -196,8 +224,36 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="labelBG2Enabled">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_24">
+             <property name="text">
+              <string>Tilemap (BG2SC)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="labelBG2Tilemap">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="labelBG2Tileset">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_45">
+             <property name="text">
+              <string>V Offset (BG2HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="labelBG2VOFS">
              <property name="text">
               <string>TextLabel</string>
              </property>
@@ -212,10 +268,31 @@
            <string>BG3</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_6">
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_26">
+           <item row="4" column="1">
+            <widget class="QLabel" name="labelBG3HOFS">
              <property name="text">
-              <string>Tilemap (BG3SC)</string>
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="labelBG3Enabled">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="labelBG3ChrSize">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="labelBG3Tilemap">
+             <property name="text">
+              <string>TextLabel</string>
              </property>
             </widget>
            </item>
@@ -233,13 +310,6 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="labelBG3Tilemap">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_30">
              <property name="text">
@@ -247,10 +317,10 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="labelBG3ChrSize">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_26">
              <property name="text">
-              <string>TextLabel</string>
+              <string>Tilemap (BG3SC)</string>
              </property>
             </widget>
            </item>
@@ -261,8 +331,22 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="labelBG3Enabled">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_47">
+             <property name="text">
+              <string>H Offset (BG3HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_49">
+             <property name="text">
+              <string>V Offset (BG3HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="labelBG3VOFS">
              <property name="text">
               <string>TextLabel</string>
              </property>
@@ -277,10 +361,17 @@
            <string>BG4</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
-           <item row="1" column="0">
-            <widget class="QLabel" name="label_29">
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_27">
              <property name="text">
-              <string>Chr Size (BGMODE)</string>
+              <string>Tilemap (BG4SC)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_51">
+             <property name="text">
+              <string>H Offset (BG4HOFS)</string>
              </property>
             </widget>
            </item>
@@ -291,22 +382,8 @@
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_27">
-             <property name="text">
-              <string>Tilemap (BG4SC)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="labelBG4Tilemap">
-             <property name="text">
-              <string>TextLabel</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="labelBG4Tileset">
+           <item row="0" column="1">
+            <widget class="QLabel" name="labelBG4Enabled">
              <property name="text">
               <string>TextLabel</string>
              </property>
@@ -319,6 +396,20 @@
              </property>
             </widget>
            </item>
+           <item row="4" column="1">
+            <widget class="QLabel" name="labelBG4HOFS">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="labelBG4Tileset">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_38">
              <property name="text">
@@ -326,8 +417,29 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="1">
-            <widget class="QLabel" name="labelBG4Enabled">
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_29">
+             <property name="text">
+              <string>Chr Size (BGMODE)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="labelBG4Tilemap">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_53">
+             <property name="text">
+              <string>V Offset (BG4HOFS)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLabel" name="labelBG4VOFS">
              <property name="text">
               <string>TextLabel</string>
              </property>

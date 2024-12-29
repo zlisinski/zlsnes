@@ -185,6 +185,16 @@ void InfoWindow::ClearWidgets()
     ui->labelBG3Tilemap->setText("");
     ui->labelBG4Tilemap->setText("");
 
+    ui->labelBG1HOFS->setText("");
+    ui->labelBG2HOFS->setText("");
+    ui->labelBG3HOFS->setText("");
+    ui->labelBG4HOFS->setText("");
+
+    ui->labelBG1VOFS->setText("");
+    ui->labelBG2VOFS->setText("");
+    ui->labelBG3VOFS->setText("");
+    ui->labelBG4VOFS->setText("");
+
     ui->labelObjTable1Addr->setText("");
     ui->labelObjTable2Addr->setText("");
     ui->labelObjSizes->setText("");
@@ -387,6 +397,16 @@ void InfoWindow::UpdateMemoryView()
     ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
                                  " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
                                  " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+
+    ui->labelBG1HOFS->setText(QString::number(ppu->bgHOffset[0]));
+    ui->labelBG2HOFS->setText(QString::number(ppu->bgHOffset[1]));
+    ui->labelBG3HOFS->setText(QString::number(ppu->bgHOffset[2]));
+    ui->labelBG4HOFS->setText(QString::number(ppu->bgHOffset[3]));
+
+    ui->labelBG1VOFS->setText(QString::number(ppu->bgVOffset[0]));
+    ui->labelBG2VOFS->setText(QString::number(ppu->bgVOffset[1]));
+    ui->labelBG3VOFS->setText(QString::number(ppu->bgVOffset[2]));
+    ui->labelBG4VOFS->setText(QString::number(ppu->bgVOffset[3]));
 }
 
 
