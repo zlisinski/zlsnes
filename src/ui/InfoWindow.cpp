@@ -11,29 +11,7 @@
 #include "core/Cartridge.h"
 #include "core/Memory.h"
 #include "core/Ppu.h"
-
-
-static const uint8_t OBJ_H_SIZE_LOOKUP[8][2] = {
-    {8, 16}, // 0
-    {8, 32}, // 1
-    {8, 64}, // 2
-    {16, 32}, // 3
-    {16, 64}, // 4
-    {32, 64}, // 5
-    {16, 32}, // 6
-    {16, 32}, // 7
-};
-
-static const uint8_t OBJ_V_SIZE_LOOKUP[8][2] = {
-    {8, 16}, // 0
-    {8, 32}, // 1
-    {8, 64}, // 2
-    {16, 32}, // 3
-    {16, 64}, // 4
-    {32, 64}, // 5
-    {32, 64}, // 6
-    {32, 32}, // 7
-};
+#include "core/PpuConstants.h"
 
 
 InfoWindow::InfoWindow(QWidget *parent) :
@@ -54,6 +32,9 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui->gvObjTable1->setScene(scene);
     scene = new QGraphicsScene(this);
     ui->gvObjTable2->setScene(scene);
+
+    scene = new QGraphicsScene(this);
+    ui->gvTilemap->setScene(scene);
 
     QSettings settings;
     restoreGeometry(settings.value(SETTINGS_INFOWINDOW_GEOMETRY).toByteArray());
@@ -378,25 +359,21 @@ void InfoWindow::UpdateMemoryView()
     ui->labelBG3Tileset->setText(UiUtils::FormatHexWord((value & 0x0F) << 13));
     ui->labelBG4Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
     
-    value = ioPorts21[eRegBG1SC & 0xFF];
-    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
-                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
-                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG1]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG1]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG1]));
 
-    value = ioPorts21[eRegBG2SC & 0xFF];
-    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
-                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
-                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG2]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG2]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG2]));
 
-    value = ioPorts21[eRegBG3SC & 0xFF];
-    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
-                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
-                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG3]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG3]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG3]));
 
-    value = ioPorts21[eRegBG4SC & 0xFF];
-    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord((value & 0xFC) << 9) +
-                                 " h=" + QString::number(Bytes::GetBit<0>(value) + 1) +
-                                 " v=" + QString::number(Bytes::GetBit<1>(value) + 1));
+    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG4]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG4]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG4]));
 
     ui->labelBG1HOFS->setText(QString::number(ppu->bgHOffset[0]));
     ui->labelBG2HOFS->setText(QString::number(ppu->bgHOffset[1]));
@@ -458,8 +435,8 @@ void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
         {
             for (int y = 0; y < 8; y++)
             {
-                uint16_t tileAddr = baseAddr + (tileId * 8  * 4); // 8px width * 4bpp;
-                uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, 4);
+                uint16_t tileAddr = baseAddr + (tileId * 8  * OBJ_BPP); // 8px width * 4bpp;
+                uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, OBJ_BPP);
                 img.setPixel(x, y, paletteData[pixelVal + 128]);
             }
         }
@@ -473,11 +450,107 @@ void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
 }
 
 
+void InfoWindow::UpdateTilemapView()
+{
+    // This slows down the ui, so only draw when visible.
+    if (!ui->gvTilemap->isVisible())
+        return;
+
+    //int tileSize = ppu->bgChrSize[eBG1];
+    int bpp = BG_BPP_LOOKUP[ppu->bgMode][eBG1];
+
+    for (int tileX = 0; tileX < ppu->bgTilemapWidth[eBG1]; tileX++)
+    {
+        for (int tileY = 0; tileY < ppu->bgTilemapHeight[eBG1]; tileY++)
+        {
+            uint16_t tilemapEntry = ppu->GetBgTilemapEntry(eBG1, tileX, tileY);
+            uint32_t tileId = tilemapEntry & 0x3FF;
+            uint8_t paletteId = (tilemapEntry >> 10) & 0x07;
+            bool flipX = Bytes::GetBit<14>(tilemapEntry);
+            bool flipY = Bytes::GetBit<15>(tilemapEntry);
+
+            QImage img(8, 8, QImage::Format_RGB32);
+
+            // TODO: Handle 16x16 tiles.
+            for (int x = 0; x < 8; x++)
+            {
+                for (int y = 0; y < 8; y++)
+                {
+                    uint16_t tileAddr = ppu->bgChrAddr[eBG1] + (tileId * 8 * bpp);
+                    uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, bpp);
+                    img.setPixel(x, y, paletteData[pixelVal + (paletteId << bpp)]);
+                }
+            }
+
+            if (flipX || flipY)
+                img = img.mirrored(flipX, flipY);
+
+            QGraphicsPixmapItem *pixmap = ui->gvTilemap->scene()->addPixmap(QPixmap::fromImage(img));
+            int xpos = tileX * 8;
+            int ypos = tileY * 8;
+            pixmap->setPos(xpos, ypos);
+        }
+    }
+
+    QPen pen(Qt::green);
+    int tilemapWidth = ppu->bgTilemapWidth[eBG1] * 8;
+    int tilemapHeight = ppu->bgTilemapHeight[eBG1] * 8;
+    int xOff = ppu->bgHOffset[eBG1] & (tilemapWidth - 1);
+    int yOff = ppu->bgVOffset[eBG1] & (tilemapHeight - 1);
+    
+    if (xOff + 256 <= tilemapWidth && yOff + 224 <= tilemapHeight)
+    {
+        ui->gvTilemap->scene()->addRect(xOff, yOff, 256, 224, pen);
+    }
+    else
+    {
+        int xOff2 = (xOff + 256) % tilemapWidth;
+        int yOff2 = (yOff + 224) % tilemapHeight;
+
+        // Draw top line
+        ui->gvTilemap->scene()->addLine(xOff, yOff, std::min(xOff + 256, tilemapWidth - 1), yOff, pen);
+        if (xOff + 256 > tilemapWidth)
+        {
+            int remain = (xOff + 256) - tilemapWidth;
+            ui->gvTilemap->scene()->addLine(0, yOff, remain, yOff, pen);
+        }
+
+        // Draw bottom line
+        ui->gvTilemap->scene()->addLine(xOff, yOff2, std::min(xOff + 256, tilemapWidth - 1), yOff2, pen);
+        if (xOff + 256 > tilemapWidth)
+        {
+            int remain = (xOff + 256) - tilemapWidth;
+            ui->gvTilemap->scene()->addLine(0, yOff2, remain, yOff2, pen);
+        }
+
+        // Draw left line
+        ui->gvTilemap->scene()->addLine(xOff, yOff, xOff, std::min(yOff + 224, tilemapHeight - 1), pen);
+        if (yOff + 224 > tilemapHeight)
+        {
+            int remain = (yOff + 224) - tilemapHeight;
+            ui->gvTilemap->scene()->addLine(xOff, 0, xOff, remain, pen);
+        }
+
+        // Draw right line
+        ui->gvTilemap->scene()->addLine(xOff2, yOff, xOff2, std::min(yOff + 224, tilemapHeight - 1), pen);
+        if (yOff + 224 > tilemapHeight)
+        {
+            int remain = (yOff + 224) - tilemapHeight;
+            ui->gvTilemap->scene()->addLine(xOff2, 0, xOff2, remain, pen);
+        }
+    }
+}
+
+
 void InfoWindow::SlotDrawFrame()
 {
+    if (!this->isVisible())
+        return;
+
     GeneratePalette();
     UpdateTileView();
     UpdatePaletteView();
     UpdateMemoryView();
     UpdateSpriteTab();
+    UpdateTilemapView();
 }

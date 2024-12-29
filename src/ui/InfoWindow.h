@@ -38,6 +38,7 @@ private:
     void UpdateMemoryView();
     void UpdateSpriteTab();
     void DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv);
+    void UpdateTilemapView();
 
     Ui::InfoWindow *ui;
 

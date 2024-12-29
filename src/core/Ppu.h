@@ -72,7 +72,7 @@ private:
 
     uint8_t GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const;
 
-    uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY);
+    uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) const;
     PixelInfo GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
@@ -122,8 +122,8 @@ private:
 
     // BGxSC - 0x2107-0x210A
     uint16_t bgTilemapAddr[4];
-    bool bgTilemapHExt[4];
-    bool bgTilemapVExt[4];
+    uint8_t bgTilemapWidth[4];
+    uint8_t bgTilemapHeight[4];
 
     // BGxyNBA - 0x210B-0x210C
     uint16_t bgChrAddr[4];
