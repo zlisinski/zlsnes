@@ -40,15 +40,6 @@ static const uint8_t OBJ_V_SIZE_LOOKUP[8][2] = {
     {32, 32}, // 7
 };
 
-enum ELayers
-{
-    eBG1,
-    eBG2,
-    eBG3,
-    eBG4,
-    eOBJ
-};
-
 
 Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     oam{0},
@@ -416,71 +407,35 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegBG1HOFS: // 0x210D
             regBG1HOFS = byte;
-            LogPpu("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
-            // This is a write twice register.
-            bgHOffset[0] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
-            bgOffsetLatch = byte;
-            bgHOffsetLatch = byte;
-            LogPpu("bgHOffset[0]=%04X", bgHOffset[0]);
+            SetBgHOffsetWriteTwice(eBG1, byte);
             return true;
         case eRegBG1VOFS: // 0x210E
             regBG1VOFS = byte;
-            LogPpu("bgOffsetLatch=%02X", bgOffsetLatch);
-            // This is a write twice register.
-            bgVOffset[0] = (byte << 8) | bgOffsetLatch;
-            bgOffsetLatch = byte;
-            LogPpu("bgVOffset[0]=%04X", bgVOffset[0]);
+            SetBgVOffsetWriteTwice(eBG1, byte);
             return true;
         case eRegBG2HOFS: // 0x210F
             regBG2HOFS = byte;
-            LogPpu("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
-            // This is a write twice register.
-            bgHOffset[1] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
-            bgOffsetLatch = byte;
-            bgHOffsetLatch = byte;
-            LogPpu("bgHOffset[1]=%04X", bgHOffset[1]);
+            SetBgHOffsetWriteTwice(eBG2, byte);
             return true;
         case eRegBG2VOFS: // 0x2110
             regBG2VOFS = byte;
-            LogPpu("bgOffsetLatch=%02X", bgOffsetLatch);
-            // This is a write twice register.
-            bgVOffset[1] = (byte << 8) | bgOffsetLatch;
-            bgOffsetLatch = byte;
-            LogPpu("bgVOffset[1]=%04X", bgVOffset[1]);
+            SetBgVOffsetWriteTwice(eBG2, byte);
             return true;
         case eRegBG3HOFS: // 0x2111
             regBG3HOFS = byte;
-            LogPpu("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
-            // This is a write twice register.
-            bgHOffset[2] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
-            bgOffsetLatch = byte;
-            bgHOffsetLatch = byte;
-            LogPpu("bgHOffset[2]=%04X", bgHOffset[2]);
+            SetBgHOffsetWriteTwice(eBG3, byte);
             return true;
         case eRegBG3VOFS: // 0x2112
             regBG3VOFS = byte;
-            LogPpu("bgOffsetLatch=%02X", bgOffsetLatch);
-            // This is a write twice register.
-            bgVOffset[2] = (byte << 8) | bgOffsetLatch;
-            bgOffsetLatch = byte;
-            LogPpu("bgVOffset[2]=%04X", bgVOffset[2]);
+            SetBgVOffsetWriteTwice(eBG3, byte);
             return true;
         case eRegBG4HOFS: // 0x2113
             regBG4HOFS = byte;
-            LogPpu("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
-            // This is a write twice register.
-            bgHOffset[3] = (byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07);
-            bgOffsetLatch = byte;
-            bgHOffsetLatch = byte;
-            LogPpu("bgHOffset[3]=%04X", bgHOffset[3]);
+            SetBgHOffsetWriteTwice(eBG4, byte);
             return true;
         case eRegBG4VOFS: // 0x2114
             regBG4VOFS = byte;
-            LogPpu("bgOffsetLatch=%02X", bgOffsetLatch);
-            // This is a write twice register.
-            bgVOffset[3] = (byte << 8) | bgOffsetLatch;
-            bgOffsetLatch = byte;
-            LogPpu("bgVOffset[3]=%04X", bgVOffset[3]);
+            SetBgVOffsetWriteTwice(eBG4, byte);
             return true;
         case eRegVMAIN: // 0x2115
             regVMAIN = byte;
@@ -814,7 +769,7 @@ uint8_t Ppu::GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t
 }
 
 
-uint16_t Ppu::GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
+uint16_t Ppu::GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY)
 {
     // Compute the offset for 32x32 tilemap.
     uint16_t offset = (tileX & 0x1F) + ((tileY & 0x1F) * 32);
@@ -842,7 +797,7 @@ uint16_t Ppu::GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY)
 }
 
 
-Ppu::PixelInfo Ppu::GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY)
+Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY)
 {
     PixelInfo ret;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
@@ -1215,4 +1170,25 @@ void Ppu::DrawFullScreen()
         DrawScanline(i);
     }
     DrawScreen();
+}
+
+
+void Ppu::SetBgHOffsetWriteTwice(EBgLayer bg, uint8_t byte)
+{
+    LogPpu("bgOffsetLatch=%02X bgHOffsetLatch=%02X", bgOffsetLatch, bgHOffsetLatch);
+    // This is a write twice register.
+    bgHOffset[bg] = ((byte << 8) | (bgOffsetLatch & ~0x07) | (bgHOffsetLatch & 0x07)) & 0x3FF;
+    bgOffsetLatch = byte;
+    bgHOffsetLatch = byte;
+    LogPpu("bgHOffset[%d]=%04X", bg, bgHOffset[bg]);
+}
+
+
+void Ppu::SetBgVOffsetWriteTwice(EBgLayer bg, uint8_t byte)
+{
+    LogPpu("bgOffsetLatch=%02X", bgOffsetLatch);
+    // This is a write twice register.
+    bgVOffset[bg] = ((byte << 8) | bgOffsetLatch) & 0x3FF;
+    bgOffsetLatch = byte;
+    LogPpu("bgVOffset[%d]=%04X", bg, bgVOffset[bg]);
 }

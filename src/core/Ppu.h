@@ -13,6 +13,17 @@ const size_t OAM_SIZE = 544;
 const size_t VRAM_SIZE = 0x10000;
 const size_t CGRAM_SIZE = 512;
 
+
+enum EBgLayer
+{
+    eBG1,
+    eBG2,
+    eBG3,
+    eBG4,
+    eOBJ
+};
+
+
 class Ppu : public IoRegisterProxy, public TimerObserver
 {
 public:
@@ -61,8 +72,8 @@ private:
 
     uint8_t GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const;
 
-    uint16_t GetBgTilemapEntry(uint8_t bg, uint16_t tileX, uint16_t tileY);
-    PixelInfo GetBgPixelInfo(uint8_t bg, uint16_t screenX, uint16_t screenY);
+    uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY);
+    PixelInfo GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
     PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
@@ -72,6 +83,9 @@ private:
     void DrawScanline(uint8_t scanline);
     void DrawScreen();
     void DrawFullScreen(); // Used when debugging to update the screen.
+
+    void SetBgHOffsetWriteTwice(EBgLayer bg, uint8_t byte);
+    void SetBgVOffsetWriteTwice(EBgLayer bg, uint8_t byte);
 
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;

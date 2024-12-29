@@ -55,41 +55,45 @@ void PpuTest::TearDown()
 
 TEST_F(PpuTest, TEST_BGHOFS_Write_Twice)
 {
+    // Offsets are limited to 10 bits.
+
     ppu->WriteRegister(eRegBG1HOFS, 0x34);
     ppu->WriteRegister(eRegBG1HOFS, 0x12);
-    EXPECT_EQ(GetBgHOffset(0), 0x1234);
+    EXPECT_EQ(GetBgHOffset(0), 0x1234 & 0x3FF);
 
     ppu->WriteRegister(eRegBG2HOFS, 0x78);
     ppu->WriteRegister(eRegBG2HOFS, 0x56);
-    EXPECT_EQ(GetBgHOffset(1), 0x5678);
+    EXPECT_EQ(GetBgHOffset(1), 0x5678 & 0x3FF);
 
     ppu->WriteRegister(eRegBG3HOFS, 0xBC);
     ppu->WriteRegister(eRegBG3HOFS, 0x9A);
-    EXPECT_EQ(GetBgHOffset(2), 0x9ABC);
+    EXPECT_EQ(GetBgHOffset(2), 0x9ABC & 0x3FF);
 
     ppu->WriteRegister(eRegBG4HOFS, 0xF0);
     ppu->WriteRegister(eRegBG4HOFS, 0xDE);
-    EXPECT_EQ(GetBgHOffset(3), 0xDEF0);
+    EXPECT_EQ(GetBgHOffset(3), 0xDEF0 & 0x3FF);
 }
 
 
 TEST_F(PpuTest, TEST_BGVOFS_Write_Twice)
 {
+    // Offsets are limited to 10 bits.
+
     ppu->WriteRegister(eRegBG1VOFS, 0x34);
     ppu->WriteRegister(eRegBG1VOFS, 0x12);
-    EXPECT_EQ(GetBgVOffset(0), 0x1234);
+    EXPECT_EQ(GetBgVOffset(0), 0x1234 & 0x3FF);
 
     ppu->WriteRegister(eRegBG2VOFS, 0x78);
     ppu->WriteRegister(eRegBG2VOFS, 0x56);
-    EXPECT_EQ(GetBgVOffset(1), 0x5678);
+    EXPECT_EQ(GetBgVOffset(1), 0x5678 & 0x3FF);
 
     ppu->WriteRegister(eRegBG3VOFS, 0xBC);
     ppu->WriteRegister(eRegBG3VOFS, 0x9A);
-    EXPECT_EQ(GetBgVOffset(2), 0x9ABC);
+    EXPECT_EQ(GetBgVOffset(2), 0x9ABC & 0x3FF);
 
     ppu->WriteRegister(eRegBG4VOFS, 0xF0);
     ppu->WriteRegister(eRegBG4VOFS, 0xDE);
-    EXPECT_EQ(GetBgVOffset(3), 0xDEF0);
+    EXPECT_EQ(GetBgVOffset(3), 0xDEF0 & 0x3FF);
 }
 
 
