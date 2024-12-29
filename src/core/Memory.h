@@ -126,10 +126,10 @@ protected:
     std::array<uint8_t, WRAM_SIZE> wram; // 0x7E0000 - 0x7FFFFF
 
     // The following blocks are mirrored in each of the banks from 0x00-0x3F and 0x80-0xBF.
-    std::array<uint8_t, 0xFF> ioPorts21; // 0x2100-0x21FF. Unused: 0x2184+
-    std::array<uint8_t, 0xFF> ioPorts40; // 0x4000-0x40FF. Only 0x4016 and 0x4017 are used.
-    std::array<uint8_t, 0xFF> ioPorts42; // 0x4200-0x42FF. Unused: 0x420E,0x420F,0x4220-42FF
-    std::array<uint8_t, 0xFF> ioPorts43; // 0x4300-0x43FF. 0x43[0-7][0-B] are used, the rest are unused.
+    std::array<uint8_t, 0x100> ioPorts21; // 0x2100-0x21FF. Unused: 0x2184+
+    std::array<uint8_t, 0x100> ioPorts40; // 0x4000-0x40FF. Only 0x4016 and 0x4017 are used.
+    std::array<uint8_t, 0x100> ioPorts42; // 0x4200-0x42FF. Unused: 0x420E,0x420F,0x4220-42FF
+    std::array<uint8_t, 0x100> ioPorts43; // 0x4300-0x43FF. 0x43[0-7][0-B] are used, the rest are unused.
     std::array<uint8_t, 0x2000> expansion; // 0x6000-0x7FFF.
 
     uint32_t wramRWAddr;

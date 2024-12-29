@@ -10,7 +10,7 @@ class Memory;
 class Timer;
 
 const size_t OAM_SIZE = 544;
-const size_t VRAM_SIZE = 0xFFFF;
+const size_t VRAM_SIZE = 0x10000;
 const size_t CGRAM_SIZE = 512;
 
 class Ppu : public IoRegisterProxy, public TimerObserver
