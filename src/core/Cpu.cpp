@@ -2,6 +2,7 @@
 
 #include "AddressMode.h"
 #include "Cpu.h"
+#include "Dma.h"
 #include "Interrupt.h"
 #include "Memory.h"
 #include "Timer.h"
@@ -22,6 +23,7 @@ Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
     memory(memory),
     timer(timer),
     interrupts(interrupts),
+    dma(memory),
     waiting(false)
 {
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);

@@ -20,10 +20,31 @@
       <string>Log Level</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="chkCpu">
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="rbInfo">
         <property name="text">
-         <string>CPU</string>
+         <string>&amp;Info</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QRadioButton" name="rbDebug">
+        <property name="text">
+         <string>&amp;Debug</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QCheckBox" name="chkTimer">
+        <property name="text">
+         <string>Timer</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="rbError">
+        <property name="text">
+         <string>&amp;Error</string>
         </property>
        </widget>
       </item>
@@ -31,6 +52,13 @@
        <widget class="QCheckBox" name="chkInterrupt">
         <property name="text">
          <string>Interrupt</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="rbWarning">
+        <property name="text">
+         <string>&amp;Warning</string>
         </property>
        </widget>
       </item>
@@ -48,10 +76,10 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="4">
-       <widget class="QCheckBox" name="chkTimer">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="chkCpu">
         <property name="text">
-         <string>Timer</string>
+         <string>CPU</string>
         </property>
        </widget>
       </item>
@@ -62,17 +90,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="rbInfo">
+      <item row="1" column="6">
+       <widget class="QCheckBox" name="chkApu">
         <property name="text">
-         <string>&amp;Info</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="rbError">
-        <property name="text">
-         <string>&amp;Error</string>
+         <string>APU</string>
         </property>
        </widget>
       </item>
@@ -83,24 +104,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
-       <widget class="QRadioButton" name="rbDebug">
+      <item row="1" column="7">
+       <widget class="QCheckBox" name="chkDma">
         <property name="text">
-         <string>&amp;Debug</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="rbWarning">
-        <property name="text">
-         <string>&amp;Warning</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="6">
-       <widget class="QCheckBox" name="chkApu">
-        <property name="text">
-         <string>APU</string>
+         <string>DMA</string>
         </property>
        </widget>
       </item>

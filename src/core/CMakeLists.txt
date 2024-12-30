@@ -4,6 +4,7 @@ set(CORE_SRC
     Apu.cpp
     Cartridge.cpp
     Cpu.cpp
+    Dma.cpp
     Emulator.cpp
     Input.cpp
     Interrupt.cpp

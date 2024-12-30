@@ -1,5 +1,6 @@
 add_subdirectory(AddressModeTest)
 add_subdirectory(CpuTest)
+add_subdirectory(DmaTest)
 add_subdirectory(MemoryTest)
 add_subdirectory(PpuTest)
 add_subdirectory(TimerTest)

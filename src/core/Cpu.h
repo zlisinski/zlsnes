@@ -4,9 +4,11 @@
 
 #include "Zlsnes.h"
 #include "Bytes.h"
+#include "Dma.h"
 #include "Memory.h"
 
 class AbsAddressMode;
+class Dma;
 class Interrupt;
 class Timer;
 
@@ -266,6 +268,7 @@ private:
     Memory *memory;
     Timer *timer;
     Interrupt *interrupts;
+    Dma dma;
 
     bool waiting;
 

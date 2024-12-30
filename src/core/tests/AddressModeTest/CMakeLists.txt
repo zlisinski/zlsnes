@@ -10,6 +10,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core)
 add_executable(AddressModeTest
     AddressModeTest.cpp
     ../../Cpu.cpp
+    ../../Dma.cpp
     ../../Interrupt.cpp
     ../../Logger.cpp
     ../../Utils.cpp

@@ -34,9 +34,9 @@ public:
         return Read8Bit(addr.ToUint());
     }
     // Bypasses special read code. Only use for Debugger.
-    uint8_t ReadRaw8Bit(uint32_t addr) //const
+    uint8_t ReadRaw8Bit(uint32_t addr)
     {
-        return *GetBytePtr(addr);
+        return memory[addr];
     }
 
     // Reads that don't wrap at bank boundaries. E.G. Read16Bit(0x12FFFF) will read from 0x12FFFF and 0x130000.
@@ -110,40 +110,16 @@ public:
     }
 
     // Bypasses checking of reads/writes from/to special addresses. Don't use unless you know what you are doing.
-    // Since there is not a flat memory model, incrementing the pointer could do bad things.
-    uint8_t *GetBytePtr(uint32_t addr);
-
-    inline uint8_t GetOpenBusValue() const {return openBusValue;}
+    //const uint8_t *GetBytePtr(uint32_t addr) const {return &memory[addr];}
+    uint8_t *GetBytePtr(uint32_t addr);// {return &memory[addr];}
 
     void ClearMemory();
 
 protected:
     // Inherited from IoRegisterSubject.
     uint8_t &GetIoRegisterRef(EIORegisters ioReg) override;
-
-    std::array<uint8_t, WRAM_SIZE> wram; // 0x7E0000 - 0x7FFFFF
-
-    // The following blocks are mirrored in each of the banks from 0x00-0x3F and 0x80-0xBF.
-    std::array<uint8_t, 0x100> ioPorts21; // 0x2100-0x21FF. Unused: 0x2184+
-    std::array<uint8_t, 0x100> ioPorts40; // 0x4000-0x40FF. Only 0x4016 and 0x4017 are used.
-    std::array<uint8_t, 0x100> ioPorts42; // 0x4200-0x42FF. Unused: 0x420E,0x420F,0x4220-42FF
-    std::array<uint8_t, 0x100> ioPorts43; // 0x4300-0x43FF. 0x43[0-7][0-B] are used, the rest are unused.
-    std::array<uint8_t, 0x2000> expansion; // 0x6000-0x7FFF.
-
-    uint32_t wramRWAddr;
-
-    // regMEMSEL - 0x420D
-    bool isFastSpeed;
-
-    // Some register bits are not connected and return the last value read from the data bus.
-    uint8_t openBusValue;
-
-    Cartridge *cart;
-    DebuggerInterface *debuggerInterface;
-    InfoInterface *infoInterface;
-    Timer *timer;
-
-    friend class MemoryTest;
+    
+    std::array<uint8_t, 0xFFFFFF> memory;
 };
 
 #endif

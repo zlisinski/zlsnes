@@ -7,24 +7,21 @@ include_directories(
 
 find_package(Qt5 REQUIRED COMPONENTS Core)
 
-add_executable(CpuTest
-    CpuTest.cpp
-    ../../Cpu.cpp
+add_executable(DmaTest
+    DmaTest.cpp
     ../../Dma.cpp
-    ../../Interrupt.cpp
     ../../Logger.cpp
     ../../Utils.cpp
     mock/Memory.cpp
-    mock/Timer.cpp
 )
 
-target_link_libraries(CpuTest
+target_link_libraries(DmaTest
     gtest
     gtest_main
     Qt5::Core
 )
 
-add_test(NAME CpuTest COMMAND CpuTest)
-set_property(TEST CpuTest PROPERTY WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+add_test(NAME DmaTest COMMAND DmaTest)
+set_property(TEST DmaTest PROPERTY WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 add_compile_definitions("TESTING")
