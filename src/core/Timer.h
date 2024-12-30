@@ -36,6 +36,11 @@ private:
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
+    void ProcessHBlankStart();
+    void ProcessHBlankEnd();
+    void ProcessVBlankStart();
+    void ProcessVBlankEnd();
+
     uint32_t clockCounter;
     uint16_t hCount;
     uint16_t vCount;

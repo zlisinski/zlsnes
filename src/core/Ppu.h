@@ -24,7 +24,7 @@ enum EBgLayer
 };
 
 
-class Ppu : public IoRegisterProxy, public TimerObserver
+class Ppu : public IoRegisterProxy, public HBlankObserver, public VBlankObserver
 {
 public:
     Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface = nullptr);
@@ -34,13 +34,18 @@ public:
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
-    // Inherited from TimerObserver.
-    void UpdateTimer(uint32_t value) override;
-
     // Used for debugging.
     uint8_t *GetOamPtr() {return &oam[0];}
     uint8_t *GetVramPtr() {return &vram[0];}
     uint8_t *GetCgramPtr() {return &cgram[0];}
+
+protected:
+    // Inherited from HBlankObserver.
+    void ProcessHBlankStart(uint32_t scanline) override;
+    void ProcessHBlankEnd(uint32_t scanline) override;
+    // Inherited from VBlankObserver.
+    void ProcessVBlankStart() override;
+    void ProcessVBlankEnd() override;
 
 private:
     struct PixelInfo

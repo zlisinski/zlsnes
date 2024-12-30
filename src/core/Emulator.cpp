@@ -62,13 +62,13 @@ bool Emulator::LoadRom(const std::string &filename)
     memory = new Memory(infoInterface, debuggerInterface);
     interrupts = new Interrupt();
     timer = new Timer(memory, interrupts);
+    // This can't be done in the Memory constructor since Timer doesn't exist yet.
+    memory->SetTimer(timer);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
     input = new Input(memory, timer/*, interrupts*/);
     cpu = new Cpu(memory, timer, interrupts);
     apu = new Apu(memory/*, timer, audioInterface, gameSpeedSubject*/);
 
-    // This can't be done in the Memory constructor since Timer doesn't exist yet.
-    memory->SetTimer(timer);
     memory->SetCartridge(&cartridge);
 
     workThread = std::thread(&Emulator::ThreadFunc, this);

@@ -2,16 +2,15 @@
 
 #include "Zlsnes.h"
 #include "Buttons.h"
-//#include "Interrupt.h"
 #include "IoRegisterProxy.h"
 #include "TimerObserver.h"
 
 class Memory;
 
-class Input : public IoRegisterProxy, public TimerObserver
+class Input : public IoRegisterProxy, public VBlankObserver
 {
 public:
-    Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts*/);
+    Input(Memory *memory, TimerSubject *timerSubject);
     virtual ~Input();
 
     void SetButtons(const Buttons &buttons);
@@ -23,16 +22,15 @@ public:
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
     uint8_t ReadRegister(EIORegisters ioReg) const override;
 
-    // Inherited from TimerObserver.
-    void UpdateTimer(uint32_t value) override;
+protected:
+    // Inherited from VBlankObserver.
+    void ProcessVBlankStart() override;
+    void ProcessVBlankEnd() override {}
 
 private:
     Memory *memory;
-    //Interrupt *interrupts;
 
     Buttons buttonData;
-
-    bool lastAutoReadFlag;
 
     //uint8_t &regJOYWR; // 0x4016, //  Joypad Output (W)
     uint8_t &regJOYA;  // 0x4016, //  Joypad Input Register A (R)
@@ -46,6 +44,4 @@ private:
     uint8_t &regJOY3H; // 0x421D Joypad 3 (gameport 1, pin 5) (upper 8bit)
     uint8_t &regJOY4L; // 0x421E Joypad 4 (gameport 2, pin 5) (lower 8bit)
     uint8_t &regJOY4H; // 0x421F Joypad 4 (gameport 2, pin 5) (upper 8bit)
-
-
 };

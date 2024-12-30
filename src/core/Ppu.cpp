@@ -110,7 +110,8 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     regSTAT77(memory->RequestOwnership(eRegSTAT77, this)),
     regSTAT78(memory->RequestOwnership(eRegSTAT78, this))
 {
-    timer->AttachObserver(this);
+    timer->AttachHBlankObserver(this);
+    timer->AttachVBlankObserver(this);
 }
 
 
@@ -634,45 +635,39 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 }
 
 
-void Ppu::UpdateTimer(uint32_t value)
+ void Ppu::ProcessHBlankStart(uint32_t scanline)
+ {
+    // We reached the end of the scanline, so draw it.
+    // TODO: Check for number of scanlines per screen in regSETINI.
+    if (scanline < 224)
+        DrawScanline(scanline);
+ }
+
+
+void Ppu::ProcessHBlankEnd(uint32_t scanline)
 {
-    (void)value;
+    // We started a new scanline.
+    this->scanline = scanline;
+}
 
-    bool oldHBlank = isHBlank;
-    bool oldVBlank = isVBlank;
 
-    isHBlank = timer->GetIsHBlank();
-    isVBlank = timer->GetIsVBlank();
+void Ppu::ProcessVBlankStart()
+{
+    // Reset the Oam address value on VBlank, but not when in forced blank.
+    if (!isForcedBlank)
+        oamRwAddr = Bytes::Make16Bit(regOAMADDH & 0x01, regOAMADDL) << 1; // Word address.
 
-    if (!isHBlank && oldHBlank)
+    DrawScreen();
+}
+
+
+void Ppu::ProcessVBlankEnd()
+{
+    // Clear sprite overflow flags.
+    if (!isForcedBlank)
     {
-        // We started a new scanline.
-        scanline = timer->GetVCount();
-    }
-    else if (isHBlank && !oldHBlank)
-    {
-        // We reached the end of the scanline, so draw it.
-        // TODO: Check for number of scanlines per screen in regSETINI.
-        if (scanline < 224)
-            DrawScanline(scanline);
-    }
-
-    if (isVBlank && !oldVBlank)
-    {
-        // Reset the Oam address value on VBlank, but not when in forced VBlank.
-        if (!isForcedBlank)
-            oamRwAddr = Bytes::Make16Bit(regOAMADDH & 0x01, regOAMADDL) << 1; // Word address.
-
-        DrawScreen();
-    }
-    else if (!isVBlank && oldVBlank)
-    {
-        // Clear sprite overflow flags.
-        if (!isForcedBlank)
-        {
-            Bytes::ClearBit<6>(regSTAT77);
-            Bytes::ClearBit<7>(regSTAT77);
-        }
+        Bytes::ClearBit<6>(regSTAT77);
+        Bytes::ClearBit<7>(regSTAT77);
     }
 }
 

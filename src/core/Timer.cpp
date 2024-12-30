@@ -31,43 +31,39 @@ Timer::Timer(Memory *memory, Interrupt *interrupts) :
 
 void Timer::AddCycle(uint8_t clocks)
 {
+    uint16_t oldHCount = hCount;
+    uint16_t oldVCount = vCount;
+
     clockCounter += clocks;
     hCount = clockCounter / CLOCKS_PER_H;
 
-    if (hCount > 1 && hCount < 274)
+    if (hCount >= 1 && (hCount < oldHCount || oldHCount == 0))
     {
-        isHBlank = false;
-        // Clear HBlank flag.
-        Bytes::SetBit<6>(regHVBJOY);
+        // If we just rolled over.
+        ProcessHBlankEnd();
     }
-    else if (hCount >= 274 && hCount < 341)
+    else if (hCount >= 274 && oldHCount < 274)
     {
-        isHBlank = true;
-        // Set HBlank flag.
-        Bytes::ClearBit<6>(regHVBJOY);
+        // We just entered hblank.
+        ProcessHBlankStart();
     }
     else if (clockCounter >= 1364)
     {
         clockCounter -= 1364;
         hCount = clockCounter / CLOCKS_PER_H;
 
+        // We could have rolled over out of hblank, so check again.
+        if (hCount >= 1 && hCount < oldHCount)
+        {
+            ProcessHBlankEnd();
+        }
+
         // TODO: Check for number of scanlines per screen in regSETINI.
 
         vCount++;
         if (vCount == 225)
         {
-            isVBlank = true;
-            // Set VBlank flags.
-            Bytes::SetBit<7>(regRDNMI);
-            Bytes::SetBit<7>(regHVBJOY);
-
-            // Request VBlank interrupt if enabled.
-            if (Bytes::GetBit<7>(regNMITIMEN))
-                interrupts->RequestNmi();
-
-            // If joypad auto read is enabled, toggle the busy flag.
-            if (Bytes::GetBit<0>(regNMITIMEN))
-                Bytes::SetBit<0>(regHVBJOY);
+            ProcessVBlankStart();
         }
         else if (vCount == 228)
         {
@@ -78,14 +74,69 @@ void Timer::AddCycle(uint8_t clocks)
         else if (vCount == 262)
         {
             vCount = 0;
-            isVBlank = false;
-            // Clear VBlank flags.
-            Bytes::ClearBit<7>(regRDNMI);
-            Bytes::ClearBit<7>(regHVBJOY);
+            ProcessVBlankEnd();
         }
     }
 
-    NotifyObservers(clocks);
+    NotifyTimerObservers(clocks);
+}
+
+
+void Timer::ProcessHBlankStart()
+{
+    isHBlank = true;
+
+    // Set HBlank flag.
+    Bytes::ClearBit<6>(regHVBJOY);
+
+    // Notify anyone who wants to know when HBlank starts.
+    NotifyHBlankStartObservers(vCount);
+}
+
+
+void Timer::ProcessHBlankEnd()
+{
+    isHBlank = false;
+
+    // Clear HBlank flag.
+    Bytes::SetBit<6>(regHVBJOY);
+
+    // Notify anyone who wants to know when HBlank ends.
+    NotifyHBlankEndObservers(vCount);
+}
+
+
+void Timer::ProcessVBlankStart()
+{
+    isVBlank = true;
+
+    // Set VBlank flags.
+    Bytes::SetBit<7>(regRDNMI);
+    Bytes::SetBit<7>(regHVBJOY);
+
+    // Request VBlank interrupt if enabled.
+    if (Bytes::GetBit<7>(regNMITIMEN))
+        interrupts->RequestNmi();
+
+    // If joypad auto read is enabled, toggle the busy flag.
+    if (Bytes::GetBit<0>(regNMITIMEN))
+        Bytes::SetBit<0>(regHVBJOY);
+
+    // Notify anyone who wants to know when VBlank starts.
+    NotifyVBlankStartObservers();
+}
+
+
+void Timer::ProcessVBlankEnd()
+{
+    isVBlank = false;
+
+    // Clear VBlank flags.
+    Bytes::ClearBit<7>(regRDNMI);
+    Bytes::ClearBit<7>(regHVBJOY);
+
+    // Notify anyone who wants to know when VBlank ends.
+    NotifyVBlankEndObservers();
 }
 
 

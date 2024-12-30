@@ -3,11 +3,9 @@
 #include "Memory.h"
 
 
-Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts*/) :
+Input::Input(Memory *memory, TimerSubject *timerSubject) :
     memory(memory),
-    //interrupts(interrupts),
     buttonData(),
-    lastAutoReadFlag(false),
     regJOYA(memory->RequestOwnership(eRegJOYA, this)),
     regJOYB(memory->RequestOwnership(eRegJOYB, this)),
     regJOY1L(memory->RequestOwnership(eRegJOY1L, this)),
@@ -31,7 +29,7 @@ Input::Input(Memory *memory, TimerSubject *timerSubject/*, Interrupt *interrupts
     regJOY4L = 0;
     regJOY4H = 0;
 
-    timerSubject->AttachObserver(this);
+    timerSubject->AttachVBlankObserver(this);
 }
 
 
@@ -95,21 +93,15 @@ bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
 }
 
 
-void Input::UpdateTimer(uint32_t value)
+void Input::ProcessVBlankStart()
 {
-    (void)value;
-
     bool autoReadFlag = Bytes::GetBit<0>(memory->ReadRaw8Bit(eRegHVBJOY));
 
-    // Only update when it changes, we don't need to do this every cycle for multiple scanlines.
-    // TODO: Vblank observer?
-    if (autoReadFlag && !lastAutoReadFlag)
+    if (autoReadFlag)
     {
         regJOY1L = Bytes::GetByte<0>(buttonData.data);
         regJOY1H = Bytes::GetByte<1>(buttonData.data);
     }
-
-    lastAutoReadFlag = autoReadFlag;
 }
 
 
