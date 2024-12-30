@@ -114,4 +114,7 @@ TEST_F(DmaTest, TEST_Dma1)
     {
         EXPECT_EQ(it->second, 0x22);
     }
+
+    EXPECT_EQ(memory->Read8Bit(0x4305), 0);
+    EXPECT_EQ(memory->Read8Bit(0x4306), 0);
 }

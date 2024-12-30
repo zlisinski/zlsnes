@@ -166,6 +166,10 @@ void Dma::RunDma()
         }
         while (byteCount > 0);
 
+        // Clear byte count when done.
+        *regDASxH[channel] = 0;
+        *regDASxL[channel] = 0;
+
         // Clear the enable bit for the channel when the transfer is done.
         regMDMAEN &= ~(1 << channel);
     }
