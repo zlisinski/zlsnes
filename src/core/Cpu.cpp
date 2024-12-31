@@ -23,7 +23,7 @@ Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
     memory(memory),
     timer(timer),
     interrupts(interrupts),
-    dma(memory),
+    dma(memory, timer),
     waiting(false)
 {
     addressModes[0x00] = std::make_unique<AddressModeImmediate>(this, memory);

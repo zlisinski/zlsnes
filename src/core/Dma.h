@@ -1,39 +1,78 @@
 #ifndef ZLSNES_CORE_DMA_H
 #define ZLSNES_CORE_DMA_H
 
+#include "Address.h"
+#include "Bytes.h"
 #include "IoRegisterProxy.h"
+#include "TimerObserver.h"
 
 class Memory;
 
-class Dma : IoRegisterProxy
+
+class Dma : public IoRegisterProxy, public HBlankObserver
 {
 public:
-    Dma(Memory *memory);
+    Dma(Memory *memory, TimerSubject *timer);
     virtual ~Dma() {}
 
+protected:
+    // Inherited from HBlankObserver.
+    void ProcessHBlankStart(uint32_t scanline) override;
+    void ProcessHBlankEnd(uint32_t scanline) override;
+
 private:
+    // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
     void RunDma();
-    void RunHDma();
+    void SetupHdma();
+    void RunHDma(uint32_t scanline);
 
     Memory *memory;
+    uint8_t *ioPorts43; // This class basically owns this block of data, but I don't currently have a way of
+                        // registering blocks of data, so this is the workaround for now.
 
     uint8_t &regMDMAEN;  // 0x420B Select General Purpose DMA Channel(s) and Start Transfer
     uint8_t &regHDMAEN;  // 0x420C Select H-Blank DMA (H-DMA) Channel(s)
+
+    struct DmaChannelData
+    {
+        DmaChannelData(uint8_t channelId, uint8_t *regData);
+        void Load();
+        void SaveABusAddr();
+        void SaveByteCount();
+
+        uint8_t channelId;
+        uint8_t *regData;
+        bool doTransfer;
+
+        union
+        {
+            uint8_t dmaParameters; // 0x43n0 - DMAPn
+            struct
+            {
+                uint8_t mode:3;
+                uint8_t fixed:1;
+                uint8_t decrementABus:1;
+                uint8_t unused:1;
+                uint8_t indirect:1;
+                uint8_t bToA:1;
+            } dmap;
+        };
+        Address bBusAddr; // 0x43n1 - BBADn
+        Address aBusAddr; // 0x43n4,3,2 - A1TnB/A1TnH/A1Bn
+
+        // MPDMA
+        uint16_t byteCount; // 0x43n6,5 - DASnL/DASnH
+
+        // HDMA
+        Address indirectAddr; // 0x43n7,6,5 - DASBn/DASnH/DASnL
+        Address directAddr; // 0x43n4,9,8 - A1TnB/A2AnH/A2AnL
+        uint8_t lineCount; // 0x43nA - NLTRn
+    } channels[8];
+
     
-    uint8_t *regDMAPx[8]; // 0x43n0 DMA/HDMA Parameters
-    uint8_t *regBBADx[8]; // 0x43n1 DMA/HDMA I/O-Bus Address (PPU-Bus aka B-Bus)
-    uint8_t *regA1TxL[8]; // 0x43n2 HDMA Table Start Address (low)  / DMA Curr Addr (low)
-    uint8_t *regA1TxH[8]; // 0x43n3 HDMA Table Start Address (high) / DMA Curr Addr (high)
-    uint8_t *regA1Bx[8];  // 0x43n4 HDMA Table Start Address (bank) / DMA Curr Addr (bank)
-    uint8_t *regDASxL[8]; // 0x43n5 Indirect HDMA Address (low)  / DMA Byte-Counter (low)
-    uint8_t *regDASxH[8]; // 0x43n6 Indirect HDMA Address (high) / DMA Byte-Counter (high)
-    uint8_t *regDASBx[8]; // 0x43n7 Indirect HDMA Address (bank)
-    uint8_t *regA2AxL[8]; // 0x43n8 HDMA Table Current Address (low)
-    uint8_t *regA2AxH[8]; // 0x43n9 HDMA Table Current Address (high)
-    uint8_t *regNTRLx[8]; // 0x43nA HDMA Line-Counter (from current Table entry)
 
     friend class DmaTest;
 };
