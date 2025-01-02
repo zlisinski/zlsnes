@@ -37,6 +37,8 @@ void Timer::AddCycle(uint8_t clocks)
     clockCounter += clocks;
     hCount = clockCounter / CLOCKS_PER_H;
 
+    // Note: HBlankEnd for a scanline comes before HBlankStart for the same scanline.
+
     if (hCount >= 1 && (hCount < oldHCount || oldHCount == 0))
     {
         // If we just rolled over.
@@ -51,12 +53,6 @@ void Timer::AddCycle(uint8_t clocks)
     {
         clockCounter -= 1364;
         hCount = clockCounter / CLOCKS_PER_H;
-
-        // We could have rolled over out of hblank, so check again.
-        if (hCount >= 1 && hCount < oldHCount)
-        {
-            ProcessHBlankEnd();
-        }
 
         // TODO: Check for number of scanlines per screen in regSETINI.
 
@@ -75,6 +71,12 @@ void Timer::AddCycle(uint8_t clocks)
         {
             vCount = 0;
             ProcessVBlankEnd();
+        }
+
+        // We could have rolled over out of hblank, so check again.
+        if (hCount >= 1 && hCount < oldHCount)
+        {
+            ProcessHBlankEnd();
         }
     }
 
