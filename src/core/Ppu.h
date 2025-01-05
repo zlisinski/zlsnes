@@ -92,6 +92,8 @@ private:
     void SetBgHOffsetWriteTwice(EBgLayer bg, uint8_t byte);
     void SetBgVOffsetWriteTwice(EBgLayer bg, uint8_t byte);
 
+    uint16_t TranslateVramAddress(uint16_t addr, uint8_t translate);
+
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;
     std::array<uint8_t, CGRAM_SIZE> cgram;
@@ -139,9 +141,12 @@ private:
     uint16_t bgHOffset[4];
     uint16_t bgVOffset[4];
 
-    // VMADDL/VMADDH - 0x2116/0x2117
+    // VMAIN - 0x2115
     uint8_t vramIncrement;
     bool isVramIncrementOnHigh;
+    uint8_t vramAddrTranslation;
+
+    // VMADDL/VMADDH - 0x2116/0x2117
     uint16_t vramRwAddr;
     uint8_t vramPrefetch[2];
 

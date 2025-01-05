@@ -39,6 +39,7 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     bgVOffset{0, 0, 0, 0},
     vramIncrement(0),
     isVramIncrementOnHigh(false),
+    vramAddrTranslation(0),
     vramRwAddr(0),
     vramPrefetch{0,0},
     cgramRwAddr(0),
@@ -405,8 +406,6 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegVMAIN: // 0x2115
             regVMAIN = byte;
-            if ((byte & 0x0C) != 0)
-                throw NotYetImplementedException(fmt("Address translation NYI. Byte=%02X", byte));
             isVramIncrementOnHigh = byte & 0x80;
             switch (byte & 0x03)
             {
@@ -414,7 +413,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
                 case 1: vramIncrement = 32; break;
                 case 2: case 3: vramIncrement = 128; break;
             }
-            LogPpu("Increment VRAM by %d after reading %s byte", vramIncrement, isVramIncrementOnHigh ? "High" : "Low");
+            vramAddrTranslation = (byte >> 2) & 0x03;
+            LogPpu("Increment VRAM by %d after reading %s byte, translate %d bits", vramIncrement, isVramIncrementOnHigh ? "High" : "Low", vramAddrTranslation);
             return true;
         case eRegVMADDL: // 0x2116
             regVMADDL = byte;
@@ -441,25 +441,31 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
             return true;
         case eRegVMDATAL: // 0x2118
+        {
             regVMDATAL = byte;
-            vram[vramRwAddr] = byte;
-            LogPpu("Write to vram %04X=%02X", vramRwAddr, byte);
+            uint16_t addr = TranslateVramAddress(vramRwAddr, vramAddrTranslation);
+            vram[addr] = byte;
+            LogPpu("Write to vram %04X=%02X", addr, byte);
             if (!isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
                 vramRwAddr += vramIncrement << 1;
             }
             return true;
+        }
         case eRegVMDATAH: // 0x2119
+        {
             regVMDATAH = byte;
-            vram[vramRwAddr + 1] = byte;
-            LogPpu("Write to vram %04X=%02X", vramRwAddr + 1, byte);
+            uint16_t addr = TranslateVramAddress(vramRwAddr, vramAddrTranslation) + 1;
+            vram[addr] = byte;
+            LogPpu("Write to vram %04X=%02X", addr, byte);
             if (isVramIncrementOnHigh)
             {
                 // This is a word address, so left shift 1 to get the byte address.
                 vramRwAddr += vramIncrement << 1;
             }
             return true;
+        }
         case eRegM7SEL:
             regM7SEL = byte;
             LogPpu("M7SEL=%02X. NYI", byte);
@@ -1151,4 +1157,20 @@ void Ppu::SetBgVOffsetWriteTwice(EBgLayer bg, uint8_t byte)
     bgVOffset[bg] = ((byte << 8) | bgOffsetLatch) & 0x3FF;
     bgOffsetLatch = byte;
     LogPpu("bgVOffset[%d]=%04X", bg, bgVOffset[bg]);
+}
+
+
+uint16_t Ppu::TranslateVramAddress(uint16_t addr, uint8_t translate)
+{
+    switch (translate)
+    {
+        case 1:
+            return (addr & 0xFF00) | ((addr & 0xE0) >> 5) | ((addr & 0x1F) << 3);
+        case 2:
+            return (addr & 0xFE00) | ((addr & 0x1C0) >> 6) | ((addr & 0x3F) << 3);
+        case 3:
+            return (addr & 0xFC00) | ((addr & 0x380) >> 7) | ((addr & 0x7F) << 3);
+        default:
+            return addr;
+    }
 }

@@ -22,6 +22,7 @@ protected:
     uint16_t GetBgVOffset(int i) {return ppu->bgVOffset[i];}
     uint8_t GetCgramData(uint16_t addr) {return ppu->cgram[addr];}
     uint8_t GetOamData(uint16_t addr) {return ppu->oam[addr];}
+    uint16_t TranslateVramAddress(uint16_t addr, uint8_t translate) {return ppu->TranslateVramAddress(addr, translate);}
 
     Ppu *ppu;
     Memory *memory;
@@ -161,4 +162,21 @@ TEST_F(PpuTest, TEST_OAMDATA_Write_Twice)
     ppu->WriteRegister(eRegOAMADDH, 0x01);
     ppu->WriteRegister(eRegOAMDATA, 0xAB);
     EXPECT_EQ(GetOamData(0x21E), 0xAB);
+}
+
+
+TEST_F(PpuTest, TEST_TranslateVramAddress)
+{
+    uint16_t addr = 0x1234;
+    uint16_t ret = TranslateVramAddress(addr, 0);
+    EXPECT_EQ(ret, addr);
+
+    ret = TranslateVramAddress(addr, 1);
+    EXPECT_EQ(ret, 0x12A1);
+
+    ret = TranslateVramAddress(addr, 2);
+    EXPECT_EQ(ret, 0x13A0);
+
+    ret = TranslateVramAddress(addr, 3);
+    EXPECT_EQ(ret, 0x11A4);
 }
