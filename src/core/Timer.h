@@ -12,6 +12,7 @@ enum EClockSpeed
     eClockInternal = 6,
     eClockSlowRom = 8,
     eClockWRam = 8,
+    eClockDma = 8,
     eClockOther = 12
 };
 

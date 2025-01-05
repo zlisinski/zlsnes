@@ -203,25 +203,29 @@ void Dma::RunDma()
         // channel.byteCount == 0 means 65536, since it will underflow.
         do
         {
+            Address aAddr(channel.aBusBank, channel.aBusOffset);
+            Address bAddr(0, 0x21, channel.bBusPort + BBUS_INC_LOOKUP[channel.dmap.mode][bbi]);
+
             // TODO: Add checking of invalid transfers (io ports using A-bus address to B-bus, WRAM to WRAM-through-io-port).
             if (channel.dmap.bToA)
             {
-                // TODO: Fix this. Reads from B-bus should go through IoRegisterProxy.
-                //Write8Bit(aBusAddr, *GetBytePtr(bBusAddr + bBusInc[mode][bbi]));
-                throw NotYetImplementedException("DMA from B-Bus to A-Bus NYI");
+                uint8_t byte = memory->Read8Bit<false>(bAddr);
+                LogDma("  DMA %02X from %06X to %06X", byte, bAddr.ToUint(), aAddr.ToUint());
+                memory->Write8Bit<false>(aAddr, byte);
             }
             else
             {
-                Address aAddr(channel.aBusBank, channel.aBusOffset);
-                Address bAddr(0, 0x21, channel.bBusPort + BBUS_INC_LOOKUP[channel.dmap.mode][bbi]);
-                memory->Write8Bit(bAddr, *memory->GetBytePtr(aAddr.ToUint()));
-                //LogDma("Dma %02X from %06X to %04X", *memory->GetBytePtr(aAddr.ToUint()), aAddr.ToUint(), bAddr.ToUint());
+                uint8_t byte = memory->Read8Bit<false>(aAddr);
+                LogDma("  DMA %02X from %06X to %06X", byte, aAddr.ToUint(), bAddr.ToUint());
+                memory->Write8Bit<false>(bAddr, byte);
             }
 
             bbi = (bbi + 1) & 3;
             channel.aBusOffset += aBusInc;
             channel.byteCount--;
             channel.SyncToMemory();
+
+            timer->AddCycle(eClockDma);
         }
         while (channel.byteCount > 0);
 
@@ -309,16 +313,18 @@ void Dma::RunHDma()
                 // Copy a byte.
                 if (channel.dmap.bToA)
                 {
-                    uint8_t byte = memory->Read8Bit(bAddr);
+                    uint8_t byte = memory->Read8Bit<false>(bAddr);
                     LogDma("  HDMA %02X from %06X to %06X", byte, bAddr.ToUint(), aAddr.ToUint());
-                    memory->Write8Bit(aAddr, byte);
+                    memory->Write8Bit<false>(aAddr, byte);
                 }
                 else
                 {
-                    uint8_t byte = memory->Read8Bit(aAddr);
+                    uint8_t byte = memory->Read8Bit<false>(aAddr);
                     LogDma("  HDMA %02X from %06X to %06X", byte, aAddr.ToUint(), bAddr.ToUint());
-                    memory->Write8Bit(bAddr, byte);
+                    memory->Write8Bit<false>(bAddr, byte);
                 }
+
+                timer->AddCycle(eClockDma);
 
                 // Increment the A bus address.
                 aOffset++;
