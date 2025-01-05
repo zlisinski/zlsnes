@@ -23,7 +23,7 @@ MemoryModel::~MemoryModel()
 }
 
 
-void MemoryModel::SetMemory(uint8_t *newMemory, size_t size)
+void MemoryModel::SetMemory(const uint8_t *newMemory, size_t size)
 {
     beginResetModel();
     memory = newMemory;

@@ -56,6 +56,11 @@ public:
         return Address(bank, offset + off);
     }
 
+    Address AddOffsetWrapPage(uint8_t off) const
+    {
+        return Address(bank, (offset & 0xFF00) | static_cast<uint8_t>((offset & 0xFF) + off));
+    }
+
     bool operator==(const Address &a) const {return (bank == a.bank) && (offset == a.offset);}
     bool operator!=(const Address &a) const {return (bank != a.bank) || (offset != a.offset);}
     bool operator<(const Address &a) const {return ToUint() < a.ToUint();}

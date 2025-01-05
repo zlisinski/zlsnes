@@ -6,46 +6,39 @@
 #include "IoRegisterProxy.h"
 #include "TimerObserver.h"
 
+
 class Memory;
+class Timer;
 
 
-class Dma : public IoRegisterProxy, public HBlankObserver
+class Dma : public IoRegisterProxy, public HBlankObserver, public VBlankObserver
 {
 public:
-    Dma(Memory *memory, TimerSubject *timer);
+    Dma(Memory *memory, Timer *timer);
     virtual ~Dma() {}
 
 protected:
     // Inherited from HBlankObserver.
     void ProcessHBlankStart(uint32_t scanline) override;
-    void ProcessHBlankEnd(uint32_t scanline) override;
+    void ProcessHBlankEnd(uint32_t scanline) override {(void)scanline;}
+    // Inherited from VBlankObserver.
+    void ProcessVBlankStart() override {};
+    void ProcessVBlankEnd() override;
 
 private:
     // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) const override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
-    void RunDma();
-    void SetupHdma();
-    void RunHDma(uint32_t scanline);
-
-    Memory *memory;
-    uint8_t *ioPorts43; // This class basically owns this block of data, but I don't currently have a way of
-                        // registering blocks of data, so this is the workaround for now.
-
-    uint8_t &regMDMAEN;  // 0x420B Select General Purpose DMA Channel(s) and Start Transfer
-    uint8_t &regHDMAEN;  // 0x420C Select H-Blank DMA (H-DMA) Channel(s)
-
     struct DmaChannelData
     {
         DmaChannelData(uint8_t channelId, uint8_t *regData);
-        void Load();
-        void SaveABusAddr();
-        void SaveByteCount();
+        void SyncToMemory();
 
         uint8_t channelId;
         uint8_t *regData;
         bool doTransfer;
+        bool isTerminated;
 
         union
         {
@@ -60,19 +53,37 @@ private:
                 uint8_t bToA:1;
             } dmap;
         };
-        Address bBusAddr; // 0x43n1 - BBADn
-        Address aBusAddr; // 0x43n4,3,2 - A1TnB/A1TnH/A1Bn
 
-        // MPDMA
-        uint16_t byteCount; // 0x43n6,5 - DASnL/DASnH
+        uint8_t bBusPort; // 0x43n1 - BBADn
+        uint8_t aBusBank; // 0x43n4 - A1TnB
+        uint16_t aBusOffset; // 0x43n3,2 - A1TnH/A1Bn
+
+        union // 0x43n6,5 - DASnH/DASnL
+        {
+            uint16_t byteCount; // DMA
+            uint16_t indirectOffset; // HDMA
+        };
 
         // HDMA
-        Address indirectAddr; // 0x43n7,6,5 - DASBn/DASnH/DASnL
-        Address directAddr; // 0x43n4,9,8 - A1TnB/A2AnH/A2AnL
+        uint8_t indirectBank; // 0x43n7 - DASBn
+        uint16_t directOffset; // 0x43n9,8 - A2AnH/A2AnL
         uint8_t lineCount; // 0x43nA - NLTRn
-    } channels[8];
+    };
 
-    
+    void RunDma();
+    void SetupHdma();
+    void LoadNextHdmaData(DmaChannelData &channel);
+    void RunHDma();
+
+    Memory *memory;
+    Timer *timer;
+    uint8_t *ioPorts43; // This class basically owns this block of data, but I don't currently have a way of
+                        // registering blocks of data, so this is the workaround for now.
+
+    uint8_t &regMDMAEN;  // 0x420B Select General Purpose DMA Channel(s) and Start Transfer
+    uint8_t &regHDMAEN;  // 0x420C Select H-Blank DMA (H-DMA) Channel(s)
+
+    DmaChannelData channels[8];
 
     friend class DmaTest;
 };

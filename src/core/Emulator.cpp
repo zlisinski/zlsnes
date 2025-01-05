@@ -197,6 +197,10 @@ void Emulator::ThreadFunc()
     if (debuggerInterface)
         debuggerInterface->SetEmulatorObjects(nullptr, nullptr, nullptr);
 
+    // SetEmulatorObjects sends a signal that needs to be handled by the gui thread before continuing.
+    // TODO: Add proper thread sync later. I don't feel like dealing with this now.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     delete apu;
     apu = NULL;
     delete cpu;

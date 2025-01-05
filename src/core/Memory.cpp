@@ -98,10 +98,6 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
                 //return ioPorts42[addr & 0xFF];
-            case 0x43:
-                throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
-                //return ioPorts43[addr & 0xFF];
             default:
                 LogError("Read from unhandled address %06X", addr);
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
@@ -259,13 +255,6 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //timer->AddCycle(EClockSpeed::eClockIoReg);
                 //ioPorts42[addr & 0xFF] = value;
-                if (debuggerInterface != NULL)
-                    debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
-                return;
-            case 0x43:
-                //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                timer->AddCycle(EClockSpeed::eClockIoReg);
-                ioPorts43[addr & 0xFF] = value;
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;

@@ -14,7 +14,7 @@ public:
     MemoryModel(QObject *parent = NULL);
     virtual ~MemoryModel();
 
-    void SetMemory(uint8_t *newMemory, size_t size);
+    void SetMemory(const uint8_t *newMemory, size_t size);
     void InvalidateMemory(Address address, uint16_t len);
 
     // Overrides for QAbstractTableModel.
@@ -24,6 +24,6 @@ public:
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
 
 private:
-    uint8_t *memory;
+    const uint8_t *memory;
     size_t memSize;
 };

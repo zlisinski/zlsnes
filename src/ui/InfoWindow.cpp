@@ -452,6 +452,9 @@ void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
 
 void InfoWindow::UpdateTilemapView()
 {
+    if (ppu == nullptr)
+        return;
+
     // This slows down the ui, so only draw when visible.
     if (!ui->gvTilemap->isVisible())
         return;
