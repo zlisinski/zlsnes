@@ -4,6 +4,13 @@
 #include "Timer.h"
 
 
+// The linker needs this, otherwise the function definition needs to go in the header.
+template uint8_t Memory::Read8Bit<true>(uint32_t addr);
+template uint8_t Memory::Read8Bit<false>(uint32_t addr);
+template void Memory::Write8Bit<true>(uint32_t addr, uint8_t value);
+template void Memory::Write8Bit<false>(uint32_t addr, uint8_t value);
+
+
 Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterface) :
     wram(),
     ioPorts21(),
@@ -41,6 +48,7 @@ void Memory::SetTimer(Timer *timer)
 }
 
 
+template<bool addTime>
 uint8_t Memory::Read8Bit(uint32_t addr)
 {
     // Note: Only store the openBusValue on reads from ROM and RAM (assuming that code can be executed from RAM).
@@ -58,12 +66,14 @@ uint8_t Memory::Read8Bit(uint32_t addr)
             case 0x08: case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D: case 0x0E: case 0x0F:
             case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
             case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
-                timer->AddCycle(EClockSpeed::eClockWRam);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockWRam);
                 // Save value for later open bus reads.
                 openBusValue = wram[addr & 0x1FFF];
                 return openBusValue;
             case 0x21:
-                timer->AddCycle(EClockSpeed::eClockIoReg);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
                     case eRegWMDATA: // 0x2180
@@ -81,10 +91,12 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 //return ioPorts21[addr & 0xFF];
             case 0x40:
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockOther);
+                //if constexpr (addTime)
+                //    timer->AddCycle(EClockSpeed::eClockOther);
                 //return ioPorts40[addr & 0xFF];
             case 0x42:
-                timer->AddCycle(EClockSpeed::eClockIoReg);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
                     case eRegRDDIVH:
@@ -96,7 +108,8 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                         throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 }
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
+                //if constexpr (addTime)
+                //    timer->AddCycle(EClockSpeed::eClockIoReg);
                 //return ioPorts42[addr & 0xFF];
             default:
                 LogError("Read from unhandled address %06X", addr);
@@ -107,21 +120,26 @@ uint8_t Memory::Read8Bit(uint32_t addr)
 
     if ((addr & 0xFE0000) == 0x7E0000) // Bank is 0x7E or 0x7F.
     {
-        timer->AddCycle(EClockSpeed::eClockWRam);
+        if constexpr (addTime)
+            timer->AddCycle(EClockSpeed::eClockWRam);
         // Save value for later open bus reads.
         openBusValue = wram[addr & 0x1FFFF];
         return openBusValue;
     }
 
-    if ((addr & 0x800000) == 0x800000 && isFastSpeed)
-        timer->AddCycle(EClockSpeed::eClockFastRom);
-    else
-        timer->AddCycle(EClockSpeed::eClockSlowRom);
+    if constexpr (addTime)
+    {
+        if ((addr & 0x800000) == 0x800000 && isFastSpeed)
+            timer->AddCycle(EClockSpeed::eClockFastRom);
+        else
+            timer->AddCycle(EClockSpeed::eClockSlowRom);
+    }
 
     return cart->ReadByte(addr);
 }
 
 
+template<bool addTime>
 void Memory::Write8Bit(uint32_t addr, uint8_t value)
 {
     if ((addr & 0x40E000) < 0x6000) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x5FFF.
@@ -141,13 +159,15 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
             case 0x08: case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D: case 0x0E: case 0x0F:
             case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
             case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
-                timer->AddCycle(EClockSpeed::eClockWRam);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockWRam);
                 wram[addr & 0x1FFF] = value;
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(0x7E, addr & 0x1FFF), 1);
                 return;
             case 0x21:
-                timer->AddCycle(EClockSpeed::eClockIoReg);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
                     case eRegAPUI00: // 0x2140
@@ -186,14 +206,16 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 return;
             case 0x40:
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                timer->AddCycle(EClockSpeed::eClockOther);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockOther);
                 ioPorts40[addr & 0xFF] = value;
                 LogMemory("Write to joypad port %04X %02X", addr & 0xFFFF, value);
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x42:
-                timer->AddCycle(EClockSpeed::eClockIoReg);
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
                     case eRegWRIO: // 0x4201
@@ -253,7 +275,8 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                         break;
                 }
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                //timer->AddCycle(EClockSpeed::eClockIoReg);
+                //if constexpr (addTime)
+                //    timer->AddCycle(EClockSpeed::eClockIoReg);
                 //ioPorts42[addr & 0xFF] = value;
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
@@ -267,17 +290,21 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
 
     if ((addr & 0xFE0000) == 0x7E0000) // Bank is 0x7E or 0x7F.
     {
-        timer->AddCycle(EClockSpeed::eClockWRam);
+        if constexpr (addTime)
+            timer->AddCycle(EClockSpeed::eClockWRam);
         wram[addr & 0x1FFFF] = value;
         if (debuggerInterface != NULL)
             debuggerInterface->MemoryChanged(Address(addr & 0x1FFFF), 1);
         return;
     }
 
-    if ((addr & 0x800000) == 0x800000 && isFastSpeed)
-        timer->AddCycle(EClockSpeed::eClockFastRom);
-    else
-        timer->AddCycle(EClockSpeed::eClockSlowRom);
+    if constexpr (addTime)
+    {
+        if ((addr & 0x800000) == 0x800000 && isFastSpeed)
+            timer->AddCycle(EClockSpeed::eClockFastRom);
+        else
+            timer->AddCycle(EClockSpeed::eClockSlowRom);
+    }
 
     cart->WriteByte(addr, value);
 }
