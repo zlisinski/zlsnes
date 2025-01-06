@@ -180,3 +180,34 @@ TEST_F(PpuTest, TEST_TranslateVramAddress)
     ret = TranslateVramAddress(addr, 3);
     EXPECT_EQ(ret, 0x11A4);
 }
+
+
+TEST_F(PpuTest, TEST_Multiplication)
+{
+    // 0 * 10 = 0
+    ppu->WriteRegister(eRegM7B, 10);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYH), 0);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYM), 0);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYL), 0);
+
+    // Writing one byte uses the latch value, which is shared between M7A and M7B.
+    // 0x800A(-32758) * 10 = -327580
+    ppu->WriteRegister(eRegM7A, 0x80);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYH), 0xFB);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYM), 0x00);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYL), 0x64);
+
+    // Write second byte.
+    // 0x0080(128) * 10 = 1280
+    ppu->WriteRegister(eRegM7A, 0x00);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYH), 0x00);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYM), 0x05);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYL), 0x00);
+
+    // M7B always uses the last byte written, not the full 16-bit value.
+    // 0x0080(128) * -1 = -128
+    ppu->WriteRegister(eRegM7B, 0xFF);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYH), 0xFF);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYM), 0xFF);
+    EXPECT_EQ(ppu->ReadRegister(eRegMPYL), 0x80);
+}

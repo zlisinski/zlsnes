@@ -42,6 +42,7 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     vramAddrTranslation(0),
     vramRwAddr(0),
     vramPrefetch{0,0},
+    m7Latch(0),
     cgramRwAddr(0),
     cgramLatch(0),
     mainScreenLayers{false, false, false, false, false},
@@ -472,10 +473,18 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
         case eRegM7A: // 0x211B
             regM7A = byte;
+            m7a = Bytes::Make16Bit(byte, m7Latch);
+            m7Latch = byte;
+            // Writes to this register also performs multiplication.
+            M7Multiply();
             LogPpu("M7A=%02X. NYI", byte);
             return true;
         case eRegM7B: // 0x211C
             regM7B = byte;
+            m7b = Bytes::Make16Bit(byte, m7Latch);
+            m7Latch = byte;
+            // Writes to this register also performs multiplication.
+            M7Multiply();
             LogPpu("M7B=%02X. NYI", byte);
             return true;
         case eRegM7C: // 0x211D
@@ -1173,4 +1182,13 @@ uint16_t Ppu::TranslateVramAddress(uint16_t addr, uint8_t translate)
         default:
             return addr;
     }
+}
+
+
+void Ppu::M7Multiply()
+{
+    int32_t result = static_cast<int16_t>(m7a) * static_cast<int8_t>(regM7B);
+    regMPYH = Bytes::GetByte<2>(result);
+    regMPYM = Bytes::GetByte<1>(result);
+    regMPYL = Bytes::GetByte<0>(result);
 }

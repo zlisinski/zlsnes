@@ -94,6 +94,8 @@ private:
 
     uint16_t TranslateVramAddress(uint16_t addr, uint8_t translate);
 
+    void M7Multiply();
+
     std::array<uint8_t, OAM_SIZE> oam;
     std::array<uint8_t, VRAM_SIZE> vram;
     std::array<uint8_t, CGRAM_SIZE> cgram;
@@ -149,6 +151,11 @@ private:
     // VMADDL/VMADDH - 0x2116/0x2117
     uint16_t vramRwAddr;
     uint8_t vramPrefetch[2];
+
+    // M7[ABCDXY] - 0x211B-0x2120
+    uint8_t m7Latch;
+    uint16_t m7a;
+    uint16_t m7b;
 
     // CGADD - 0x2121
     uint16_t cgramRwAddr;
