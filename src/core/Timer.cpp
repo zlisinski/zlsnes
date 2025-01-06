@@ -142,7 +142,7 @@ void Timer::ProcessVBlankEnd()
 }
 
 
-uint8_t Timer::ReadRegister(EIORegisters ioReg) const
+uint8_t Timer::ReadRegister(EIORegisters ioReg)
 {
     LogTimer("Timer::ReadRegister %04X", ioReg);
 

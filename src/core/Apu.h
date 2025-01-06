@@ -12,7 +12,7 @@ public:
     virtual ~Apu() {}
 
 private:
-    uint8_t ReadRegister(EIORegisters ioReg) const override;
+    uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
     uint8_t &regAPUI00; // 0x2140 Main CPU to Sound CPU Communication Port 0

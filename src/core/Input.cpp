@@ -46,7 +46,7 @@ void Input::SetButtons(const Buttons &buttons)
 }
 
 
-uint8_t Input::ReadRegister(EIORegisters ioReg) const
+uint8_t Input::ReadRegister(EIORegisters ioReg)
 {
     LogInput("Input::ReadByte %04X", ioReg);
 

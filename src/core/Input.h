@@ -20,7 +20,7 @@ public:
 
     // Inherited from IoRegisterProxy.
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
-    uint8_t ReadRegister(EIORegisters ioReg) const override;
+    uint8_t ReadRegister(EIORegisters ioReg) override;
 
 protected:
     // Inherited from VBlankObserver.

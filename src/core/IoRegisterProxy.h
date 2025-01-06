@@ -17,7 +17,7 @@ protected:
 
 private:
     virtual bool WriteRegister(EIORegisters ioReg, uint8_t byte) = 0;
-    virtual uint8_t ReadRegister(EIORegisters ioReg) const = 0;
+    virtual uint8_t ReadRegister(EIORegisters ioReg) = 0;
 
     friend class IoRegisterSubject;
 };

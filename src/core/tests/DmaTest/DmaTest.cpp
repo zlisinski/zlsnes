@@ -52,7 +52,7 @@ void DmaTest::TearDown()
 class FakeIo : public IoRegisterProxy
 {
 public:
-    uint8_t ReadRegister(EIORegisters ioReg) const override
+    uint8_t ReadRegister(EIORegisters ioReg) override
     {
         (void)ioReg;
         return 0;

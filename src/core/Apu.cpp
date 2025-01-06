@@ -11,7 +11,7 @@ Apu::Apu(IoRegisterSubject *memory) :
 }
 
 
-uint8_t Apu::ReadRegister(EIORegisters ioReg) const
+uint8_t Apu::ReadRegister(EIORegisters ioReg)
 {
     LogApu("Apu::ReadRegister %04X", ioReg);
 

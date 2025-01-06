@@ -47,6 +47,8 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     cgramLatch(0),
     mainScreenLayers{false, false, false, false, false},
     subScreenLayers{false, false, false, false, false},
+    ppu1OpenBus(0),
+    ppu2OpenBus(0),
     regINIDISP(memory->RequestOwnership(eRegINIDISP, this)),
     regOBJSEL(memory->RequestOwnership(eRegOBJSEL, this)),
     regOAMADDL(memory->RequestOwnership(eRegOAMADDL, this)),
@@ -117,144 +119,106 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
 }
 
 
-uint8_t Ppu::ReadRegister(EIORegisters ioReg) const
+uint8_t Ppu::ReadRegister(EIORegisters ioReg)
 {
     LogPpu("Ppu::ReadRegister %04X", ioReg);
 
     switch (ioReg)
     {
-        case eRegINIDISP:
-            return regINIDISP;
-        case eRegOBJSEL:
-            return regOBJSEL;
-        case eRegOAMADDL:
-            return regOAMADDL;
-        case eRegOAMADDH:
-            return regOAMADDH;
-        case eRegOAMDATA:
-            return regOAMDATA;
-        case eRegBGMODE:
-            return regBGMODE;
-        case eRegMOSAIC:
-            return regMOSAIC;
-        case eRegBG1SC:
-            return regBG1SC;
-        case eRegBG2SC:
-            return regBG2SC;
-        case eRegBG3SC:
-            return regBG3SC;
-        case eRegBG4SC:
-            return regBG4SC;
-        case eRegBG12NBA:
-            return regBG12NBA;
-        case eRegBG34NBA:
-            return regBG34NBA;
-        case eRegBG1HOFS:
-            return regBG1HOFS;
-        case eRegBG1VOFS:
-            return regBG1VOFS;
-        case eRegBG2HOFS:
-            return regBG2HOFS;
-        case eRegBG2VOFS:
-            return regBG2VOFS;
-        case eRegBG3HOFS:
-            return regBG3HOFS;
-        case eRegBG3VOFS:
-            return regBG3VOFS;
-        case eRegBG4HOFS:
-            return regBG4HOFS;
-        case eRegBG4VOFS:
-            return regBG4VOFS;
-        case eRegVMAIN:
-            return regVMAIN;
-        case eRegVMADDL:
-            return regVMADDL;
-        case eRegVMADDH:
-            return regVMADDH;
-        case eRegVMDATAL:
-            return regVMDATAL;
-        case eRegVMDATAH:
-            return regVMDATAH;
-        case eRegM7SEL:
-            return regM7SEL;
-        case eRegM7A:
-            return regM7A;
-        case eRegM7B:
-            return regM7B;
-        case eRegM7C:
-            return regM7C;
-        case eRegM7D:
-            return regM7D;
-        case eRegM7X:
-            return regM7X;
-        case eRegM7Y:
-            return regM7Y;
-        case eRegCGADD:
-            return regCGADD;
-        case eRegCGDATA:
-            return regCGDATA;
-        case eRegW12SEL:
-            return regW12SEL;
-        case eRegW34SEL:
-            return regW34SEL;
-        case eRegWOBJSEL:
-            return regWOBJSEL;
-        case eRegWH0:
-            return regWH0;
-        case eRegWH1:
-            return regWH1;
-        case eRegWH2:
-            return regWH2;
-        case eRegWH3:
-            return regWH3;
-        case eRegWBGLOG:
-            return regWBGLOG;
-        case eRegWOBJLOG:
-            return regWOBJLOG;
-        case eRegTM:
-            return regTM;
-        case eRegTS:
-            return regTS;
-        case eRegTMW:
-            return regTMW;
-        case eRegTSW:
-            return regTSW;
-        case eRegCGWSEL:
-            return regCGWSEL;
-        case eRegCGADSUB:
-            return regCGADSUB;
-        case eRegCOLDATA:
-            return regCOLDATA;
-        case eRegSETINI:
-            return regSETINI;
-        case eRegMPYL:
-            return regMPYL;
-        case eRegMPYM:
-            return regMPYM;
-        case eRegMPYH:
-            return regMPYH;
+        case eRegOAMDATA: // 0x2104
+        case eRegBGMODE:  // 0x2105
+        case eRegMOSAIC:  // 0x2106
+        case eRegBG2SC:   // 0x2108
+        case eRegBG3SC:   // 0x2109
+        case eRegBG4SC:   // 0x210A
+        case eRegBG4VOFS: // 0x2114
+        case eRegVMAIN:   // 0x2115
+        case eRegVMADDL:  // 0x2116
+        case eRegVMDATAL: // 0x2118
+        case eRegVMDATAH: // 0x2119
+        case eRegM7SEL:   // 0x211A
+        case eRegW34SEL:  // 0x2124
+        case eRegWOBJSEL: // 0x2125
+        case eRegWH0:     // 0x2126
+        case eRegWH2:     // 0x2128
+        case eRegWH3:     // 0x2129
+        case eRegWBGLOG:  // 0x212A
+            LogPpu("Read from open bus register %04X", ioReg);
+            return ppu1OpenBus;
+
+        case eRegINIDISP: // 0x2100
+        case eRegOBJSEL:  // 0x2101
+        case eRegOAMADDL: // 0x2102
+        case eRegOAMADDH: // 0x2103
+        case eRegBG1SC:   // 0x2107
+        case eRegBG12NBA: // 0x210B
+        case eRegBG34NBA: // 0x210C
+        case eRegBG1HOFS: // 0x210D
+        case eRegBG1VOFS: // 0x210E
+        case eRegBG2HOFS: // 0x210F
+        case eRegBG2VOFS: // 0x2110
+        case eRegBG3HOFS: // 0x2111
+        case eRegBG3VOFS: // 0x2112
+        case eRegBG4HOFS: // 0x2113
+        case eRegVMADDH:  // 0x2117
+        case eRegM7A:     // 0x211B
+        case eRegM7B:     // 0x211C
+        case eRegM7C:     // 0x211D
+        case eRegM7D:     // 0x211E
+        case eRegM7X:     // 0x211F
+        case eRegM7Y:     // 0x2120
+        case eRegCGADD:   // 0x2121
+        case eRegCGDATA:  // 0x2122
+        case eRegW12SEL:  // 0x2123
+        case eRegWH1:     // 0x2127
+        case eRegWOBJLOG: // 0x212B
+        case eRegTM:      // 0x212C
+        case eRegTS:      // 0x212D
+        case eRegTMW:     // 0x212E
+        case eRegTSW:     // 0x212F
+        case eRegCGWSEL:  // 0x2130
+        case eRegCGADSUB: // 0x2131
+        case eRegCOLDATA: // 0x2132
+        case eRegSETINI:  // 0x2133
+            LogPpu("Read from open bus register %04X", ioReg);
+            return memory->GetOpenBusValue();
+
+        case eRegMPYL: // 0x2134
+            return (ppu1OpenBus = regMPYL);
+        case eRegMPYM: // 0x2135
+            return (ppu1OpenBus = regMPYM);
+        case eRegMPYH: // 0x2136
+            return (ppu1OpenBus = regMPYH);
         case eRegSLHV:
+            LogPpu("Read from SLHV NYI");
             return regSLHV;
-        case eRegRDOAM:
-            return regRDOAM;
-        case eRegRDVRAML:
-            return regRDVRAML;
-        case eRegRDVRAMH:
-            return regRDVRAMH;
-        case eRegRDCGRAM:
-            return regRDCGRAM;
-        case eRegOPHCT:
-            return regOPHCT;
-        case eRegOPVCT:
-            return regOPVCT;
-        case eRegSTAT77:
-            return regSTAT77;
-        case eRegSTAT78:
-            return regSTAT78;
+        case eRegRDOAM: // 0x2138
+            LogPpu("Read from RDOAM NYI");
+            return (ppu1OpenBus = regRDOAM);
+        case eRegRDVRAML: // 0x2139
+            LogPpu("Read from RDVRAML NYI");
+            return (ppu1OpenBus = regRDVRAML);
+        case eRegRDVRAMH: // 0x213A
+            LogPpu("Read from RDVRAMH NYI");
+            return (ppu1OpenBus = regRDVRAMH);
+        case eRegRDCGRAM: // 0x213B
+            LogPpu("Read from RDCGRAM NYI");
+            return (ppu2OpenBus = regRDCGRAM);
+        case eRegOPHCT: // 0x213C
+            LogPpu("Read from OPHCT NYI");
+            return (ppu2OpenBus = regOPHCT);
+        case eRegOPVCT: // 0x213D
+            LogPpu("Read from OPVCT NYI");
+            return (ppu2OpenBus = regOPVCT);
+        case eRegSTAT77: // 0x213E
+            LogPpu("Read from STAT77 NYI");
+            return (ppu1OpenBus = regSTAT77);
+        case eRegSTAT78: // 0x213F
+            LogPpu("Read from STAT78 NYI");
+            return (ppu2OpenBus = regSTAT78);
         default:
             throw std::range_error(fmt("Ppu doesnt handle reads to 0x%04X", ioReg));
     }
-    return 0;
 }
 
 
@@ -607,42 +571,6 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             regSETINI = byte;
             LogPpu("ExtSync=%d ExtBg=%d HiRes=%d Overscan=%d, ObjInterlace=%d ScreenInterlace=%d", Bytes::GetBit<7>(byte), Bytes::GetBit<6>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<0>(byte));
             return true;
-        case eRegMPYL:
-            regMPYL = byte;
-            return false;
-        case eRegMPYM:
-            regMPYM = byte;
-            return false;
-        case eRegMPYH:
-            regMPYH = byte;
-            return false;
-        case eRegSLHV:
-            regSLHV = byte;
-            return false;
-        case eRegRDOAM:
-            regRDOAM = byte;
-            return false;
-        case eRegRDVRAML:
-            regRDVRAML = byte;
-            return false;
-        case eRegRDVRAMH:
-            regRDVRAMH = byte;
-            return false;
-        case eRegRDCGRAM:
-            regRDCGRAM = byte;
-            return false;
-        case eRegOPHCT:
-            regOPHCT = byte;
-            return false;
-        case eRegOPVCT:
-            regOPVCT = byte;
-            return false;
-        case eRegSTAT77:
-            regSTAT77 = byte;
-            return false;
-        case eRegSTAT78:
-            regSTAT78 = byte;
-            return false;
         default:
             return false;
     }

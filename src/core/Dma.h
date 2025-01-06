@@ -27,7 +27,7 @@ protected:
 
 private:
     // Inherited from IoRegisterProxy.
-    uint8_t ReadRegister(EIORegisters ioReg) const override;
+    uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
     struct DmaChannelData

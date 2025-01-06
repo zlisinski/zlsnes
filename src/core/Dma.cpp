@@ -70,7 +70,7 @@ Dma::Dma(Memory *memory, Timer *timer) :
 }
 
 
-uint8_t Dma::ReadRegister(EIORegisters ioReg) const
+uint8_t Dma::ReadRegister(EIORegisters ioReg)
 {
     LogDma("Dma::ReadRegister %04X", ioReg);
 

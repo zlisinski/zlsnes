@@ -31,7 +31,7 @@ public:
     virtual ~Ppu() {}
 
     // Inherited from IoRegisterProxy.
-    uint8_t ReadRegister(EIORegisters ioReg) const override;
+    uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
     // Used for debugging.
@@ -164,6 +164,9 @@ private:
     // TM/TS - 0x212c/0x212D
     bool mainScreenLayers[5];
     bool subScreenLayers[5];
+
+    uint8_t ppu1OpenBus;
+    uint8_t ppu2OpenBus;
 
     //Write-only
     uint8_t &regINIDISP; // 0x2100 Display Control 1
