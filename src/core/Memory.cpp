@@ -1,6 +1,7 @@
 #include "Memory.h"
 #include "DebuggerInterface.h"
 #include "Cartridge.h"
+#include "Ppu.h"
 #include "Timer.h"
 
 
@@ -21,10 +22,11 @@ Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterfac
     wramRWAddr(0),
     isFastSpeed(false),
     openBusValue(0),
-    cart(NULL),
+    cart(nullptr),
     debuggerInterface(debuggerInterface),
     infoInterface(infoInterface),
-    timer(NULL)
+    ppu(nullptr),
+    timer(nullptr)
 {
 
 }
@@ -33,18 +35,6 @@ Memory::Memory(InfoInterface *infoInterface, DebuggerInterface *debuggerInterfac
 Memory::~Memory()
 {
 
-}
-
-
-void Memory::SetCartridge(Cartridge *cart)
-{
-    this->cart = cart;
-}
-
-
-void Memory::SetTimer(Timer *timer)
-{
-    this->timer = timer;
 }
 
 
@@ -219,6 +209,9 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 switch (addr & 0xFFFF)
                 {
                     case eRegWRIO: // 0x4201
+                        // On 1 to 0 transition, have the ppu latch counters.
+                        if (Bytes::TestBit<7>(ioPorts42[addr & 0xFF]) && !Bytes::TestBit<7>(value))
+                            ppu->LatchCounters();
                         ioPorts42[addr & 0xFF] = value;
                         LogMemory("WRIO=%02X NYI", value);
                         break;

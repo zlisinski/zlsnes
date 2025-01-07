@@ -65,7 +65,8 @@ bool Emulator::LoadRom(const std::string &filename)
     // This can't be done in the Memory constructor since Timer doesn't exist yet.
     memory->SetTimer(timer);
     ppu = new Ppu(memory, timer, displayInterface, debuggerInterface);
-    input = new Input(memory, timer/*, interrupts*/);
+    memory->SetPpu(ppu);
+    input = new Input(memory, timer);
     cpu = new Cpu(memory, timer, interrupts);
     apu = new Apu(memory/*, timer, audioInterface, gameSpeedSubject*/);
 

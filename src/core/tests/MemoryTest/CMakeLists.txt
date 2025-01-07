@@ -12,6 +12,7 @@ add_executable(MemoryTest
     ../../Cartridge.cpp
     ../../Logger.cpp
     ../../Memory.cpp
+    ../../Ppu.cpp
     ../../Utils.cpp
     mock/Timer.cpp
 )

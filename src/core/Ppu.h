@@ -30,6 +30,8 @@ public:
     Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Ppu() {}
 
+    void LatchCounters(bool force = false);
+
     // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
@@ -164,6 +166,14 @@ private:
     // TM/TS - 0x212c/0x212D
     bool mainScreenLayers[5];
     bool subScreenLayers[5];
+
+    // OPHCT - 0x213C
+    uint16_t hCount;
+    bool hCountFlipflop;
+
+    // OPVCT - 0x213D
+    uint16_t vCount;
+    bool vCountFlipflop;
 
     uint8_t ppu1OpenBus;
     uint8_t ppu2OpenBus;
