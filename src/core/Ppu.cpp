@@ -560,12 +560,12 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             {
                 cgram[cgramRwAddr - 1] = cgramLatch;
                 cgram[cgramRwAddr] = byte;
-                LogPpu("Writing word to cgram %04X %02X%02X", cgramRwAddr, byte, cgramLatch);
+                LogPpu("Writing word to cgram %04X %02X%02X", cgramRwAddr - 1, byte, cgramLatch);
 
                 // Convert to ARGB and store in palette.
                 palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(Bytes::Make16Bit(byte, cgramLatch));
             }
-            cgramRwAddr++;
+            cgramRwAddr = (cgramRwAddr + 1) & 0x1FF;
             return true;
 
         case eRegW12SEL: // 0x2123
