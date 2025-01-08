@@ -45,8 +45,15 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     m7Latch(0),
     cgramRwAddr(0),
     cgramLatch(0),
+    bgEnableWindow{{false, false}, {false, false}, {false, false}, {false, false}, {false, false}, {false, false}},
+    bgInvertWindow{{false, false}, {false, false}, {false, false}, {false, false}, {false, false}, {false, false}},
+    windowLeft{0, 0},
+    windowRight{0, 0},
+    bgWindowMask{0, 0, 0, 0, 0, 0},
     mainScreenLayers{false, false, false, false, false},
     subScreenLayers{false, false, false, false, false},
+    mainScreenWindow{false, false, false, false, false},
+    subScreenWindow{false, false, false, false, false},
     hCount(0xFFFF),
     hCountFlipflop(false),
     vCount(0xFFFF),
@@ -570,47 +577,87 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegW12SEL: // 0x2123
             regW12SEL = byte;
-            LogPpu("W12SEL=%02X. NYI", byte);
+            bgInvertWindow[eBG1][0] = Bytes::TestBit<0>(byte);
+            bgEnableWindow[eBG1][0] = Bytes::TestBit<1>(byte);
+            bgInvertWindow[eBG1][1] = Bytes::TestBit<2>(byte);
+            bgEnableWindow[eBG1][1] = Bytes::TestBit<3>(byte);
+            bgInvertWindow[eBG2][0] = Bytes::TestBit<4>(byte);
+            bgEnableWindow[eBG2][0] = Bytes::TestBit<5>(byte);
+            bgInvertWindow[eBG2][1] = Bytes::TestBit<6>(byte);
+            bgEnableWindow[eBG2][1] = Bytes::TestBit<7>(byte);
+            LogPpu("W12SEL=%02X Bg1En=%d,%d Bg1In=%d,%d Bg2En=%d,%d Bg2In=%d,%d", byte,
+                   bgEnableWindow[eBG1][0], bgEnableWindow[eBG1][1], bgInvertWindow[eBG1][0], bgInvertWindow[eBG1][1],
+                   bgEnableWindow[eBG2][0], bgEnableWindow[eBG2][1], bgInvertWindow[eBG2][0], bgInvertWindow[eBG2][1]);
             return true;
 
         case eRegW34SEL: // 0x2124
             regW34SEL = byte;
-            LogPpu("W34SEL=%02X. NYI", byte);
+            bgInvertWindow[eBG3][0] = Bytes::TestBit<0>(byte);
+            bgEnableWindow[eBG3][0] = Bytes::TestBit<1>(byte);
+            bgInvertWindow[eBG3][1] = Bytes::TestBit<2>(byte);
+            bgEnableWindow[eBG3][1] = Bytes::TestBit<3>(byte);
+            bgInvertWindow[eBG4][0] = Bytes::TestBit<4>(byte);
+            bgEnableWindow[eBG4][0] = Bytes::TestBit<5>(byte);
+            bgInvertWindow[eBG4][1] = Bytes::TestBit<6>(byte);
+            bgEnableWindow[eBG4][1] = Bytes::TestBit<7>(byte);
+            LogPpu("W34SEL=%02X Bg3En=%d,%d Bg3In=%d,%d Bg4En=%d,%d Bg4In=%d,%d", byte,
+                   bgEnableWindow[eBG3][0], bgEnableWindow[eBG3][1], bgInvertWindow[eBG3][0], bgInvertWindow[eBG3][1],
+                   bgEnableWindow[eBG4][0], bgEnableWindow[eBG4][1], bgInvertWindow[eBG4][0], bgInvertWindow[eBG4][1]);
             return true;
 
         case eRegWOBJSEL: // 0x2125
             regWOBJSEL = byte;
-            LogPpu("WOBJSEL=%02X. NYI", byte);
+            bgInvertWindow[eOBJ][0] = Bytes::TestBit<0>(byte);
+            bgEnableWindow[eOBJ][0] = Bytes::TestBit<1>(byte);
+            bgInvertWindow[eOBJ][1] = Bytes::TestBit<2>(byte);
+            bgEnableWindow[eOBJ][1] = Bytes::TestBit<3>(byte);
+            bgEnableWindow[eCOL][0] = Bytes::TestBit<4>(byte);
+            bgEnableWindow[eCOL][0] = Bytes::TestBit<5>(byte);
+            bgEnableWindow[eCOL][1] = Bytes::TestBit<6>(byte);
+            bgEnableWindow[eCOL][1] = Bytes::TestBit<7>(byte);
+            LogPpu("WOBJSEL=%02X ObjEn=%d,%d ObjIn=%d,%d ColEn=%d,%d ColIn=%d,%d", byte,
+                   bgEnableWindow[eOBJ][0], bgEnableWindow[eOBJ][1], bgInvertWindow[eOBJ][0], bgInvertWindow[eOBJ][1],
+                   bgEnableWindow[eCOL][0], bgEnableWindow[eCOL][1], bgEnableWindow[eCOL][0], bgEnableWindow[eCOL][1]);
             return true;
 
         case eRegWH0: // 0x2126
             regWH0 = byte;
-            LogPpu("WH0=%02X. NYI", byte);
+            windowLeft[0] = byte;
+            LogPpu("WH0 Window 1 Left=%02X", byte);
             return true;
 
         case eRegWH1: // 0x2127
             regWH1 = byte;
-            LogPpu("WH1=%02X. NYI", byte);
+            windowRight[0] = byte;
+            LogPpu("WH1 Window 1 Right=%02X", byte);
             return true;
 
         case eRegWH2: // 0x2128
             regWH2 = byte;
-            LogPpu("WH2=%02X. NYI", byte);
+            windowLeft[1] = byte;
+            LogPpu("WH2 Window 2 Left=%02X", byte);
             return true;
 
         case eRegWH3: // 0x2129
             regWH3 = byte;
-            LogPpu("WH3=%02X. NYI", byte);
+            windowRight[1] = byte;
+            LogPpu("WH3 Window 2 Right=%02X", byte);
             return true;
 
         case eRegWBGLOG: // 0x212A
             regWBGLOG = byte;
-            LogPpu("WBGLOG=%02X. NYI", byte);
+            bgWindowMask[eBG1] = byte & 0x03;
+            bgWindowMask[eBG2] = (byte >> 2) & 0x03;
+            bgWindowMask[eBG3] = (byte >> 4) & 0x03;
+            bgWindowMask[eBG4] = byte >> 6;
+            LogPpu("WBGLOG=%02X bgMask=%d,%d,%d,%d", byte, bgWindowMask[eBG1], bgWindowMask[eBG2], bgWindowMask[eBG3], bgWindowMask[eBG4]);
             return true;
 
         case eRegWOBJLOG: // 0x212B
             regWOBJLOG = byte;
-            LogPpu("WOBJLOG=%02X. NYI", byte);
+            bgWindowMask[eOBJ] = byte & 0x03;
+            bgWindowMask[eCOL] = (byte >> 2) & 0x03;
+            LogPpu("WOBJLOG=%02X objMask=%d colMask=%d", byte, bgWindowMask[eOBJ], bgWindowMask[eCOL]);
             return true;
 
         case eRegTM: // 0x212C
@@ -635,12 +682,22 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegTMW: // 0x212E
             regTMW = byte;
-            LogPpu("Main Window Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
+            mainScreenWindow[eBG1] = Bytes::GetBit<0>(byte);
+            mainScreenWindow[eBG2] = Bytes::GetBit<1>(byte);
+            mainScreenWindow[eBG3] = Bytes::GetBit<2>(byte);
+            mainScreenWindow[eBG4] = Bytes::GetBit<3>(byte);
+            mainScreenWindow[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Main Window Layers=%d,%d,%d,%d,%d", mainScreenWindow[eBG1], mainScreenWindow[eBG2], mainScreenWindow[eBG3], mainScreenWindow[eBG4], mainScreenWindow[eOBJ]);
             return true;
 
         case eRegTSW: // 0x212F
             regTSW = byte;
-            LogPpu("Subscreen Window Layers=%d,%d,%d,%d,%d", Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<4>(byte));
+            subScreenWindow[eBG1] = Bytes::GetBit<0>(byte);
+            subScreenWindow[eBG2] = Bytes::GetBit<1>(byte);
+            subScreenWindow[eBG3] = Bytes::GetBit<2>(byte);
+            subScreenWindow[eBG4] = Bytes::GetBit<3>(byte);
+            subScreenWindow[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Subscreen Window Layers=%d,%d,%d,%d,%d", subScreenWindow[eBG1], subScreenWindow[eBG2], subScreenWindow[eBG3], subScreenWindow[eBG4], subScreenWindow[eOBJ]);
             return true;
 
         case eRegCGWSEL: // 0x2130
@@ -792,12 +849,55 @@ uint16_t Ppu::GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) con
 }
 
 
+bool Ppu::GetBgWindowValue(EBgLayer bg, uint16_t screenX) const
+{
+    // {main,sub}ScreenWindow doesn't contain data for the color layer.
+    if (bg != eCOL && (!mainScreenWindow[bg] && !subScreenWindow[bg]))
+        return false;
+
+    bool applied[2] = {false, false};
+    uint8_t enabledCount = 0;
+    for (int i = 0; i < 2; i++)
+    {
+        if (!bgEnableWindow[bg][i])
+            continue;
+
+        enabledCount++;
+
+        if (screenX >= windowLeft[i] && screenX <= windowRight[i])
+            applied[i] = true;
+        if (bgInvertWindow[bg][i])
+            applied[i] = !applied[i];
+    }
+
+    if (enabledCount == 2)
+    {
+        switch (bgWindowMask[bg])
+        {
+            case 0:
+                return applied[0] || applied[1];
+            case 1:
+                return applied[0] && applied[1];
+            case 2:
+                return applied[0] ^ applied[1];
+            case 3:
+                return !(applied[0] ^ applied[1]);
+        }
+    }
+
+    return applied[0] || applied[1];
+}
+
+
 Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY)
 {
     PixelInfo ret;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
     if ((!mainScreenLayers[bg] && !subScreenLayers[bg]) || bpp == 0)
+        return ret;
+
+    if (GetBgWindowValue(bg, screenX))
         return ret;
 
     int tileSize = bgChrSize[bg];

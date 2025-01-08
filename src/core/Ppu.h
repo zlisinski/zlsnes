@@ -20,7 +20,8 @@ enum EBgLayer
     eBG2,
     eBG3,
     eBG4,
-    eOBJ
+    eOBJ,
+    eCOL
 };
 
 
@@ -80,6 +81,7 @@ private:
     uint8_t GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const;
 
     uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) const;
+    bool GetBgWindowValue(EBgLayer bg, uint16_t screenX) const;
     PixelInfo GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
@@ -163,9 +165,24 @@ private:
     uint16_t cgramRwAddr;
     uint8_t cgramLatch;
 
+    // WxSEL - 0x2123-0x2125
+    bool bgEnableWindow[6][2];
+    bool bgInvertWindow[6][2];
+
+    // WHx - 0x2126-0x2129
+    uint8_t windowLeft[2];
+    uint8_t windowRight[2];
+
+    // WBGLOG/WOBJLOG - 0x212A/0x212B
+    uint8_t bgWindowMask[6];
+
     // TM/TS - 0x212c/0x212D
     bool mainScreenLayers[5];
     bool subScreenLayers[5];
+
+    // TMW/TSW - 0x212E/0x212F
+    bool mainScreenWindow[5];
+    bool subScreenWindow[5];
 
     // OPHCT - 0x213C
     uint16_t hCount;
