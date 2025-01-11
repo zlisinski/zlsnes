@@ -14,6 +14,9 @@ Timer::Timer(Memory *memory, Interrupt *interrupts) :
     vCount(0),
     isHBlank(true),
     isVBlank(false),
+    irqTrigger(0),
+    hTrigger(0x1FF),
+    vTrigger(0x1FF),
     memory(memory),
     interrupts(interrupts),
     regNMITIMEN(memory->RequestOwnership(eRegNMITIMEN, this)),
@@ -25,21 +28,27 @@ Timer::Timer(Memory *memory, Interrupt *interrupts) :
     regTIMEUP(memory->RequestOwnership(eRegTIMEUP, this)),
     regHVBJOY(memory->RequestOwnership(eRegHVBJOY, this))
 {
-    
+    regHTIMEH = 0x01;
+    regHTIMEL = 0xFF;
+    regVTIMEH = 0x01;
+    regVTIMEL = 0xFF;
 }
 
 
 void Timer::AddCycle(uint8_t clocks)
 {
     uint16_t oldHCount = hCount;
-    uint16_t oldVCount = vCount;
+
+    // Since a single call to this function can advance hCount by more than 1, we have to check a range of values,
+    // including rolling over from 341 to 0.
+    #define HCOUNT_GE(val) (hCount >= (val) && (oldHCount < (val) || oldHCount > hCount))
 
     clockCounter += clocks;
     hCount = clockCounter / CLOCKS_PER_H;
 
     // Note: HBlankEnd for a scanline comes before HBlankStart for the same scanline.
 
-    if (hCount >= 1 && (hCount < oldHCount || oldHCount == 0))
+    if (HCOUNT_GE(1))
     {
         // If we just rolled over.
         ProcessHBlankEnd();
@@ -74,10 +83,17 @@ void Timer::AddCycle(uint8_t clocks)
         }
 
         // We could have rolled over out of hblank, so check again.
-        if (hCount >= 1 && hCount < oldHCount)
+        if (HCOUNT_GE(1))
         {
             ProcessHBlankEnd();
         }
+    }
+
+    if ((irqTrigger == 3 && vCount == vTrigger && HCOUNT_GE(hTrigger)) ||
+        (irqTrigger == 2 && vCount == vTrigger && HCOUNT_GE(0)) ||
+        (irqTrigger == 1 && HCOUNT_GE(hTrigger)))
+    {
+        interrupts->RequestIrq();
     }
 
     NotifyTimerObservers(clocks);
@@ -154,6 +170,7 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg)
         case eRegVTIMEL: // 0x4209
         case eRegVTIMEH: // 0x420A
             return memory->GetOpenBusValue();
+
         case eRegRDNMI: // 0x4210
         {
             uint8_t value = regRDNMI;
@@ -166,10 +183,18 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg)
 
             return value;
         }
+
         case eRegTIMEUP: // 0x4211
-            return regTIMEUP;
+        {
+            uint8_t value = (regTIMEUP & 0x80) | (memory->GetOpenBusValue() & 0x7F);
+            Bytes::ClearBit<7>(regTIMEUP);
+            interrupts->ClearIrq();
+            return value;
+        }
+
         case eRegHVBJOY: // 0x4212
             return regHVBJOY;
+
         default:
             throw std::range_error(fmt("Timer doesnt handle reads to 0x%04X", ioReg));
     }
@@ -184,31 +209,40 @@ bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
     {
         case eRegNMITIMEN: // 0x4200
         {
-            LogTimer("NMITIMEN=%02X", byte);
-
             // Request VBlank interrupt if the enable flag changes while in VBlank.
-            if (!Bytes::GetBit<7>(regNMITIMEN) && Bytes::GetBit<7>(byte) && Bytes::GetBit<7>(regRDNMI))
+            if (!Bytes::TestBit<7>(regNMITIMEN) && Bytes::TestBit<7>(byte) && Bytes::TestBit<7>(regRDNMI))
                 interrupts->RequestNmi();
 
             regNMITIMEN = byte;
+            irqTrigger = (byte >> 4) & 0x03;
+            LogTimer("NMITIMEN=%02X irqTrigger=%02X", byte, irqTrigger);
             return true;
         }
+
         case eRegHTIMEL: // 0x4207
             regHTIMEL = byte;
-            LogTimer("HTIMEL=%02X NYI", byte);
+            hTrigger = (hTrigger & 0xFF00) | byte;
+            LogTimer("HTIMEL=%02X hTrigger=%04X", byte, hTrigger);
             return true;
+
         case eRegHTIMEH: // 0x4208
             regHTIMEH = byte;
-            LogTimer("HTIMEH=%02X NYI", byte);
+            hTrigger = (byte << 8) | (hTrigger & 0xFF);
+            LogTimer("HTIMEH=%02X hTrigger=%04X", byte, hTrigger);
             return true;
+
         case eRegVTIMEL: // 0x4209
             regVTIMEL = byte;
-            LogTimer("VTIMEL=%02X NYI", byte);
+            vTrigger = (vTrigger & 0xFF00) | byte;
+            LogTimer("VTIMEL=%02X vTrigger=%04X", byte, vTrigger);
             return true;
+
         case eRegVTIMEH: // 0x420A
             regVTIMEH = byte;
-            LogTimer("VTIMEH=%02X NYI", byte);
+            vTrigger = (byte << 8) | (vTrigger & 0xFF);
+            LogTimer("VTIMEH=%02X vTrigger=%04X", byte, vTrigger);
             return true;
+
         case eRegRDNMI: // 0x4210
         case eRegTIMEUP: // 0x4211
         case eRegHVBJOY: // 0x4212

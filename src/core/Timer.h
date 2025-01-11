@@ -49,6 +49,13 @@ private:
     bool isHBlank;
     bool isVBlank;
 
+    // NMITIMEN - 0x4200
+    uint8_t irqTrigger;
+
+    // [HV]TIME[HL] - 0x4207-0x420A
+    uint16_t hTrigger;
+    uint16_t vTrigger;
+
     Memory *memory;
     Interrupt *interrupts;
 
