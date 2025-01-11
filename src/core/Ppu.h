@@ -33,6 +33,8 @@ public:
 
     void LatchCounters(bool force = false);
 
+    void ToggleLayer(int layer, bool enabled);
+
     // Inherited from IoRegisterProxy.
     uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
@@ -110,6 +112,9 @@ private:
     Timer *timer;
     DebuggerInterface *debuggerInterface;
     DisplayInterface *displayInterface;
+
+    // PpuInterface.
+    bool enableLayer[5];
 
     bool isHBlank;
     bool isVBlank;

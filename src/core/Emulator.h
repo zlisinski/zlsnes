@@ -32,6 +32,7 @@ public:
     void EndEmulation();
     void ButtonPressed(Buttons::Button button);
     void ButtonReleased(Buttons::Button button);
+    void ToggleLayer(int layer, bool enabled);
 
     void SaveState(int slot);
     void LoadState(int slot);
@@ -62,4 +63,6 @@ private:
     Memory *memory;
     Ppu *ppu;
     Timer *timer;
+
+    bool enabledLayers[5];
 };

@@ -16,6 +16,7 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     timer(timer),
     debuggerInterface(debuggerInterface),
     displayInterface(displayInterface),
+    enableLayer{true, true, true, true, true},
     isHBlank(true),
     isVBlank(false),
     scanline(0),
@@ -140,6 +141,13 @@ void Ppu::LatchCounters(bool force)
         vCount = timer->GetVCount();
         Bytes::SetBit<6>(regSTAT78);
     }
+}
+
+
+void Ppu::ToggleLayer(int layer, bool enabled)
+{
+    if (layer >= eBG1 && layer <= eOBJ)
+        enableLayer[layer] = enabled;
 }
 
 
@@ -900,6 +908,10 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     if (GetBgWindowValue(bg, screenX))
         return ret;
 
+    // Check if layer is disabled in emulator GUI.
+    if (!enableLayer[bg])
+        return ret;
+
     int tileSize = bgChrSize[bg];
     int tileX = ((screenX + bgHOffset[bg]) / tileSize) & (bgTilemapWidth[bg] - 1);
     int tileY = ((screenY + bgVOffset[bg]) / tileSize) & (bgTilemapHeight[bg] - 1);
@@ -990,6 +1002,10 @@ uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &spri
 Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo ret;
+
+    // Check if layer is disabled in emulator GUI.
+    if (!enableLayer[eOBJ])
+        return ret;
 
     if (!mainScreenLayers[eOBJ] && !subScreenLayers[eOBJ])
         return ret;

@@ -247,6 +247,53 @@ void MainWindow::SetupMenuBar()
     emuMenu->addAction(emuLoadStateAction);
     connect(emuLoadStateAction, SIGNAL(triggered()), this, SLOT(SlotLoadState()));
 
+    emuMenu->addSeparator();
+
+    // Emulator | BG Layer 1
+    QAction *emuBG1Action = new QAction("BG &1", this);
+    emuBG1Action->setShortcut(Qt::Key_1);
+    emuBG1Action->setCheckable(true);
+    emuBG1Action->setChecked(true);
+    emuBG1Action->setData(0);
+    emuMenu->addAction(emuBG1Action);
+    connect(emuBG1Action, SIGNAL(triggered(bool)), this, SLOT(SlotToggleLayer(bool)));
+
+    // Emulator | BG Layer 2
+    QAction *emuBG2Action = new QAction("BG &2", this);
+    emuBG2Action->setShortcut(Qt::Key_2);
+    emuBG2Action->setCheckable(true);
+    emuBG2Action->setChecked(true);
+    emuBG2Action->setData(1);
+    emuMenu->addAction(emuBG2Action);
+    connect(emuBG2Action, SIGNAL(triggered(bool)), this, SLOT(SlotToggleLayer(bool)));
+
+    // Emulator | BG Layer 3
+    QAction *emuBG3Action = new QAction("BG &3", this);
+    emuBG3Action->setShortcut(Qt::Key_3);
+    emuBG3Action->setCheckable(true);
+    emuBG3Action->setChecked(true);
+    emuBG3Action->setData(2);
+    emuMenu->addAction(emuBG3Action);
+    connect(emuBG3Action, SIGNAL(triggered(bool)), this, SLOT(SlotToggleLayer(bool)));
+
+    // Emulator | BG Layer 4
+    QAction *emuBG4Action = new QAction("BG &4", this);
+    emuBG4Action->setShortcut(Qt::Key_4);
+    emuBG4Action->setCheckable(true);
+    emuBG4Action->setChecked(true);
+    emuBG4Action->setData(3);
+    emuMenu->addAction(emuBG4Action);
+    connect(emuBG4Action, SIGNAL(triggered(bool)), this, SLOT(SlotToggleLayer(bool)));
+
+    // Emulator | BG Layer Sprite
+    QAction *emuBG5Action = new QAction("Sprite", this);
+    emuBG5Action->setShortcut(Qt::Key_5);
+    emuBG5Action->setCheckable(true);
+    emuBG5Action->setChecked(true);
+    emuBG5Action->setData(4);
+    emuMenu->addAction(emuBG5Action);
+    connect(emuBG5Action, SIGNAL(triggered(bool)), this, SLOT(SlotToggleLayer(bool)));
+
     ///////////////////////////////////////////////////////////////////////////
 
     // Display Menu
@@ -554,6 +601,17 @@ void MainWindow::SlotTogglePause(bool checked)
     paused = checked;
     labelPause->setText(checked ? "Paused" : "");
     emulator->PauseEmulation(paused);
+}
+
+
+void MainWindow::SlotToggleLayer(bool enabled)
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action)
+    {
+        int layer = action->data().toInt();
+        emulator->ToggleLayer(layer, enabled);
+    }
 }
 
 

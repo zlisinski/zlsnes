@@ -30,7 +30,8 @@ Emulator::Emulator(DisplayInterface *displayInterface, /*AudioInterface *audioIn
     interrupts(NULL),
     memory(NULL),
     ppu(NULL),
-    timer(NULL)
+    timer(NULL),
+    enabledLayers{true, true, true, true, true}
 {
 
 }
@@ -71,6 +72,10 @@ bool Emulator::LoadRom(const std::string &filename)
     apu = new Apu(memory/*, timer, audioInterface, gameSpeedSubject*/);
 
     memory->SetCartridge(&cartridge);
+
+    // Set enabled layers based on what the GUI has enabled.
+    for (int i = 0; i < 5; i++)
+        ppu->ToggleLayer(i, enabledLayers[i]);
 
     workThread = std::thread(&Emulator::ThreadFunc, this);
 
@@ -122,6 +127,14 @@ void Emulator::ButtonReleased(Buttons::Button button)
 
     if (input && buttons.data != oldButtonData)
         input->SetButtons(buttons);
+}
+
+
+void Emulator::ToggleLayer(int layer, bool enabled)
+{
+    enabledLayers[layer] = enabled;
+    if (ppu)
+        ppu->ToggleLayer(layer, enabled);
 }
 
 

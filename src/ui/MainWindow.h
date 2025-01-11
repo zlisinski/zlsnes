@@ -115,6 +115,7 @@ private slots:
     void SlotOpenRecentRom();
     void SlotReset();
     void SlotTogglePause(bool checked);
+    void SlotToggleLayer(bool enabled);
     void SlotEndEmulation();
     void SlotSetFpsCap();
     void SlotQuit();
