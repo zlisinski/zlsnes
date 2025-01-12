@@ -69,6 +69,7 @@ private slots:
     void SlotObjectsChanged();
     void SlotMemoryChanged(Address address, uint16_t len);
     void on_cmbMemoryType_currentTextChanged(const QString &text);
+    void on_btnExportMemory_clicked();
 
 signals:
     void SignalDebuggerWindowClosed();

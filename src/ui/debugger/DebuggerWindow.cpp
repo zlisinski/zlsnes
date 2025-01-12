@@ -1,4 +1,5 @@
 #include <QtCore/QSettings>
+#include <QFileDialog>
 #include <thread>
 
 #include "core/Cpu.h"
@@ -392,4 +393,49 @@ void DebuggerWindow::on_cmbMemoryType_currentTextChanged(const QString &text)
 {
     (void)text;
     UpdateMemoryView();
+}
+
+
+void DebuggerWindow::on_btnExportMemory_clicked()
+{
+    if (memory == nullptr || ppu == nullptr)
+        return;
+
+    uint8_t *data;
+    size_t size;
+
+    QString selected = ui->cmbMemoryType->currentText();
+    if (selected == "WRAM")
+    {
+        data = memory->GetBytePtr(WRAM_OFFSET);
+        size = WRAM_SIZE;
+    }
+    else if (selected == "VRAM")
+    {
+        data = ppu->GetVramPtr();
+        size = VRAM_SIZE;
+    }
+    else if (selected == "OAM")
+    {
+        data = ppu->GetOamPtr();
+        size = OAM_SIZE;
+    }
+    else if (selected == "CGRAM")
+    {
+        data = ppu->GetCgramPtr();
+        size = CGRAM_SIZE;
+    }
+
+    QString filename = QFileDialog::getSaveFileName(this, "Export memory", selected + ".bin");
+    if (filename == "")
+        return;
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        UiUtils::MessageBox("Error opening " + filename);
+        return;
+    }
+
+    file.write(reinterpret_cast<const char *>(data), size);
 }
