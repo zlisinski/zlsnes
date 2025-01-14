@@ -401,8 +401,8 @@ void DebuggerWindow::on_btnExportMemory_clicked()
     if (memory == nullptr || ppu == nullptr)
         return;
 
-    uint8_t *data;
-    size_t size;
+    uint8_t *data = nullptr;
+    size_t size = 0;
 
     QString selected = ui->cmbMemoryType->currentText();
     if (selected == "WRAM")

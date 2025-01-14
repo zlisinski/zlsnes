@@ -11,6 +11,7 @@ class Opcode
 {
 public:
     static Opcode GetOpcode(Address pc, const uint8_t *memory, const Registers *reg);
+    ~Opcode() {}
 
     QString ToString() const;
     QString GetBytesStr() const {return bytesStr;}

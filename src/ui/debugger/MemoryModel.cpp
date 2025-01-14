@@ -34,6 +34,8 @@ void MemoryModel::SetMemory(const uint8_t *newMemory, size_t size)
 
 void MemoryModel::InvalidateMemory(Address address, uint16_t len)
 {
+    (void)address;
+    (void)len;
     /*int startRow = address / 16;
     int endRow = (address + len - 1) / 16;
     QModelIndex startIndex = this->index(startRow, 0);
