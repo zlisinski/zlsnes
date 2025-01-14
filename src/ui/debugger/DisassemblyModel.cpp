@@ -69,20 +69,11 @@ void DisassemblyModel::AddRow(Address pc, const uint8_t *memoryAtPc, const Regis
 
         // Advance the program counter to the next instruction.
         // Check that we are not moving into a different section of memory.
-        // Only support LoROM for now. TODO: HiROM support.
-        uint32_t uintPc = pc.ToUint();
-        if ((uintPc & 0x408000) == 0x8000)
-        {
-            pc = pc.AddOffset(opcode.GetByteCount());
-            memoryAtPc += opcode.GetByteCount();
-            // If we rolled over into the next bank, our memory pointer is no longer valid.
-            if (pc.GetBank() != Bytes::GetByte<3>(origUintPc))
-                break;
-        }
-        else
-        {
-            throw NotYetImplementedException(fmt("Disassembly when PC is not in LoROM: 0x%06X", uintPc));
-        }
+        pc = pc.AddOffset(opcode.GetByteCount());
+        memoryAtPc += opcode.GetByteCount();
+        // If we rolled over into the next bank, our memory pointer is no longer valid.
+        if (pc.GetBank() != Bytes::GetByte<2>(origUintPc))
+            break;
     } while (!addresses.contains(pc.ToUint()));
     
     // Find where to insert the new rows.
