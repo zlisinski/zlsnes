@@ -81,19 +81,11 @@ void Cartridge::Reset()
 
 uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
 {
+    // This assumes that accesses to special addresses like wram and io ports have already been filtered out before getting here.
+
     if (isLoRom)
     {
-        if ((addr & 0x8000) == 0x8000 && (addr & 0xFE0000) != 0x7E0000)
-        {
-            // This is a read from ROM. 00-7D:8000-FFFF, 80-FF:8000-FFFF
-            *mem = &rom;
-
-            // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
-            // Ignore the high bit of bank, which selects WS1/WS2.
-            uint32_t mappedAddr = ((addr & 0x7F0000) >> 1) | (addr & 0x7FFF);
-            return mappedAddr;
-        }
-        else if ((addr & 0x708000) == 0x700000 && (addr & 0xFE0000) != 0x7E0000)
+        if (standardHeader.ramSize != 0 && (addr & 0x708000) == 0x700000 && (addr & 0xFE0000) != 0x7E0000)
         {
             // This is a read from SRAM. 70-7D:0000-7FFF, F0-FF:0000-7FFF
             *mem = &sram;
@@ -103,30 +95,20 @@ uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
             uint32_t mappedAddr = ((addr & 0x0F0000) >> 1) | (addr & 0x7FFF);
             return mappedAddr;
         }
-        else
-            throw std::range_error(fmt("Address %06X is not valid for LoROM", addr));
+
+        // This is a read from LoROM area. 00-7D:8000-FFFF, 80-FF:8000-FFFF
+        // or
+        // This is a read from HiROM area. 40-7D:0000-7FFF, C0-FF:0000-7FFF
+        *mem = &rom;
+
+        // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
+        // Ignore the high bit of bank, which selects WS1/WS2.
+        uint32_t mappedAddr = ((addr & 0x7F0000) >> 1) | (addr & 0x7FFF);
+        return mappedAddr;
     }
     else
     {
-        if ((addr & 0x400000) == 0x400000 && (addr & 0xFE0000) != 0x7E0000)
-        {
-            // This is a read from ROM. 40-7D:0000-FFFF, C0-FF:0000-FFFF
-            *mem = &rom;
-
-            // Clear bits 22 and 23.
-            uint32_t mappedAddr = addr & 0x3FFFFF;
-            return mappedAddr;
-        }
-        if ((addr & 0x408000) == 0x008000)
-        {
-            // This is a read from LoROM area. 00-3F:8000-FFFF, 80-BF:8000-FFFF
-            *mem = &rom;
-
-            // Clear bits 22 and 23.
-            uint32_t mappedAddr = addr & 0x3FFFFF;
-            return mappedAddr;
-        }
-        else if ((addr & 0x40E000) == 0x006000)
+        if (standardHeader.ramSize != 0 && (addr & 0x40E000) == 0x006000)
         {
             // This is a read from SRAM. 30-3F:6000-7FFF, B0-BF:6000-7FFF
             *mem = &sram;
@@ -135,8 +117,15 @@ uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
             uint32_t mappedAddr = ((addr & 0xFF0000) >> 3) | (addr & 0x1FFF);
             return mappedAddr;
         }
-        else
-            throw std::range_error(fmt("Address %06X is not valid for HiROM", addr));
+
+        // This is a read from HiROM area. 40-7D:0000-FFFF, C0-FF:0000-FFFF
+        // or
+        // This is a read from LoROM area. 00-3F:8000-FFFF, 80-BF:8000-FFFF
+        *mem = &rom;
+
+        // Clear bits 22 and 23.
+        uint32_t mappedAddr = addr & 0x3FFFFF;
+        return mappedAddr;
     }
 }
 
@@ -154,6 +143,13 @@ void Cartridge::WriteByte(uint32_t addr, uint8_t byte)
 {
     std::vector<uint8_t> *mem;
     uint32_t mappedAddr = MapAddress(addr, &mem);
+
+    if (mem == &rom)
+    {
+        LogError("Write to ROM address %06X(%06X) = %02X", addr, mappedAddr, byte);
+        //throw std::range_error(fmt("Write to ROM address %06X(%06X)", addr, mappedAddr));
+        return;
+    }
 
     (*mem)[mappedAddr] = byte;
 }
@@ -252,7 +248,8 @@ bool Cartridge::FindHeader(size_t headerOffset)
 
     // Check checksums. This doesn't actually verify all ROM data in case this is a hacked ROM.
     if ((header.checksum ^ header.checksumComplement) != 0xFFFF &&
-        !(header.checksum == 0x5343 && header.checksumComplement == 0x4343)) // Some test roms use these hardcoded values.
+        !(header.checksum == 0x5343 && header.checksumComplement == 0x4343) && // Some test roms use these hardcoded values.
+        !(header.checksum == 0x0000 && header.checksumComplement == 0x0000)) // Some test roms have all zeros.
     {
         LogError("Bad checksum at %04X", headerOffset);
         return false;
