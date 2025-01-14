@@ -47,7 +47,13 @@ uint8_t Memory::Read8Bit(uint32_t addr)
     if ((addr & 0x40E000) < 0x6000) // Bank is in range 0x00-0x3F or 0x80-0xBF, and offset is in range 0x0000-0x5FFF.
     {
         if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
+        {
+            // All io registers except for 4016/4017 take the same time.
+            // The Input class will take care of adding additional cycles in those cases.
+            if constexpr (addTime)
+                timer->AddCycle(EClockSpeed::eClockIoReg);
             return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
+        }
 
         uint8_t page = Bytes::GetByte<1>(addr);
         switch (page)
@@ -137,6 +143,11 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
         // Let observers handle the update. If there are no observers for this address, continue with normal processing.
         if (WriteIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF), value))
         {
+            // All io registers except for 4016/4017 take the same time.
+            // The Input class will take care of adding additional cycles in those cases.
+            if constexpr (addTime)
+                timer->AddCycle(EClockSpeed::eClockIoReg);
+
             if (debuggerInterface != NULL)
                 debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
             return;

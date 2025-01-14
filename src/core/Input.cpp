@@ -1,10 +1,12 @@
 #include "Zlsnes.h"
 #include "Input.h"
 #include "Memory.h"
+#include "Timer.h"
 
 
-Input::Input(Memory *memory, TimerSubject *timerSubject) :
+Input::Input(Memory *memory, Timer *timer) :
     memory(memory),
+    timer(timer),
     buttonData(),
     regJOYA(memory->RequestOwnership(eRegJOYA, this)),
     regJOYB(memory->RequestOwnership(eRegJOYB, this)),
@@ -29,7 +31,7 @@ Input::Input(Memory *memory, TimerSubject *timerSubject) :
     regJOY4L = 0;
     regJOY4H = 0;
 
-    timerSubject->AttachVBlankObserver(this);
+    timer->AttachVBlankObserver(this);
 }
 
 
@@ -53,8 +55,12 @@ uint8_t Input::ReadRegister(EIORegisters ioReg)
     switch (ioReg)
     {
         case eRegJOYA:
+            // eClockIoReg will be added in the Memory class, so only add the difference for this slow register.
+            timer->AddCycle(EClockSpeed::eClockOther - EClockSpeed::eClockIoReg);
             return (regJOYA & 0x03) | (memory->GetOpenBusValue() & 0xFC);
         case eRegJOYB:
+            // eClockIoReg will be added in the Memory class, so only add the difference for this slow register.
+            timer->AddCycle(EClockSpeed::eClockOther - EClockSpeed::eClockIoReg);
             return (regJOYB & 0x03) | 0x1C | (memory->GetOpenBusValue() & 0xE0);
         case eRegJOY1L:
             return regJOY1L;
@@ -85,6 +91,8 @@ bool Input::WriteRegister(EIORegisters ioReg, uint8_t byte)
     switch (ioReg)
     {
         case eRegJOYWR:
+            // eClockIoReg will be added in the Memory class, so only add the difference for this slow register.
+            timer->AddCycle(EClockSpeed::eClockOther - EClockSpeed::eClockIoReg);
             return true;
         // The rest are all read-only.
         default:

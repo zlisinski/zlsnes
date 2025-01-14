@@ -5,12 +5,15 @@
 #include "IoRegisterProxy.h"
 #include "TimerObserver.h"
 
+
 class Memory;
+class Timer;
+
 
 class Input : public IoRegisterProxy, public VBlankObserver
 {
 public:
-    Input(Memory *memory, TimerSubject *timerSubject);
+    Input(Memory *memory, Timer *timer);
     virtual ~Input();
 
     void SetButtons(const Buttons &buttons);
@@ -29,6 +32,7 @@ protected:
 
 private:
     Memory *memory;
+    Timer *timer;
 
     Buttons buttonData;
 

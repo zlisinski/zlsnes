@@ -76,7 +76,6 @@ uint8_t Dma::ReadRegister(EIORegisters ioReg)
 
     if ((ioReg >> 8) == 0x43)
     {
-        timer->AddCycle(eClockIoReg);
         return ioPorts43[ioReg & 0xFF];
     }
 
@@ -134,7 +133,6 @@ bool Dma::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         // Write it to memory so the debugger can see the last written value.
         ioPorts43[ioReg & 0xFF] = byte;
-        timer->AddCycle(eClockIoReg);
 
         return true;
     }
@@ -154,7 +152,6 @@ bool Dma::WriteRegister(EIORegisters ioReg, uint8_t byte)
             throw std::range_error(fmt("Dma doesnt handle writes to 0x%04X", ioReg));
     }
 
-    timer->AddCycle(eClockIoReg);
     return true;
 }
 
