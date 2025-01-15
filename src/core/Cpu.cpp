@@ -81,8 +81,6 @@ Cpu::~Cpu()
 uint8_t Cpu::ReadPC8Bit()
 {
     uint8_t byte = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
-    //timer->AddCycle();
-
     reg.pc++;
 
     return byte;
@@ -93,11 +91,9 @@ uint16_t Cpu::ReadPC16Bit()
 {
     uint8_t low = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
-    //timer->AddCycle();
 
     uint8_t high = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
-    //timer->AddCycle();
 
     uint16_t word = (high << 8) | low;
 
@@ -109,15 +105,12 @@ uint32_t Cpu::ReadPC24Bit()
 {
     uint8_t low = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
-    //timer->AddCycle();
 
     uint8_t mid = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
-    //timer->AddCycle();
 
     uint8_t high = memory->Read8Bit(Bytes::Make24Bit(reg.pb, reg.pc));
     reg.pc++;
-    //timer->AddCycle();
 
     uint32_t word = (high << 16) | (mid << 8) | low;
 
@@ -232,6 +225,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.x, reg.a);
                 else
                     LoadRegister(&reg.xl, reg.al);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -242,6 +237,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.y, reg.a);
                 else
                     LoadRegister(&reg.yl, reg.al);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -252,6 +249,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.x, reg.sp);
                 else
                     LoadRegister(&reg.xl, reg.sl);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -262,6 +261,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.a, reg.x);
                 else
                     LoadRegister(&reg.al, reg.xl);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -273,6 +274,8 @@ void Cpu::ProcessOpCode()
                     reg.sp = 0x0100 | reg.xl;
                 else
                     reg.sp = reg.x;
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -283,6 +286,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.y, reg.x);
                 else
                     LoadRegister(&reg.yl, reg.xl);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -293,6 +298,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.a, reg.y);
                 else
                     LoadRegister(&reg.al, reg.yl);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -303,6 +310,8 @@ void Cpu::ProcessOpCode()
                     LoadRegister(&reg.x, reg.y);
                 else
                     LoadRegister(&reg.xl, reg.yl);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -310,6 +319,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("TCD");
                 LoadRegister(&reg.d, reg.a);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -321,6 +332,8 @@ void Cpu::ProcessOpCode()
                     reg.sp = 0x0100 | reg.al;
                 else
                     reg.sp = reg.a;
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -328,6 +341,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("TDC");
                 LoadRegister(&reg.a, reg.d);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -335,6 +350,8 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("TSC");
                 LoadRegister(&reg.a, reg.sp);
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -344,6 +361,9 @@ void Cpu::ProcessOpCode()
                 std::swap(reg.ah, reg.al);
                 SetNFlag(reg.al);
                 SetZFlag(reg.al);
+
+                timer->AddCycle(eClockInternal);
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -511,6 +531,8 @@ void Cpu::ProcessOpCode()
         case 0x48: // PHA - Push A
             {
                 LogInst("PHA");
+                timer->AddCycle(eClockInternal);
+
                 if (IsAccumulator16Bit())
                     Push16Bit(reg.a);
                 else
@@ -521,6 +543,8 @@ void Cpu::ProcessOpCode()
         case 0xDA: // PHX - Push X
             {
                 LogInst("PHX");
+                timer->AddCycle(eClockInternal);
+
                 if (IsIndex16Bit())
                     Push16Bit(reg.x);
                 else
@@ -531,6 +555,8 @@ void Cpu::ProcessOpCode()
         case 0x5A: // PHY - Push Y
             {
                 LogInst("PHY");
+                timer->AddCycle(eClockInternal);
+
                 if (IsIndex16Bit())
                     Push16Bit(reg.y);
                 else
@@ -541,6 +567,8 @@ void Cpu::ProcessOpCode()
         case 0x8B: // PHB - Push DB
             {
                 LogInst("PHB");
+                timer->AddCycle(eClockInternal);
+
                 Push8Bit(reg.db);
             }
             break;
@@ -548,6 +576,8 @@ void Cpu::ProcessOpCode()
         case 0x0B: // PHD - Push D
             {
                 LogInst("PHD");
+                timer->AddCycle(eClockInternal);
+
                 Push16Bit(reg.d);
             }
             break;
@@ -555,6 +585,8 @@ void Cpu::ProcessOpCode()
         case 0x4B: // PHK - Push PB
             {
                 LogInst("PHK");
+                timer->AddCycle(eClockInternal);
+
                 Push8Bit(reg.pb);
             }
             break;
@@ -562,6 +594,8 @@ void Cpu::ProcessOpCode()
         case 0x08: // PHP - Push P
             {
                 LogInst("PHP");
+                timer->AddCycle(eClockInternal);
+
                 Push8Bit(reg.p);
             }
             break;
@@ -587,6 +621,9 @@ void Cpu::ProcessOpCode()
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
                 LogCpu("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+
+                timer->AddCycle(eClockInternal);
+
                 Push16Bit(reg.pc + value);
             }
             break;
@@ -594,6 +631,8 @@ void Cpu::ProcessOpCode()
         case 0x68: // PLA - Pull/Pop A
             {
                 LogInst("PLA");
+                timer->AddCycle(2 * eClockInternal);
+
                 if (IsAccumulator16Bit())
                 {
                     reg.a = Pop16Bit();
@@ -612,6 +651,8 @@ void Cpu::ProcessOpCode()
         case 0xFA: // PLX - Pull/Pop X
             {
                 LogInst("PLX");
+                timer->AddCycle(2 * eClockInternal);
+
                 if (IsIndex16Bit())
                 {
                     reg.x = Pop16Bit();
@@ -630,6 +671,8 @@ void Cpu::ProcessOpCode()
         case 0x7A: // PLY - Pull/Pop Y
             {
                 LogInst("PLY");
+                timer->AddCycle(2 * eClockInternal);
+
                 if (IsIndex16Bit())
                 {
                     reg.y = Pop16Bit();
@@ -648,6 +691,8 @@ void Cpu::ProcessOpCode()
         case 0xAB: // PLB - Pull/Pop DB
             {
                 LogInst("PLB");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.db = Pop8Bit();
                 SetNFlag(reg.db);
                 SetZFlag(reg.db);
@@ -657,6 +702,8 @@ void Cpu::ProcessOpCode()
         case 0x2B: // PLD - Pull/Pop D
             {
                 LogInst("PLD");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.d = Pop16Bit();
                 SetNFlag(reg.d);
                 SetZFlag(reg.d);
@@ -666,6 +713,8 @@ void Cpu::ProcessOpCode()
         case 0x28: // PLP - Pull/Pop P
             {
                 LogInst("PLP");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
             }
@@ -987,6 +1036,7 @@ void Cpu::ProcessOpCode()
                 {
                     uint16_t value = mode->Read16Bit();
                     value--;
+                    timer->AddCycle(eClockInternal);
                     mode->Write16Bit(value);
                     SetNFlag(value);
                     SetZFlag(value);
@@ -995,6 +1045,7 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     value--;
+                    timer->AddCycle(eClockInternal);
                     mode->Write8Bit(value);
                     SetNFlag(value);
                     SetZFlag(value);
@@ -1018,6 +1069,8 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1037,6 +1090,8 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1054,6 +1109,7 @@ void Cpu::ProcessOpCode()
                 {
                     uint16_t value = mode->Read16Bit();
                     value++;
+                    timer->AddCycle(eClockInternal);
                     mode->Write16Bit(value);
                     SetNFlag(value);
                     SetZFlag(value);
@@ -1062,6 +1118,7 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     value++;
+                    timer->AddCycle(eClockInternal);
                     mode->Write8Bit(value);
                     SetNFlag(value);
                     SetZFlag(value);
@@ -1085,6 +1142,8 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.xl);
                     SetZFlag(reg.xl);
                 }
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1104,6 +1163,8 @@ void Cpu::ProcessOpCode()
                     SetNFlag(reg.yl);
                     SetZFlag(reg.yl);
                 }
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1253,6 +1314,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = ~reg.a & value;
 
+                    timer->AddCycle(eClockInternal);
+
                     // Z flag is based on reg.a AND value.
                     SetZFlag(static_cast<uint16_t>(reg.a & value));
                     mode->Write16Bit(result);
@@ -1261,6 +1324,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = ~reg.al & value;
+
+                    timer->AddCycle(eClockInternal);
 
                     // Z flag is based on reg.al AND value.
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
@@ -1282,6 +1347,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = reg.a | value;
 
+                    timer->AddCycle(eClockInternal);
+
                     // Z flag is based on reg.a AND value.
                     SetZFlag(static_cast<uint16_t>(reg.a & value));
                     mode->Write16Bit(result);
@@ -1290,6 +1357,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = reg.al | value;
+
+                    timer->AddCycle(eClockInternal);
 
                     // Z flag is based on reg.al AND value.
                     SetZFlag(static_cast<uint8_t>(reg.al & value));
@@ -1320,6 +1389,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = value << 1;
 
+                    timer->AddCycle(eClockInternal);
+
                     reg.flags.c = value >> 15;
                     SetNFlag(result);
                     SetZFlag(result);
@@ -1329,6 +1400,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = value << 1;
+
+                    timer->AddCycle(eClockInternal);
 
                     reg.flags.c = value >> 7;
                     SetNFlag(result);
@@ -1354,6 +1427,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = value >> 1;
 
+                    timer->AddCycle(eClockInternal);
+
                     reg.flags.c = value & 0x01;
                     SetNFlag(result);
                     SetZFlag(result);
@@ -1363,6 +1438,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = value >> 1;
+
+                    timer->AddCycle(eClockInternal);
 
                     reg.flags.c = value & 0x01;
                     SetNFlag(result);
@@ -1388,6 +1465,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = (value << 1) | reg.flags.c;
 
+                    timer->AddCycle(eClockInternal);
+
                     reg.flags.c = value >> 15;
                     SetNFlag(result);
                     SetZFlag(result);
@@ -1397,6 +1476,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = (value << 1) | reg.flags.c;
+
+                    timer->AddCycle(eClockInternal);
 
                     reg.flags.c = value >> 7;
                     SetNFlag(result);
@@ -1422,6 +1503,8 @@ void Cpu::ProcessOpCode()
                     uint16_t value = mode->Read16Bit();
                     uint16_t result = (value >> 1) | (reg.flags.c << 15);
 
+                    timer->AddCycle(eClockInternal);
+
                     reg.flags.c = value & 0x01;
                     SetNFlag(result);
                     SetZFlag(result);
@@ -1431,6 +1514,8 @@ void Cpu::ProcessOpCode()
                 {
                     uint8_t value = mode->Read8Bit();
                     uint8_t result = (value >> 1) | (reg.flags.c << 7);
+
+                    timer->AddCycle(eClockInternal);
 
                     reg.flags.c = value & 0x01;
                     SetNFlag(result);
@@ -1450,11 +1535,14 @@ void Cpu::ProcessOpCode()
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
+                timer->AddCycle(eClockInternal);
+
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
                 if (offset == -2)
                     throw InfiniteLoopException();
 #endif
+
                 reg.pc += offset;
             }
             break;
@@ -1463,11 +1551,14 @@ void Cpu::ProcessOpCode()
             {
                 int16_t offset = static_cast<int16_t>(ReadPC16Bit());
                 LogCpu("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
+                timer->AddCycle(eClockInternal);
+
 #ifndef TESTING
                 // Detect an infinite loop and stop execution. Allow when running unit tests.
                 if (offset == -3)
                     throw InfiniteLoopException();
 #endif
+
                 reg.pc += offset;
             }
             break;
@@ -1492,6 +1583,7 @@ void Cpu::ProcessOpCode()
                 // Bit 6 of the opcode says which flag to check, bit 5 is whether the flag should be set or cleared.
                 if (((reg.p >> flagShift[opcode >> 6]) & 0x01) == ((opcode >> 5) & 0x01))
                 {
+                    timer->AddCycle(eClockInternal);
                     reg.pc += offset;
                 }
             }
@@ -1526,7 +1618,7 @@ void Cpu::ProcessOpCode()
 
         // Long Jumps
         case 0x5C: // JMP AbsoluteLong
-        case 0xDC: // JMP [Absolute]
+        case 0xDC: // JMP/JML [Absolute]
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
@@ -1554,6 +1646,8 @@ void Cpu::ProcessOpCode()
                 mode->LoadAddress();
                 LogInstMp("JSR");
 
+                timer->AddCycle(eClockInternal);
+
                 Push16Bit(reg.pc - 1);
                 reg.pc = mode->GetAddress().GetOffset();
             }
@@ -1565,6 +1659,8 @@ void Cpu::ProcessOpCode()
                 AddressModeAbsoluteLong mode(this, memory);
                 mode.LoadAddress();
                 LogInstM("JSL");
+
+                timer->AddCycle(eClockInternal);
 
                 Push8Bit(reg.pb);
                 Push16Bit(reg.pc - 1);
@@ -1583,7 +1679,11 @@ void Cpu::ProcessOpCode()
         case 0x60:
             {
                 LogInst("RTS");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.pc = Pop16Bit() + 1;
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1591,6 +1691,8 @@ void Cpu::ProcessOpCode()
         case 0x6B:
             {
                 LogInst("RTL");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.pc = Pop16Bit() + 1;
                 reg.pb = Pop8Bit();
             }
@@ -1606,7 +1708,8 @@ void Cpu::ProcessOpCode()
         case 0x02: // COP - Coprocessor
             {
                 const char *names[] = {"BRK", "COP"};
-                LogInst(names[opcode >> 1]);
+                uint8_t signature = ReadPC8Bit();
+                LogCpu("%02X %02X: %s %02X", opcode, signature, names[opcode >> 1], signature);
 
                 if (reg.emulationMode)
                 {
@@ -1635,6 +1738,8 @@ void Cpu::ProcessOpCode()
         case 0x40: // RTI - Return from interrupt
             {
                 LogInst("RTI");
+                timer->AddCycle(2 * eClockInternal);
+
                 reg.p = Pop8Bit();
                 UpdateRegistersAfterFlagChange();
                 reg.pc = Pop16Bit();
@@ -1654,6 +1759,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("CLC");
                 reg.flags.c = 0;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1662,6 +1768,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("SEC");
                 reg.flags.c = 1;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1670,6 +1777,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("CLI");
                 reg.flags.i = 0;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1678,6 +1786,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("SEI");
                 reg.flags.i = 1;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1686,6 +1795,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("CLV");
                 reg.flags.v = 0;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1694,6 +1804,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("CLD");
                 reg.flags.d = 0;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1702,6 +1813,7 @@ void Cpu::ProcessOpCode()
             {
                 LogInst("SED");
                 reg.flags.d = 1;
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1714,6 +1826,8 @@ void Cpu::ProcessOpCode()
 
                 reg.p &= ~mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1726,6 +1840,8 @@ void Cpu::ProcessOpCode()
 
                 reg.p |= mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1738,6 +1854,8 @@ void Cpu::ProcessOpCode()
                 reg.flags.c = reg.emulationMode;
                 reg.emulationMode = carry;
                 UpdateRegistersAfterFlagChange();
+
+                timer->AddCycle(eClockInternal);
             }
             break;
 
@@ -1769,6 +1887,8 @@ void Cpu::ProcessOpCode()
                     reg.y &= 0x00FF;
                 }
 
+                timer->AddCycle(2 * eClockInternal);
+
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
@@ -1797,6 +1917,8 @@ void Cpu::ProcessOpCode()
                     reg.y &= 0x00FF;
                 }
 
+                timer->AddCycle(2 * eClockInternal);
+
                 // Loop until reg.a underflows.
                 if (reg.a != 0xFFFF)
                     reg.pc -= 3;
@@ -1813,6 +1935,7 @@ void Cpu::ProcessOpCode()
         case 0xEA:
             {
                 LogInst("NOP");
+                timer->AddCycle(eClockInternal);
             }
             break;
 
