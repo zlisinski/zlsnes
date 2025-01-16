@@ -1714,7 +1714,7 @@ void Cpu::ProcessOpCode()
                 if (reg.emulationMode)
                 {
                     const uint32_t vectors[] = {0xFFFE, 0xFFF4};
-                    Push16Bit(reg.pc + 1);
+                    Push16Bit(reg.pc);
                     Push8Bit(reg.p | 0x10);
                     reg.pb = 0;
                     reg.pc = memory->Read16Bit(vectors[opcode >> 1]);
@@ -1725,7 +1725,7 @@ void Cpu::ProcessOpCode()
                 {
                     const uint32_t vectors[] = {0xFFE6, 0xFFE4};
                     Push8Bit(reg.pb);
-                    Push16Bit(reg.pc + 1);
+                    Push16Bit(reg.pc);
                     Push8Bit(reg.p);
                     reg.pb = 0;
                     reg.pc = memory->Read16Bit(vectors[opcode >> 1]);
