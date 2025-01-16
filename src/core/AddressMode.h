@@ -5,6 +5,7 @@
 #include "Address.h"
 #include "Cpu.h"
 #include "Memory.h"
+#include "Timer.h"
 #include "Zlsnes.h"
 
 
@@ -102,7 +103,15 @@ public:
     virtual void LoadAddress() override
     {
         data16 = cpu->ReadPC16Bit();
-        address =  Address(cpu->reg.db, data16).AddOffset(cpu->reg.x);
+        address = Address(cpu->reg.db, data16).AddOffset(cpu->reg.x);
+
+        if ((((cpu->opcode & 0x1F) == 0x1E) && cpu->opcode != 0xBE) || cpu->opcode == 0x9D || // 0x[13579DE]E or 0x9D
+            cpu->reg.flags.x == 0 ||
+            Bytes::GetByte<1>(data16) != Bytes::GetByte<1>(address.GetOffset()))
+        {
+            // Add an extra cycle for write opcodes, when x is 0, or when a page boundary is crossed.
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        }
     }
 };
 
@@ -119,6 +128,13 @@ public:
     {
         data16 = cpu->ReadPC16Bit();
         address = Address(cpu->reg.db, data16).AddOffset(cpu->reg.y);
+
+        if (cpu->opcode == 0x99 || cpu->reg.flags.x == 0 ||
+            Bytes::GetByte<1>(data16) != Bytes::GetByte<1>(address.GetOffset()))
+        {
+            // Add an extra cycle for write opcodes, when x is 0, or when a page boundary is crossed.
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        }
     }
 };
 
@@ -254,6 +270,10 @@ public:
         // TODO: Handle emulation mode special case.
         data8 = cpu->ReadPC8Bit();
         address = Address(0, data8 + cpu->reg.d);
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -281,6 +301,11 @@ public:
         {
             address = Address(0, data8 + cpu->reg.d + cpu->reg.x);
         }
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -308,6 +333,11 @@ public:
         {
             address = Address(0, data8 + cpu->reg.d + cpu->reg.y);
         }
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -327,6 +357,11 @@ public:
     {
         // TODO: Handle emulation mode special case.
         data8 = cpu->ReadPC8Bit();
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+
         uint16_t addr = memory->Read16BitWrapBank(0, data8 + cpu->reg.d);
         address = Address(cpu->reg.db, addr);
     }
@@ -345,6 +380,10 @@ public:
     {
         data8 = cpu->ReadPC8Bit();
         address = Address(memory->Read24BitWrapBank(0, data8 + cpu->reg.d));
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 };
 
@@ -361,6 +400,12 @@ public:
     {
         uint16_t addr;
         data8 = cpu->ReadPC8Bit();
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+
         if (cpu->reg.emulationMode && cpu->reg.dl == 0)
         {
             // Low byte wraps, only when dl is 0.
@@ -388,8 +433,20 @@ public:
     {
         // TODO: Handle emulation mode special case.
         data8 = cpu->ReadPC8Bit();
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+
         uint16_t addr = memory->Read16BitWrapBank(0, data8 + cpu->reg.d);
         address = Address(cpu->reg.db, addr).AddOffset(cpu->reg.y);
+
+        if (cpu->opcode == 0x91 || cpu->reg.flags.x == 0 ||
+            Bytes::GetByte<1>(addr) != Bytes::GetByte<1>(address.GetOffset()))
+        {
+            // Add an extra cycle for write opcodes, when x is 0, or when a page boundary is crossed.
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+        }
     }
 };
 
@@ -405,6 +462,11 @@ public:
     virtual void LoadAddress() override
     {
         data8 = cpu->ReadPC8Bit();
+
+        // Add a extra cycle if dl is not 0.
+        if (cpu->reg.dl != 0)
+            cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+
         uint32_t addr = memory->Read24BitWrapBank(0, data8 + cpu->reg.d);
         address = Address(addr).AddOffset(cpu->reg.y);
     }
@@ -463,6 +525,8 @@ public:
     {
         data8 = cpu->ReadPC8Bit();
         address = Address(0, data8 + cpu->reg.sp);
+
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 
     virtual uint16_t Read16Bit() override {return memory->Read16BitWrapBank(address);}
@@ -481,8 +545,13 @@ public:
     virtual void LoadAddress() override
     {
         data8 = cpu->ReadPC8Bit();
+
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
+
         uint32_t addr = memory->Read16BitWrapBank(0, data8 + cpu->reg.sp);
         address = Address(cpu->reg.db, addr).AddOffset(cpu->reg.y);
+
+        cpu->GetTimer()->AddCycle(EClockSpeed::eClockInternal);
     }
 };
 

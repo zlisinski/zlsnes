@@ -29,6 +29,8 @@ protected:
 
     void ResetState();
     uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
+    uint32_t GetCounter() {return timer->internalCounter;}
+    void ClearCounter() {timer->internalCounter = 0;}
 
     Cpu *cpu;
     Interrupt *interrupts;

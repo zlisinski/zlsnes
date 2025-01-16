@@ -126,6 +126,7 @@ public:
     }
 
     inline Address GetFullPC() const {return Address(reg.pb, reg.pc);}
+    inline Timer *GetTimer() {return timer;}
 
     Registers reg;
     uint8_t opcode;

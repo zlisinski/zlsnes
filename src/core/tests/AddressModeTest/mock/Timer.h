@@ -24,6 +24,8 @@ public:
 
 private:
     uint32_t internalCounter;
+
+    friend class AddressModeTest;
 };
 
 #endif

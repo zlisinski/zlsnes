@@ -8,5 +8,5 @@ Timer::Timer() :
 
 void Timer::AddCycle(uint8_t clocks)
 {
-    (void)clocks;
+    internalCounter += clocks;
 }
