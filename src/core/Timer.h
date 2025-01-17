@@ -25,7 +25,7 @@ public:
     Timer(Memory *memory, Interrupt *interrupts);
     virtual ~Timer() {}
 
-    void AddCycle(uint8_t clocks);
+    void AddCycle(uint8_t cycles);
 
     inline uint16_t GetHCount() {return hCount;}
     inline uint16_t GetVCount() {return vCount;}

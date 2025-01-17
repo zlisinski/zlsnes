@@ -35,7 +35,7 @@ Timer::Timer(Memory *memory, Interrupt *interrupts) :
 }
 
 
-void Timer::AddCycle(uint8_t clocks)
+void Timer::AddCycle(uint8_t cycles)
 {
     uint16_t oldHCount = hCount;
 
@@ -43,7 +43,7 @@ void Timer::AddCycle(uint8_t clocks)
     // including rolling over from 341 to 0.
     #define HCOUNT_GE(val) (hCount >= (val) && (oldHCount < (val) || oldHCount > hCount))
 
-    clockCounter += clocks;
+    clockCounter += cycles;
     hCount = clockCounter / CLOCKS_PER_H;
 
     // Note: HBlankEnd for a scanline comes before HBlankStart for the same scanline.
@@ -52,6 +52,13 @@ void Timer::AddCycle(uint8_t clocks)
     {
         // If we just rolled over.
         ProcessHBlankEnd();
+    }
+    else if (hCount >= 134 && oldHCount < 134)
+    {
+        // DRAM refresh.
+        cycles += 40; // For NotifyTimerObservers();
+        clockCounter += 40;
+        hCount = clockCounter / CLOCKS_PER_H;
     }
     else if (hCount >= 274 && oldHCount < 274)
     {
@@ -96,7 +103,7 @@ void Timer::AddCycle(uint8_t clocks)
         interrupts->RequestIrq();
     }
 
-    NotifyTimerObservers(clocks);
+    NotifyTimerObservers(cycles);
 }
 
 
