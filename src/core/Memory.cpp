@@ -267,11 +267,11 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     }
                     case eRegMEMSEL: // 0x420D
                         ioPorts42[addr & 0xFF] = value;
-                        if ((value & 0x01) && cart->IsFastSpeed())
+                        if ((value & 0x01) /*&& cart->IsFastSpeed()*/) // Other emulators don't check the cart speed, but it seems wrong not to.
                             isFastSpeed = true;
                         else
                             isFastSpeed = false;
-                        LogMemory("MEMSEL: %s %s", (value & 0x01) ? "false" : "slow", isFastSpeed ? "false" : "slow");
+                        LogMemory("MEMSEL: %s %s", (value & 0x01) ? "fast" : "slow", isFastSpeed ? "fast" : "slow");
                         break;
                     default:
                         throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
