@@ -189,6 +189,22 @@ private:
     bool mainScreenWindow[5];
     bool subScreenWindow[5];
 
+    // CGWSEL - 0x2130
+    bool colDirectMode;
+    bool colAddend;
+    uint8_t colSubScreenRegion;
+    uint8_t colMainScreenRegion;
+
+    // CGADSUB - 0x2131
+    bool bgColorMathEnable[6];
+    bool halfColorMath;
+    bool colorSubtract;
+
+    // COLDATA - 0x2132
+    uint8_t redChannel;
+    uint8_t blueChannel;
+    uint8_t greenChannel;
+
     // OPHCT - 0x213C
     uint16_t hCount;
     bool hCountFlipflop;

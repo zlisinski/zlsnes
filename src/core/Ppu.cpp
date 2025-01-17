@@ -55,6 +55,16 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     subScreenLayers{false, false, false, false, false},
     mainScreenWindow{false, false, false, false, false},
     subScreenWindow{false, false, false, false, false},
+    colDirectMode(false),
+    colAddend(false),
+    colSubScreenRegion(0),
+    colMainScreenRegion(0),
+    bgColorMathEnable{false, false, false, false, false, false},
+    halfColorMath(false),
+    colorSubtract(false),
+    redChannel(0),
+    blueChannel(0),
+    greenChannel(0),
     hCount(0xFFFF),
     hCountFlipflop(false),
     vCount(0xFFFF),
@@ -710,22 +720,43 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegCGWSEL: // 0x2130
             regCGWSEL = byte;
-            LogPpu("ForceBlack=%d ColorMath=%d SubscreenBG=%d DirectColor=%d", (byte >> 6), ((byte >> 4) & 0x03), ((byte >> 1) & 0x01), (byte & 0x01));
+            colDirectMode = Bytes::TestBit<0>(byte);
+            colAddend = Bytes::TestBit<0>(byte);
+            colSubScreenRegion = (byte >> 4) & 0x03;
+            colMainScreenRegion = byte >> 6;
+            LogPpu("CGWSEL=%02X mainScree=%d subScreen=%d addend=%d directColor=%d", byte,
+                   colMainScreenRegion, colSubScreenRegion, colAddend, colDirectMode);
             return true;
 
         case eRegCGADSUB: // 0x2131
             regCGADSUB = byte;
-            LogPpu("CGMath=%02X", byte);
+            bgColorMathEnable[eBG1] = Bytes::GetBit<0>(byte);
+            bgColorMathEnable[eBG2] = Bytes::GetBit<1>(byte);
+            bgColorMathEnable[eBG3] = Bytes::GetBit<2>(byte);
+            bgColorMathEnable[eBG4] = Bytes::GetBit<3>(byte);
+            bgColorMathEnable[eOBJ] = Bytes::GetBit<4>(byte);
+            bgColorMathEnable[eCOL] = Bytes::GetBit<5>(byte);
+            halfColorMath = Bytes::GetBit<6>(byte);
+            colorSubtract = Bytes::GetBit<7>(byte);
+            LogPpu("CGADSUB=%02X colMath=%d,%d,%d,%d,%d,%d half=%d sub=%d", byte,
+                    bgColorMathEnable[eBG1], bgColorMathEnable[eBG2], bgColorMathEnable[eBG3], bgColorMathEnable[eBG4],
+                    bgColorMathEnable[eOBJ], bgColorMathEnable[eCOL], halfColorMath, colorSubtract);
             return true;
 
         case eRegCOLDATA: // 0x2132
             regCOLDATA = byte;
-            LogPpu("COLDATA=%02X. NYI", byte);
+            if (Bytes::TestBit<5>(byte))
+                redChannel = byte & 0x1F;
+            if (Bytes::TestBit<6>(byte))
+                greenChannel = byte & 0x1F;
+            if (Bytes::TestBit<7>(byte))
+                blueChannel = byte & 0x1F;
+            LogPpu("COLDATA=%02X r=%d b=%d g=%d", byte, redChannel, blueChannel, greenChannel);
             return true;
 
         case eRegSETINI: // 0x2133
             regSETINI = byte;
-            LogPpu("ExtSync=%d ExtBg=%d HiRes=%d Overscan=%d, ObjInterlace=%d ScreenInterlace=%d", Bytes::GetBit<7>(byte), Bytes::GetBit<6>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<0>(byte));
+            LogPpu("ExtSync=%d ExtBg=%d HiRes=%d Overscan=%d, ObjInterlace=%d ScreenInterlace=%d NYI", Bytes::GetBit<7>(byte), Bytes::GetBit<6>(byte), Bytes::GetBit<3>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<0>(byte));
             return true;
 
         default:
@@ -994,6 +1025,9 @@ uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &spri
             break;
         }
     }
+
+    if (tileCount > 34)
+        LogDebug("%d tiles on scanline %d", tileCount, scanline);
 
     return count;
 }
