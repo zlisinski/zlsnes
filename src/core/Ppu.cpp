@@ -51,10 +51,10 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     windowLeft{0, 0},
     windowRight{0, 0},
     bgWindowMask{0, 0, 0, 0, 0, 0},
-    mainScreenLayers{false, false, false, false, false},
-    subScreenLayers{false, false, false, false, false},
-    mainScreenWindow{false, false, false, false, false},
-    subScreenWindow{false, false, false, false, false},
+    mainScreenLayerEnabled{false, false, false, false, false},
+    subScreenLayerEnabled{false, false, false, false, false},
+    mainScreenWindowEnabled{false, false, false, false, false},
+    subScreenWindowEnabled{false, false, false, false, false},
     colDirectMode(false),
     colAddend(false),
     colSubScreenRegion(0),
@@ -680,42 +680,46 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegTM: // 0x212C
             regTM = byte;
-            mainScreenLayers[eBG1] = Bytes::GetBit<0>(byte);
-            mainScreenLayers[eBG2] = Bytes::GetBit<1>(byte);
-            mainScreenLayers[eBG3] = Bytes::GetBit<2>(byte);
-            mainScreenLayers[eBG4] = Bytes::GetBit<3>(byte);
-            mainScreenLayers[eOBJ] = Bytes::GetBit<4>(byte);
-            LogPpu("Main Layers=%d,%d,%d,%d,%d", mainScreenLayers[eBG1], mainScreenLayers[eBG2], mainScreenLayers[eBG3], mainScreenLayers[eBG4], mainScreenLayers[eOBJ]);
+            mainScreenLayerEnabled[eBG1] = Bytes::GetBit<0>(byte);
+            mainScreenLayerEnabled[eBG2] = Bytes::GetBit<1>(byte);
+            mainScreenLayerEnabled[eBG3] = Bytes::GetBit<2>(byte);
+            mainScreenLayerEnabled[eBG4] = Bytes::GetBit<3>(byte);
+            mainScreenLayerEnabled[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Main Layers=%d,%d,%d,%d,%d", mainScreenLayerEnabled[eBG1], mainScreenLayerEnabled[eBG2],
+                   mainScreenLayerEnabled[eBG3], mainScreenLayerEnabled[eBG4], mainScreenLayerEnabled[eOBJ]);
             return true;
 
         case eRegTS: // 0x212D
             regTS = byte;
-            subScreenLayers[eBG1] = Bytes::GetBit<0>(byte);
-            subScreenLayers[eBG2] = Bytes::GetBit<1>(byte);
-            subScreenLayers[eBG3] = Bytes::GetBit<2>(byte);
-            subScreenLayers[eBG4] = Bytes::GetBit<3>(byte);
-            subScreenLayers[eOBJ] = Bytes::GetBit<4>(byte);
-            LogPpu("Subscreen Layers=%d,%d,%d,%d,%d", subScreenLayers[eBG1], subScreenLayers[eBG2], subScreenLayers[eBG3], subScreenLayers[eBG4], subScreenLayers[eOBJ]);
+            subScreenLayerEnabled[eBG1] = Bytes::GetBit<0>(byte);
+            subScreenLayerEnabled[eBG2] = Bytes::GetBit<1>(byte);
+            subScreenLayerEnabled[eBG3] = Bytes::GetBit<2>(byte);
+            subScreenLayerEnabled[eBG4] = Bytes::GetBit<3>(byte);
+            subScreenLayerEnabled[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Subscreen Layers=%d,%d,%d,%d,%d", subScreenLayerEnabled[eBG1], subScreenLayerEnabled[eBG2],
+                   subScreenLayerEnabled[eBG3], subScreenLayerEnabled[eBG4], subScreenLayerEnabled[eOBJ]);
             return true;
 
         case eRegTMW: // 0x212E
             regTMW = byte;
-            mainScreenWindow[eBG1] = Bytes::GetBit<0>(byte);
-            mainScreenWindow[eBG2] = Bytes::GetBit<1>(byte);
-            mainScreenWindow[eBG3] = Bytes::GetBit<2>(byte);
-            mainScreenWindow[eBG4] = Bytes::GetBit<3>(byte);
-            mainScreenWindow[eOBJ] = Bytes::GetBit<4>(byte);
-            LogPpu("Main Window Layers=%d,%d,%d,%d,%d", mainScreenWindow[eBG1], mainScreenWindow[eBG2], mainScreenWindow[eBG3], mainScreenWindow[eBG4], mainScreenWindow[eOBJ]);
+            mainScreenWindowEnabled[eBG1] = Bytes::GetBit<0>(byte);
+            mainScreenWindowEnabled[eBG2] = Bytes::GetBit<1>(byte);
+            mainScreenWindowEnabled[eBG3] = Bytes::GetBit<2>(byte);
+            mainScreenWindowEnabled[eBG4] = Bytes::GetBit<3>(byte);
+            mainScreenWindowEnabled[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Main Window Layers=%d,%d,%d,%d,%d", mainScreenWindowEnabled[eBG1], mainScreenWindowEnabled[eBG2],
+                   mainScreenWindowEnabled[eBG3], mainScreenWindowEnabled[eBG4], mainScreenWindowEnabled[eOBJ]);
             return true;
 
         case eRegTSW: // 0x212F
             regTSW = byte;
-            subScreenWindow[eBG1] = Bytes::GetBit<0>(byte);
-            subScreenWindow[eBG2] = Bytes::GetBit<1>(byte);
-            subScreenWindow[eBG3] = Bytes::GetBit<2>(byte);
-            subScreenWindow[eBG4] = Bytes::GetBit<3>(byte);
-            subScreenWindow[eOBJ] = Bytes::GetBit<4>(byte);
-            LogPpu("Subscreen Window Layers=%d,%d,%d,%d,%d", subScreenWindow[eBG1], subScreenWindow[eBG2], subScreenWindow[eBG3], subScreenWindow[eBG4], subScreenWindow[eOBJ]);
+            subScreenWindowEnabled[eBG1] = Bytes::GetBit<0>(byte);
+            subScreenWindowEnabled[eBG2] = Bytes::GetBit<1>(byte);
+            subScreenWindowEnabled[eBG3] = Bytes::GetBit<2>(byte);
+            subScreenWindowEnabled[eBG4] = Bytes::GetBit<3>(byte);
+            subScreenWindowEnabled[eOBJ] = Bytes::GetBit<4>(byte);
+            LogPpu("Subscreen Window Layers=%d,%d,%d,%d,%d", subScreenWindowEnabled[eBG1], subScreenWindowEnabled[eBG2],
+                   subScreenWindowEnabled[eBG3], subScreenWindowEnabled[eBG4], subScreenWindowEnabled[eOBJ]);
             return true;
 
         case eRegCGWSEL: // 0x2130
@@ -830,6 +834,57 @@ void Ppu::AdjustBrightness(uint8_t brightness)
 }
 
 
+bool Ppu::IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const
+{
+    bool isInside[2] = {false, false};
+    int enabledCount = 0;
+
+    for (int i = 0; i < 2; i++)
+    {
+        if (!bgEnableWindow[bg][i])
+            continue;
+
+        enabledCount++;
+
+        if (screenX >= windowLeft[i] && screenX <= windowRight[i])
+            isInside[i] = true;
+        if (bgInvertWindow[bg][i])
+            isInside[i] = !isInside[i];
+    }
+
+    if (enabledCount == 2)
+    {
+        switch (bgWindowMask[bg])
+        {
+            case 0:
+                return isInside[0] || isInside[1];
+            case 1:
+                return isInside[0] && isInside[1];
+            case 2:
+                return isInside[0] ^ isInside[1];
+            case 3:
+                return !(isInside[0] ^ isInside[1]);
+        }
+    }
+
+    return isInside[0] || isInside[1];
+}
+
+
+Ppu::WindowInfo Ppu::GetBgWindowValue(EBgLayer bg, uint16_t screenX) const
+{
+    WindowInfo info;
+
+    info.isMainScreen = mainScreenWindowEnabled[bg];
+    info.isSubScreen = subScreenWindowEnabled[bg];
+
+    if (info.isMainScreen || info.isSubScreen)
+        info.isInside = IsPointInsideWindow(bg, screenX);
+
+    return info;
+}
+
+
 uint8_t Ppu::GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const
 {
     const uint8_t *tileData = &vram[addr];
@@ -888,55 +943,16 @@ uint16_t Ppu::GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) con
 }
 
 
-bool Ppu::GetBgWindowValue(EBgLayer bg, uint16_t screenX) const
-{
-    // {main,sub}ScreenWindow doesn't contain data for the color layer.
-    if (bg != eCOL && (!mainScreenWindow[bg] && !subScreenWindow[bg]))
-        return false;
-
-    bool applied[2] = {false, false};
-    uint8_t enabledCount = 0;
-    for (int i = 0; i < 2; i++)
-    {
-        if (!bgEnableWindow[bg][i])
-            continue;
-
-        enabledCount++;
-
-        if (screenX >= windowLeft[i] && screenX <= windowRight[i])
-            applied[i] = true;
-        if (bgInvertWindow[bg][i])
-            applied[i] = !applied[i];
-    }
-
-    if (enabledCount == 2)
-    {
-        switch (bgWindowMask[bg])
-        {
-            case 0:
-                return applied[0] || applied[1];
-            case 1:
-                return applied[0] && applied[1];
-            case 2:
-                return applied[0] ^ applied[1];
-            case 3:
-                return !(applied[0] ^ applied[1]);
-        }
-    }
-
-    return applied[0] || applied[1];
-}
-
-
 Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY)
 {
     PixelInfo ret;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
-    if ((!mainScreenLayers[bg] && !subScreenLayers[bg]) || bpp == 0)
+    if ((!mainScreenLayerEnabled[bg] && !subScreenLayerEnabled[bg]) || bpp == 0)
         return ret;
 
-    if (GetBgWindowValue(bg, screenX))
+    WindowInfo window = GetBgWindowValue(bg, screenX);
+    if (window.isInside)
         return ret;
 
     // Check if layer is disabled in emulator GUI.
@@ -1042,7 +1058,7 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
     if (!enableLayer[eOBJ])
         return ret;
 
-    if (!mainScreenLayers[eOBJ] && !subScreenLayers[eOBJ])
+    if (!mainScreenLayerEnabled[eOBJ] && !subScreenLayerEnabled[eOBJ])
         return ret;
 
     for (int i = 0; i < spriteCount; i++)

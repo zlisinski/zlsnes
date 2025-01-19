@@ -59,7 +59,18 @@ private:
         uint8_t colorId;
         uint8_t bg;
         uint8_t priority;
-        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0) {}
+        bool isMainScreen;
+        bool isSubScreen;
+        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0), isMainScreen(false), isSubScreen(false) {}
+    };
+
+    struct WindowInfo
+    {
+        bool isInside;
+        bool isMainScreen;
+        bool isSubScreen;
+        bool isColorScreen;
+        WindowInfo() : isInside(false), isMainScreen(false), isSubScreen(false), isColorScreen(false) {}
     };
 
     struct Sprite
@@ -102,10 +113,12 @@ private:
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
     void AdjustBrightness(uint8_t brightness);
 
+    bool IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const;
+    WindowInfo GetBgWindowValue(EBgLayer bg, uint16_t screenX) const;
+
     uint8_t GetTilePixelData(uint16_t addr, uint8_t xOff, uint8_t yOff, uint8_t bpp) const;
 
     uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) const;
-    bool GetBgWindowValue(EBgLayer bg, uint16_t screenX) const;
     PixelInfo GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
@@ -207,12 +220,12 @@ private:
     uint8_t bgWindowMask[6];
 
     // TM/TS - 0x212c/0x212D
-    bool mainScreenLayers[5];
-    bool subScreenLayers[5];
+    bool mainScreenLayerEnabled[5];
+    bool subScreenLayerEnabled[5];
 
     // TMW/TSW - 0x212E/0x212F
-    bool mainScreenWindow[5];
-    bool subScreenWindow[5];
+    bool mainScreenWindowEnabled[5];
+    bool subScreenWindowEnabled[5];
 
     // CGWSEL - 0x2130
     bool colDirectMode;
