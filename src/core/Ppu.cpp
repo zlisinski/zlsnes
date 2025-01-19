@@ -949,22 +949,23 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     int xOff = (screenX + bgHOffset[bg]) & (tileSize - 1);
     int yOff = (screenY + bgVOffset[bg]) & (tileSize - 1);
 
-    uint16_t tilemapEntry = GetBgTilemapEntry(bg, tileX, tileY);
-    uint32_t tileId = tilemapEntry & 0x3FF;
-    ret.paletteId = (tilemapEntry >> 10) & 0x07;
-    ret.priority = Bytes::GetBit<13>(tilemapEntry);
-    bool flipX = Bytes::GetBit<14>(tilemapEntry);
-    bool flipY = Bytes::GetBit<15>(tilemapEntry);
+    // Cache the tile since the next 8 pixels will use the same tile.
+    BgTilemapCache &tile = bgTilemapCache[bg];
+    if (tile.tileX != tileX || tile.tileY != tileY)
+        tile = BgTilemapCache(GetBgTilemapEntry(bg, tileX, tileY), tileX, tileY);
+
+    ret.paletteId = tile.data.paletteId;
+    ret.priority = tile.data.priority;
 
     // From here on, tiles are always 8x8.
     // TODO: Offset if using 16px tiles.
 
-    if (flipX)
+    if (tile.data.flipX)
         xOff = 7 - xOff;
-    if (flipY)
+    if (tile.data.flipY)
         yOff = 7 - yOff;
 
-    uint16_t addr = bgChrAddr[bg] + (tileId * 8 * bpp);
+    uint16_t addr = bgChrAddr[bg] + (tile.data.tileId * 8 * bpp);
     uint8_t pixelVal = GetTilePixelData(addr, xOff, yOff, bpp);
 
     ret.colorId = pixelVal;

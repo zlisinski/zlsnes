@@ -77,6 +77,28 @@ private:
         Sprite() : xPos(0), yPos(0), tileId(0), isUpperTable(false), paletteId(0), priority(0), flipX(0), flipY(0), width(0), height(0) {}
     };
 
+    struct BgTilemapCache
+    {
+        union
+        {
+            uint16_t tileData;
+            struct
+            {
+                uint16_t tileId : 10;
+                uint16_t paletteId : 3;
+                uint16_t priority : 1;
+                uint16_t flipX : 1;
+                uint16_t flipY : 1;
+            } data;
+        };
+
+        uint8_t tileX;
+        uint8_t tileY;
+
+        BgTilemapCache() : tileData(0), tileX(0xFF), tileY(0xFF) {}
+        BgTilemapCache(uint16_t tileData, uint16_t tileX, uint16_t tileY) : tileData{tileData}, tileX(tileX), tileY(tileY) {}
+    };
+
     uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
     void AdjustBrightness(uint8_t brightness);
 
@@ -115,6 +137,9 @@ private:
 
     // PpuInterface.
     bool enableLayer[5];
+
+    // Cache
+    BgTilemapCache bgTilemapCache[5];
 
     bool isHBlank;
     bool isVBlank;
