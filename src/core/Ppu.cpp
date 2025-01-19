@@ -875,10 +875,10 @@ Ppu::WindowInfo Ppu::GetBgWindowValue(EBgLayer bg, uint16_t screenX) const
 {
     WindowInfo info;
 
-    info.isMainScreen = mainScreenWindowEnabled[bg];
-    info.isSubScreen = subScreenWindowEnabled[bg];
+    info.isOnMainScreen = mainScreenWindowEnabled[bg];
+    info.isOnSubScreen = subScreenWindowEnabled[bg];
 
-    if (info.isMainScreen || info.isSubScreen)
+    if (info.isOnMainScreen || info.isOnSubScreen)
         info.isInside = IsPointInsideWindow(bg, screenX);
 
     return info;
@@ -945,19 +945,29 @@ uint16_t Ppu::GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) con
 
 Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY)
 {
-    PixelInfo ret;
+    PixelInfo info;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
     // Check if layer is disabled in emulator GUI.
     if (!enableLayer[bg])
-        return ret;
+        return info;
 
-    if ((!mainScreenLayerEnabled[bg] && !subScreenLayerEnabled[bg]) || bpp == 0)
-        return ret;
+    info.isOnMainScreen = mainScreenLayerEnabled[bg];
+    info.isOnSubScreen = subScreenLayerEnabled[bg];
+
+    // Check if the layer is enabled for at least one screen and not disabled by the bgmode.
+    if ((!info.isOnMainScreen && !info.isOnSubScreen) || bpp == 0)
+        return info;
 
     WindowInfo window = GetBgWindowValue(bg, screenX);
-    if (window.isInside)
-        return ret;
+
+    // Disable the pixel for the screen if it's inside the window and windows are enabled for the bg.
+    info.isOnMainScreen &= !(window.isInside && window.isOnMainScreen);
+    info.isOnSubScreen &= !(window.isInside && window.isOnSubScreen);
+
+    // If all screens are inside the window, the pixel is never drawn.
+    if (!info.isOnMainScreen && !info.isOnSubScreen)
+        return info;
 
     int tileSize = bgChrSize[bg];
     int tileX = ((screenX + bgHOffset[bg]) / tileSize) & (bgTilemapWidth[bg] - 1);
@@ -970,8 +980,8 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     if (tile.tileX != tileX || tile.tileY != tileY)
         tile = BgTilemapCache(GetBgTilemapEntry(bg, tileX, tileY), tileX, tileY);
 
-    ret.paletteId = tile.data.paletteId;
-    ret.priority = tile.data.priority;
+    info.paletteId = tile.data.paletteId;
+    info.priority = tile.data.priority;
 
     // From here on, tiles are always 8x8.
     // TODO: Offset if using 16px tiles.
@@ -984,9 +994,9 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     uint16_t addr = bgChrAddr[bg] + (tile.data.tileId * 8 * bpp);
     uint8_t pixelVal = GetTilePixelData(addr, xOff, yOff, bpp);
 
-    ret.colorId = pixelVal;
-    ret.bg = bg;
-    return ret;
+    info.colorId = pixelVal;
+    info.bg = bg;
+    return info;
 }
 
 
@@ -1052,18 +1062,28 @@ uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &spri
 
 Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
-    PixelInfo ret;
+    PixelInfo info;
 
     // Check if layer is disabled in emulator GUI.
     if (!enableLayer[eOBJ])
-        return ret;
+        return info;
 
-    if (!mainScreenLayerEnabled[eOBJ] && !subScreenLayerEnabled[eOBJ])
-        return ret;
+    info.isOnMainScreen = mainScreenLayerEnabled[eOBJ];
+    info.isOnSubScreen = subScreenLayerEnabled[eOBJ];
+
+    // Check if the layer is enabled for at least one screen.
+    if (!info.isOnMainScreen && !info.isOnSubScreen)
+        return info;
 
     WindowInfo window = GetBgWindowValue(eOBJ, screenX);
-    if (window.isInside)
-        return ret;
+
+    // Disable the pixel for the screen if it's inside the window and windows are enabled for the bg.
+    info.isOnMainScreen &= !(window.isInside && window.isOnMainScreen);
+    info.isOnSubScreen &= !(window.isInside && window.isOnSubScreen);
+
+    // If all screens are inside the window, the pixel is never drawn.
+    if (!info.isOnMainScreen && !info.isOnSubScreen)
+        return info;
 
     for (int i = 0; i < spriteCount; i++)
     {
@@ -1099,18 +1119,19 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
         uint8_t pixelVal = GetTilePixelData(tileAddr, xOff, yOff, OBJ_BPP);
         if (pixelVal != 0)
         {
-            ret.paletteId = cur.paletteId;
-            ret.colorId = pixelVal;
-            ret.bg = eOBJ;
-            ret.priority = cur.priority;
+            info.paletteId = cur.paletteId;
+            info.colorId = pixelVal;
+            info.bg = eOBJ;
+            info.priority = cur.priority;
             break;
         }
     }
 
-    return ret;
+    return info;
 }
 
 
+template <Ppu::EScreenType Screen>
 Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo bgInfo[4];
@@ -1120,44 +1141,44 @@ Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<
     {
         case 0:
             // Sprites with priority 3
-            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 3 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 1
             bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // BG2 tiles with priority 1
             bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
-            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             // Sprites with priority 2
-            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 2 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 0
-            if (bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // BG2 tiles with priority 0
-            if (bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             // Sprites with priority 1
-            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG3 tiles with priority 1
             bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
-            if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+            if (bgInfo[eBG3].priority && bgInfo[eBG3].IsNotTransparent<Screen>())
                 return bgInfo[eBG3];
             // BG4 tiles with priority 1
             bgInfo[eBG4] = GetBgPixelInfo(eBG4, screenX, screenY);
-            if (bgInfo[eBG4].priority && bgInfo[eBG4].colorId != 0)
+            if (bgInfo[eBG4].priority && bgInfo[eBG4].IsNotTransparent<Screen>())
                 return bgInfo[eBG4];
             // Sprites with priority 0
-            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 0 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG3 tiles with priority 0
-            if (bgInfo[eBG3].colorId != 0)
+            if (bgInfo[eBG3].IsNotTransparent<Screen>())
                 return bgInfo[eBG3];
             // BG4 tiles with priority 0
-            if (bgInfo[eBG4].colorId != 0)
+            if (bgInfo[eBG4].IsNotTransparent<Screen>())
                 return bgInfo[eBG4];
             break;
         case 1:
@@ -1165,43 +1186,43 @@ Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<
             if (bgMode1Bg3Priority)
             {
                 bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
-                if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+                if (bgInfo[eBG3].priority && bgInfo[eBG3].IsNotTransparent<Screen>())
                     return bgInfo[eBG3];
             }
             // Sprites with priority 3
-            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 3 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 1
             bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // BG2 tiles with priority 1
             bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
-            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             // Sprites with priority 2
-            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 2 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 0
-            if (bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // BG2 tiles with priority 0
-            if (bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             // Sprites with priority 1
-            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // Skip loading if we already loaded it above.
             if (!bgMode1Bg3Priority)
                 bgInfo[eBG3] = GetBgPixelInfo(eBG3, screenX, screenY);
             // BG3 tiles with priority 1 if bit 3 of regBGMODE is clear
-            if (bgInfo[eBG3].priority && bgInfo[eBG3].colorId != 0)
+            if (bgInfo[eBG3].priority && bgInfo[eBG3].IsNotTransparent<Screen>())
                 return bgInfo[eBG3];
             // Sprites with priority 0
-            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 0 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG3 tiles with priority 0
-            if (bgInfo[eBG3].colorId != 0)
+            if (bgInfo[eBG3].IsNotTransparent<Screen>())
                 return bgInfo[eBG3];
             break;
         case 2:
@@ -1209,69 +1230,69 @@ Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<
         case 4:
         case 5:
             // Sprites with priority 3
-            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 3 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 1
             bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 2
-            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 2 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG2 tiles with priority 1
             bgInfo[eBG2] = GetBgPixelInfo(eBG2, screenX, screenY);
-            if (bgInfo[eBG2].priority && bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].priority && bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             // Sprites with priority 1
-            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 0
-            if (bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 0
-            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 0 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG2 tiles with priority 0
-            if (bgInfo[eBG2].colorId != 0)
+            if (bgInfo[eBG2].IsNotTransparent<Screen>())
                 return bgInfo[eBG2];
             break;
         case 6:
             // Sprites with priority 3
-            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 3 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 1
             bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-            if (bgInfo[eBG1].priority && bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].priority && bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 2
-            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 2 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // Sprites with priority 1
-            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1 tiles with priority 0
-            if (bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 0
-            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 0 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             break;
         case 7:
             // Sprites with priority 3
-            if (spriteInfo.priority == 3 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 3 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // Sprites with priority 2
-            if (spriteInfo.priority == 2 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 2 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // Sprites with priority 1
-            if (spriteInfo.priority == 1 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1
             bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
-            if (bgInfo[eBG1].colorId != 0)
+            if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 0
-            if (spriteInfo.priority == 0 && spriteInfo.colorId != 0)
+            if (spriteInfo.priority == 0 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             break;
     }
@@ -1299,7 +1320,10 @@ void Ppu::DrawScanline(uint8_t scanline)
 
     for (int x = 0; x < SCREEN_X / 2; x++)
     {
-        PixelInfo pixel = GetPixelInfo(x, scanline, sprites, spriteCount);
+        PixelInfo pixel = GetPixelInfo<EScreenType::MainScreen>(x, scanline, sprites, spriteCount);
+        // This will go away soon.
+        if (pixel.colorId == 0)
+            pixel = GetPixelInfo<EScreenType::SubScreen>(x, scanline, sprites, spriteCount);
 
         uint8_t paletteOffset = 0;
         if (pixel.colorId != 0)

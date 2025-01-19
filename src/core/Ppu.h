@@ -53,24 +53,40 @@ protected:
     void ProcessVBlankEnd() override;
 
 private:
+    enum class EScreenType
+    {
+        MainScreen,
+        SubScreen
+    };
+
     struct PixelInfo
     {
         uint8_t paletteId;
         uint8_t colorId;
         uint8_t bg;
         uint8_t priority;
-        bool isMainScreen;
-        bool isSubScreen;
-        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0), isMainScreen(false), isSubScreen(false) {}
+        bool isOnMainScreen;
+        bool isOnSubScreen;
+
+        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0), isOnMainScreen(false), isOnSubScreen(false) {}
+
+        template <EScreenType Screen = EScreenType::MainScreen>
+        bool IsNotTransparent()
+        {
+            if constexpr (Screen == EScreenType::MainScreen)
+                return colorId != 0 && isOnMainScreen;
+            else
+                return colorId != 0 && isOnSubScreen;
+        }
     };
 
     struct WindowInfo
     {
         bool isInside;
-        bool isMainScreen;
-        bool isSubScreen;
+        bool isOnMainScreen;
+        bool isOnSubScreen;
         bool isColorScreen;
-        WindowInfo() : isInside(false), isMainScreen(false), isSubScreen(false), isColorScreen(false) {}
+        WindowInfo() : isInside(false), isOnMainScreen(false), isOnSubScreen(false), isColorScreen(false) {}
     };
 
     struct Sprite
@@ -124,6 +140,7 @@ private:
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
     PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
+    template <EScreenType Screen = EScreenType::MainScreen>
     PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
     void DrawScanline(uint8_t scanline);
