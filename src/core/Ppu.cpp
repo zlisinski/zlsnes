@@ -948,15 +948,15 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     PixelInfo ret;
     uint8_t bpp = BG_BPP_LOOKUP[bgMode][bg];
 
+    // Check if layer is disabled in emulator GUI.
+    if (!enableLayer[bg])
+        return ret;
+
     if ((!mainScreenLayerEnabled[bg] && !subScreenLayerEnabled[bg]) || bpp == 0)
         return ret;
 
     WindowInfo window = GetBgWindowValue(bg, screenX);
     if (window.isInside)
-        return ret;
-
-    // Check if layer is disabled in emulator GUI.
-    if (!enableLayer[bg])
         return ret;
 
     int tileSize = bgChrSize[bg];
@@ -1059,6 +1059,10 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
         return ret;
 
     if (!mainScreenLayerEnabled[eOBJ] && !subScreenLayerEnabled[eOBJ])
+        return ret;
+
+    WindowInfo window = GetBgWindowValue(eOBJ, screenX);
+    if (window.isInside)
         return ret;
 
     for (int i = 0; i < spriteCount; i++)
