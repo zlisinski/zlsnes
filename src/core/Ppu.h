@@ -21,7 +21,7 @@ enum EBgLayer
     eBG3,
     eBG4,
     eOBJ,
-    eCOL
+    eCOL // Color window or 0 color backdrop
 };
 
 
@@ -63,12 +63,12 @@ private:
     {
         uint8_t paletteId;
         uint8_t colorId;
-        uint8_t bg;
+        EBgLayer bg;
         uint8_t priority;
         bool isOnMainScreen;
         bool isOnSubScreen;
 
-        PixelInfo() : paletteId(0), colorId(0), bg(0), priority(0), isOnMainScreen(false), isOnSubScreen(false) {}
+        PixelInfo() : paletteId(0), colorId(0), bg(eCOL), priority(0), isOnMainScreen(false), isOnSubScreen(false) {}
 
         template <EScreenType Screen = EScreenType::MainScreen>
         bool IsNotTransparent()
@@ -142,6 +142,9 @@ private:
 
     template <EScreenType Screen = EScreenType::MainScreen>
     PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
+
+    uint16_t GetColorValueFromPalette(EBgLayer bg, uint8_t paletteId, uint8_t colorId);
+    uint32_t PerformColorMath(EBgLayer mainBg, uint16_t mainColor, uint16_t subColor);
 
     void DrawScanline(uint8_t scanline);
     void DrawScreen();
@@ -259,6 +262,7 @@ private:
     uint8_t redChannel;
     uint8_t blueChannel;
     uint8_t greenChannel;
+    uint16_t fixedColor;
 
     // OPHCT - 0x213C
     uint16_t hCount;

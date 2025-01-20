@@ -725,7 +725,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegCGWSEL: // 0x2130
             regCGWSEL = byte;
             colDirectMode = Bytes::TestBit<0>(byte);
-            colAddend = Bytes::TestBit<0>(byte);
+            colAddend = Bytes::TestBit<1>(byte);
             colSubScreenRegion = (byte >> 4) & 0x03;
             colMainScreenRegion = byte >> 6;
             LogPpu("CGWSEL=%02X mainScree=%d subScreen=%d addend=%d directColor=%d", byte,
@@ -755,7 +755,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
                 greenChannel = byte & 0x1F;
             if (Bytes::TestBit<7>(byte))
                 blueChannel = byte & 0x1F;
-            LogPpu("COLDATA=%02X r=%d b=%d g=%d", byte, redChannel, blueChannel, greenChannel);
+            fixedColor = (blueChannel << 10) | (greenChannel << 5) | redChannel;
+            LogPpu("COLDATA=%02X r=%d b=%d g=%d fixed=%04X", byte, redChannel, blueChannel, greenChannel, fixedColor);
             return true;
 
         case eRegSETINI: // 0x2133
@@ -820,7 +821,7 @@ uint32_t Ppu::ConvertBGR555toARGB888(uint16_t bgrColor)
     uint8_t b = bgrColor & 0x1F;
     b = (b << 3) | ((b >> 2) & 0x07);
 
-    return 0xFF000000 | Bytes::Make24Bit(r, g, b);
+    return ((brightness * 17) << 24) | Bytes::Make24Bit(r, g, b);
 }
 
 
@@ -1302,6 +1303,74 @@ Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<
 }
 
 
+uint16_t Ppu::GetColorValueFromPalette(EBgLayer bg, uint8_t paletteId, uint8_t colorId)
+{
+    uint16_t paletteOffset = 0;
+    if (colorId != 0)
+    {
+        if (bg == eOBJ)
+            paletteOffset = (paletteId << OBJ_BPP) + 128;
+        else if (bgMode == 0)
+            paletteOffset = (paletteId << BG_BPP_LOOKUP[bgMode][bg]) + (bg * 0x20);
+        else
+            paletteOffset = (paletteId << BG_BPP_LOOKUP[bgMode][bg]);
+    }
+
+    paletteOffset = (paletteOffset + colorId) << 1;
+
+    return Bytes::Make16Bit(cgram[paletteOffset + 1], cgram[paletteOffset]);
+}
+
+
+uint32_t Ppu::PerformColorMath(EBgLayer mainBg, uint16_t mainColor, uint16_t subColor)
+{
+    if (colorSubtract)
+    {
+        int8_t newBlue = (mainColor >> 10) - (subColor >> 10);
+        int8_t newGreen = ((mainColor >> 5) & 0x1F) - ((subColor >> 5) & 0x1F);
+        int8_t newRed = (mainColor & 0x1F) - (subColor & 0x1F);
+
+        if (halfColorMath)
+        {
+            newBlue >>= 1;
+            newGreen >>= 1;
+            newRed >>= 1;
+        }
+
+        if (newBlue < 0)
+            newBlue = 0;
+        if (newGreen < 0)
+            newGreen = 0;
+        if (newRed < 0)
+            newRed = 0;
+
+        return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
+    }
+    else
+    {
+        uint8_t newBlue = (mainColor >> 10) + (subColor >> 10);
+        uint8_t newGreen = ((mainColor >> 5) & 0x1F) + ((subColor >> 5) & 0x1F);
+        uint8_t newRed = (mainColor & 0x1F) + (subColor & 0x1F);
+
+        if (halfColorMath)
+        {
+            newBlue >>= 1;
+            newGreen >>= 1;
+            newRed >>= 1;
+        }
+
+        if (newBlue > 31)
+            newBlue = 31;
+        if (newGreen > 31)
+            newGreen = 31;
+        if (newRed > 31)
+            newRed = 31;
+
+        return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
+    }
+}
+
+
 void Ppu::DrawScanline(uint8_t scanline)
 {
     if (isForcedBlank)
@@ -1321,22 +1390,60 @@ void Ppu::DrawScanline(uint8_t scanline)
     for (int x = 0; x < SCREEN_X / 2; x++)
     {
         PixelInfo pixel = GetPixelInfo<EScreenType::MainScreen>(x, scanline, sprites, spriteCount);
-        // This will go away soon.
-        if (pixel.colorId == 0)
-            pixel = GetPixelInfo<EScreenType::SubScreen>(x, scanline, sprites, spriteCount);
 
-        uint8_t paletteOffset = 0;
-        if (pixel.colorId != 0)
+        uint32_t color;
+
+        if (bgColorMathEnable[pixel.bg] && (pixel.bg != eOBJ || (pixel.bg == eOBJ && pixel.paletteId > 3)))
         {
-            if (pixel.bg == eOBJ)
-                paletteOffset = (pixel.paletteId << OBJ_BPP) + 128;
-            else if (bgMode == 0)
-                paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]) + (pixel.bg * 0x20);
-            else
-                paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]);
-        }
+            uint16_t mainColor = 0;
+            uint16_t subColor = fixedColor;
 
-        uint32_t color = palette[pixel.colorId + paletteOffset];
+            // Apply clipping to black and the color window to the main pixel.
+            if (colMainScreenRegion == 0)
+            {
+                // Never clip to black.
+                mainColor = GetColorValueFromPalette(pixel.bg, pixel.paletteId, pixel.colorId);
+            }
+            else if (colMainScreenRegion == 1 || colMainScreenRegion == 2)
+            {
+                // Clip based on inside/outside color window.
+                bool isInside = IsPointInsideWindow(eCOL, x);
+                if (colMainScreenRegion == 1)
+                    isInside = !isInside;
+                if (!isInside)
+                    mainColor = GetColorValueFromPalette(pixel.bg, pixel.paletteId, pixel.colorId);
+            }
+            // If colMainScreenRegion == 3, pixel is always 0.
+
+            // Ignore color window for now
+            if (colAddend)
+            {
+                PixelInfo subScreenPixel = GetPixelInfo<EScreenType::SubScreen>(x, scanline, sprites, spriteCount);
+                if (subScreenPixel.colorId != 0)
+                    subColor = GetColorValueFromPalette(subScreenPixel.bg, subScreenPixel.paletteId, subScreenPixel.colorId);
+            }
+            else
+            {
+                subColor = fixedColor;
+            }
+
+            color = PerformColorMath(pixel.bg, mainColor, subColor);
+        }
+        else
+        {
+            uint8_t paletteOffset = 0;
+            if (pixel.colorId != 0)
+            {
+                if (pixel.bg == eOBJ)
+                    paletteOffset = (pixel.paletteId << OBJ_BPP) + 128;
+                else if (bgMode == 0)
+                    paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]) + (pixel.bg * 0x20);
+                else
+                    paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]);
+            }
+
+            color = palette[pixel.colorId + paletteOffset];
+        }
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
         frameBuffer[pixelOffset] = color;
