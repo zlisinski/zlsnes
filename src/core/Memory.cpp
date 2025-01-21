@@ -131,7 +131,8 @@ uint8_t Memory::Read8Bit(uint32_t addr)
             timer->AddCycle(EClockSpeed::eClockSlowRom);
     }
 
-    return cart->ReadByte(addr);
+    openBusValue = cart->ReadByte(addr);
+    return openBusValue;
 }
 
 
