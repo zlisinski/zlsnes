@@ -196,7 +196,7 @@ void Emulator::ThreadFunc()
             //quit = true;
         }
 
-        //memory->SaveRam(ramFilename);
+        cartridge.SaveSram();
     }
     catch(const std::exception& e)
     {
@@ -216,18 +216,18 @@ void Emulator::ThreadFunc()
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     delete apu;
-    apu = NULL;
+    apu = nullptr;
     delete cpu;
-    cpu = NULL;
+    cpu = nullptr;
     delete ppu;
-    ppu = NULL;
+    ppu = nullptr;
     delete input;
-    input = NULL;
-    /*delete interrupts;
-    interrupts = NULL;*/
+    input = nullptr;
+    delete interrupts;
+    interrupts = nullptr;
     delete timer;
-    timer = NULL;
+    timer = nullptr;
     delete memory;
-    memory = NULL;
+    memory = nullptr;
     cartridge.Reset();
 }

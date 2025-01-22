@@ -48,6 +48,7 @@ public:
     Cartridge();
 
     bool LoadRom(const std::string &filename);
+    bool SaveSram();
     void Reset();
 
     uint32_t MapAddress(uint32_t addr, std::vector<uint8_t> **mem);
@@ -68,6 +69,7 @@ protected:
 
     std::vector<uint8_t> rom;
     std::vector<uint8_t> sram;
+    std::string sramFilename;
 
     StandardHeader standardHeader;
     ExtendedHeader extendedHeader;

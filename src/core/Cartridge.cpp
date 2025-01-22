@@ -43,8 +43,8 @@ bool Cartridge::LoadRom(const std::string &filename)
     if (standardHeader.ramSize != 0)
     {
         uint32_t ramSize = (1 << standardHeader.ramSize) * 1024;
-        std::string ramFilename = filename + ".srm";
-        std::ifstream file(ramFilename, std::ios::binary);
+        sramFilename = filename + ".srm";
+        std::ifstream file(sramFilename, std::ios::binary);
         if (file)
         {
             std::istreambuf_iterator<char> start(file), end;
@@ -57,10 +57,26 @@ bool Cartridge::LoadRom(const std::string &filename)
         }
         else
         {
-            LogWarning("Couldn't open %s. Starting with fresh SRAM", ramFilename.c_str());
+            LogWarning("Couldn't open %s. Starting with fresh SRAM", sramFilename.c_str());
             sram = std::vector<uint8_t>(ramSize, 0);
         }
     }
+
+    return true;
+}
+
+
+bool Cartridge::SaveSram()
+{
+    std::ofstream file(sramFilename, std::ios::binary);
+    if (!file.is_open())
+    {
+        LogError("Error opening sram file %s", sramFilename.c_str());
+        return false;
+    }
+
+    file.write(reinterpret_cast<char *>(sram.data()), sram.size());
+    file.close();
 
     return true;
 }
@@ -70,6 +86,7 @@ void Cartridge::Reset()
 {
     rom.clear();
     sram.clear();
+    sramFilename = "";
     isInterleaved = false;
     romType = ERomType::eLoROM;
     isLoRom = true;
