@@ -196,6 +196,11 @@ private:
     bool bgMode1Bg3Priority;
     uint8_t bgChrSize[4];
 
+    // MOSAIC - 0x2106
+    bool bgEnableMosaic[4];
+    uint8_t bgMosaicSize;
+    uint16_t bgMosaicStartScanline;
+
     // BGxSC - 0x2107-0x210A
     uint16_t bgTilemapAddr[4];
     uint8_t bgTilemapWidth[4];

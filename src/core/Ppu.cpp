@@ -30,6 +30,9 @@ Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, Debug
     bgMode(0),
     bgMode1Bg3Priority(false),
     bgChrSize{8, 8, 8, 8},
+    bgEnableMosaic{false, false, false, false},
+    bgMosaicSize(0),
+    bgMosaicStartScanline(1),
     bgTilemapAddr{0, 0, 0, 0},
     bgTilemapWidth{32, 32, 32, 32},
     bgTilemapHeight{32, 32, 32, 32},
@@ -367,7 +370,17 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegMOSAIC: // 0x2106
             regMOSAIC = byte;
-            LogPpu("MosaicSize=%d MosaicLayers=%d,%d,%d,%d", (byte >> 4), Bytes::GetBit<0>(byte), Bytes::GetBit<1>(byte), Bytes::GetBit<2>(byte), Bytes::GetBit<3>(byte));
+            bgEnableMosaic[eBG1] = Bytes::TestBit<0>(byte);
+            bgEnableMosaic[eBG2] = Bytes::TestBit<1>(byte);
+            bgEnableMosaic[eBG3] = Bytes::TestBit<2>(byte);
+            bgEnableMosaic[eBG4] = Bytes::TestBit<3>(byte);
+            bgMosaicSize = (byte >> 4) + 1;
+
+            // When set mid frame, the top of the mosaic block is the current scanline.
+            bgMosaicStartScanline = scanline;
+
+            LogPpu("MosaicSize=%d MosaicLayers=%d,%d,%d,%d", bgMosaicSize, bgEnableMosaic[eBG1], bgEnableMosaic[eBG2],
+                   bgEnableMosaic[eBG3], bgEnableMosaic[eBG4]);
             return true;
 
         case eRegBG1SC: // 0x2107
@@ -805,6 +818,9 @@ void Ppu::ProcessVBlankEnd()
         Bytes::ClearBit<6>(regSTAT77);
         Bytes::ClearBit<7>(regSTAT77);
     }
+
+    // Reset which scanline is the starting vertical block for mosaic.
+    bgMosaicStartScanline = 1;
 }
 
 
@@ -970,11 +986,19 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     if (!info.isOnMainScreen && !info.isOnSubScreen)
         return info;
 
+    int mosaicXOff = 0;
+    int mosaicYOff = 0;
+    if (bgEnableMosaic[bg] && bgMosaicSize > 1)
+    {
+        mosaicXOff = screenX % bgMosaicSize;
+        mosaicYOff = (screenY - bgMosaicStartScanline) % bgMosaicSize;
+    }
+
     int tileSize = bgChrSize[bg];
-    int tileX = ((screenX + bgHOffset[bg]) / tileSize) & (bgTilemapWidth[bg] - 1);
-    int tileY = ((screenY + bgVOffset[bg]) / tileSize) & (bgTilemapHeight[bg] - 1);
-    int xOff = (screenX + bgHOffset[bg]) & (tileSize - 1);
-    int yOff = (screenY + bgVOffset[bg]) & (tileSize - 1);
+    int tileX = ((screenX + bgHOffset[bg] - mosaicXOff) / tileSize) & (bgTilemapWidth[bg] - 1);
+    int tileY = ((screenY + bgVOffset[bg] - mosaicYOff) / tileSize) & (bgTilemapHeight[bg] - 1);
+    int xOff = (screenX + bgHOffset[bg] - mosaicXOff) & (tileSize - 1);
+    int yOff = (screenY + bgVOffset[bg] - mosaicYOff) & (tileSize - 1);
 
     // Cache the tile since the next 8 pixels will use the same tile.
     BgTilemapCache &tile = bgTilemapCache[bg];
