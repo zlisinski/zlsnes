@@ -36,8 +36,6 @@ private:
     void UpdateTileView();
     void UpdatePaletteView();
     void UpdateMemoryView();
-    void UpdateSpriteTab();
-    void DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv);
     void UpdateTilemapView();
 
     Ui::InfoWindow *ui;
@@ -46,6 +44,7 @@ private:
     const Ppu *ppu;
 
     uint32_t paletteData[256];
+    QByteArray paletteHash;
 
 private slots:
     void SlotDrawFrame();
@@ -53,4 +52,20 @@ private slots:
 signals:
     void SignalInfoWindowClosed();
     void SignalDrawFrame();
+
+// Sprite Tab /////////////////////////////////////////////////////////////////
+
+private slots:
+    void on_chkSpriteLive_clicked(bool checked);
+    void on_btnSpriteUpdate_clicked();
+    void on_cmbSpritePalette_currentIndexChanged(int index);
+
+private:
+    void ClearSpriteTab();
+    void UpdateSpriteTab();
+    void GeneratePaletteIcons();
+    void DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv);
+
+    bool spriteLiveUpdate;
+    int spritePaletteId;
 };

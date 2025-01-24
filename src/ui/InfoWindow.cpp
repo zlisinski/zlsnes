@@ -2,6 +2,7 @@
 #include <QtCore/QSettings>
 #include <QtCore/QTimer>
 #include <QtWidgets/QGraphicsPixmapItem>
+#include <QCryptographicHash>
 
 #include "InfoWindow.h"
 #include "SettingsConstants.h"
@@ -19,7 +20,9 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ui(new Ui::InfoWindow),
     ioPorts21(nullptr),
     ppu(nullptr),
-    paletteData{0}
+    paletteData{0},
+    spriteLiveUpdate(true),
+    spritePaletteId(0)
 {
     ui->setupUi(this);
 
@@ -41,6 +44,8 @@ InfoWindow::InfoWindow(QWidget *parent) :
 
     connect(this, SIGNAL(SignalInfoWindowClosed()), parent, SLOT(SlotInfoWindowClosed()));
     connect(this, SIGNAL(SignalDrawFrame()), this, SLOT(SlotDrawFrame()));
+
+    on_chkSpriteLive_clicked(spriteLiveUpdate);
 
     ClearWidgets();
     DrawFrame();
@@ -176,9 +181,7 @@ void InfoWindow::ClearWidgets()
     ui->labelBG3VOFS->setText("");
     ui->labelBG4VOFS->setText("");
 
-    ui->labelObjTable1Addr->setText("");
-    ui->labelObjTable2Addr->setText("");
-    ui->labelObjSizes->setText("");
+    ClearSpriteTab();
 }
 
 
@@ -234,24 +237,20 @@ void InfoWindow::GeneratePalette()
     if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
-    // Convert BGR555 to ARGB8888
+    // If the palette data hasn't changed, do nothing.
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    hash.addData(reinterpret_cast<const char *>(ppu->cgram.data()), ppu->cgram.size());
+    if (paletteHash == hash.result())
+        return;
+
+    paletteHash = hash.result();
+
+    // Use the ppu palette but set full brightness.
     for (int i = 0; i < 256; i++)
-    {
-        uint16_t color = Bytes::Make16Bit(ppu->cgram[(i * 2) + 1], ppu->cgram[i * 2]);
+        paletteData[i] = 0xFF000000 | ppu->palette[i];
 
-        uint8_t r = color & 0x1F;
-        r = (r << 3) | ((r >> 2) & 0x07);
-
-        color >>= 5;
-        uint8_t g = color & 0x1F;
-        g = (g << 3) | ((g >> 2) & 0x07);
-
-        color >>= 5;
-        uint8_t b = color & 0x1F;
-        b = (b << 3) | ((b >> 2) & 0x07);
-
-        paletteData[i] = 0xFF000000 | Bytes::Make24Bit(r, g, b);
-    }
+    // Make the palette icons for the sprite tab.
+    GeneratePaletteIcons();
 }
 
 
@@ -387,69 +386,6 @@ void InfoWindow::UpdateMemoryView()
 }
 
 
-void InfoWindow::UpdateSpriteTab()
-{
-    if (ppu == nullptr || ioPorts21 == nullptr)
-        return;
-
-    ui->labelObjTable1Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[0]));
-    ui->labelObjTable2Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[1]));
-
-    QString str = QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][0]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][0]) + ", " +
-                  QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][1]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][1]);
-    ui->labelObjSizes->setText(str);
-
-    DrawSpriteTable(ppu->objBaseAddr[0], ui->gvObjTable1);
-    DrawSpriteTable(ppu->objBaseAddr[1], ui->gvObjTable2);
-}
-
-
-void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
-{
-    if (ppu == nullptr || ioPorts21 == nullptr)
-        return;
-
-    const int SCALE = 3;
-
-    gv->scene()->clear();
-    gv->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
-    QPen pen(Qt::green, 1);
-
-    // Draw grid.
-    for (int i = 0; i < 17; i++)
-    {
-        int len = i * ((SCALE * 8) + 1);
-        gv->scene()->addLine(0, len, 400, len, pen);
-    }
-    for (int i = 0; i < 17; i++)
-    {
-        int len = i * ((SCALE * 8) + 1);
-        gv->scene()->addLine(len, 0, len, 400, pen);
-    }
-
-    for (int tileId = 0; tileId < 256; tileId++)
-    {
-        QImage img(8, 8, QImage::Format_RGB32);
-
-        for (int x = 0; x < 8; x++)
-        {
-            for (int y = 0; y < 8; y++)
-            {
-                uint16_t tileAddr = baseAddr + (tileId * 8  * OBJ_BPP); // 8px width * 4bpp;
-                uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, OBJ_BPP);
-                img.setPixel(x, y, paletteData[pixelVal + 128]);
-            }
-        }
-
-        QGraphicsPixmapItem *pixmap = gv->scene()->addPixmap(QPixmap::fromImage(img));
-        pixmap->setScale(SCALE);
-        int xpos = 1 + ((tileId % 16) * 8 * SCALE) + (tileId % 16);
-        int ypos = 1 + ((tileId / 16) * 8 * SCALE) + (tileId / 16);
-        pixmap->setPos(xpos, ypos);
-    }
-}
-
-
 void InfoWindow::UpdateTilemapView()
 {
     if (ppu == nullptr)
@@ -556,4 +492,146 @@ void InfoWindow::SlotDrawFrame()
     UpdateMemoryView();
     UpdateSpriteTab();
     UpdateTilemapView();
+}
+
+
+// Sprite Tab /////////////////////////////////////////////////////////////////
+
+
+void InfoWindow::ClearSpriteTab()
+{
+    ui->labelObjTable1Addr->setText("");
+    ui->labelObjTable2Addr->setText("");
+    ui->labelObjSizes->setText("");
+
+    ui->gvObjTable1->scene()->clear();
+    ui->gvObjTable2->scene()->clear();
+
+    ui->cmbSpritePalette->clear();
+    for (int i = 0; i < 8; i++)
+    {
+        ui->cmbSpritePalette->addItem("Palette " + QString::number(i));
+    }
+}
+
+
+void InfoWindow::on_chkSpriteLive_clicked(bool checked)
+{
+    spriteLiveUpdate = checked;
+    ui->btnSpriteUpdate->setEnabled(!spriteLiveUpdate);
+}
+
+
+void InfoWindow::on_btnSpriteUpdate_clicked()
+{
+    if (ppu == nullptr)
+        return;
+
+    DrawSpriteTable(ppu->objBaseAddr[0], ui->gvObjTable1);
+    DrawSpriteTable(ppu->objBaseAddr[1], ui->gvObjTable2);
+}
+
+
+void InfoWindow::on_cmbSpritePalette_currentIndexChanged(int index)
+{
+    spritePaletteId = index;
+
+    on_btnSpriteUpdate_clicked();
+}
+
+
+void InfoWindow::UpdateSpriteTab()
+{
+    if (ppu == nullptr || ioPorts21 == nullptr)
+        return;
+
+    ui->labelObjTable1Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[0]));
+    ui->labelObjTable2Addr->setText(UiUtils::FormatHexWord(ppu->objBaseAddr[1]));
+
+    QString str = QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][0]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][0]) + ", " +
+                  QString::number(OBJ_H_SIZE_LOOKUP[ppu->objSize][1]) + "x" + QString::number(OBJ_V_SIZE_LOOKUP[ppu->objSize][1]);
+    ui->labelObjSizes->setText(str);
+
+    if (spriteLiveUpdate)
+    {
+        DrawSpriteTable(ppu->objBaseAddr[0], ui->gvObjTable1);
+        DrawSpriteTable(ppu->objBaseAddr[1], ui->gvObjTable2);
+    }
+}
+
+
+void InfoWindow::GeneratePaletteIcons()
+{
+    int scale = 8;
+    int colorsPerRow = 4;
+    int iconSize = scale * colorsPerRow;
+    ui->cmbSpritePalette->setIconSize(QSize(iconSize, iconSize));
+
+    for (int i = 0; i < 8; i++)
+    {
+        QImage img(iconSize, iconSize, QImage::Format_ARGB32);
+        for (int colorId = 0; colorId < 16; colorId++)
+        {
+            int x = (colorId % colorsPerRow) * scale;
+            int y = (colorId / colorsPerRow) * scale;
+            uint32_t color = paletteData[128 + (i * 16) + colorId];
+
+            for (int x2 = 0; x2 < scale; x2++)
+            {
+                for (int y2 = 0; y2 < scale; y2++)
+                {
+                    img.setPixel(x + x2, y + y2, color);
+                }
+            }
+        }
+
+        QIcon icon(QPixmap::fromImage(img));
+        ui->cmbSpritePalette->setItemIcon(i, icon);
+    }
+}
+
+
+void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
+{
+    if (ppu == nullptr || ioPorts21 == nullptr)
+        return;
+
+    const int SCALE = 3;
+
+    gv->scene()->clear();
+    gv->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
+    QPen pen(Qt::green, 1);
+
+    // Draw grid.
+    for (int i = 0; i < 17; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        gv->scene()->addLine(0, len, 400, len, pen);
+    }
+    for (int i = 0; i < 17; i++)
+    {
+        int len = i * ((SCALE * 8) + 1);
+        gv->scene()->addLine(len, 0, len, 400, pen);
+    }
+
+    for (int tileId = 0; tileId < 256; tileId++)
+    {
+        QImage img(8, 8, QImage::Format_RGB32);
+
+        for (int x = 0; x < 8; x++)
+        {
+            for (int y = 0; y < 8; y++)
+            {
+                uint16_t tileAddr = baseAddr + (tileId * 8  * OBJ_BPP); // 8px width * 4bpp;
+                uint8_t pixelVal = ppu->GetTilePixelData(tileAddr, x, y, OBJ_BPP);
+                img.setPixel(x, y, paletteData[128 + (spritePaletteId * 16) + pixelVal]);
+            }
+        }
+
+        QGraphicsPixmapItem *pixmap = gv->scene()->addPixmap(QPixmap::fromImage(img));
+        pixmap->setScale(SCALE);
+        int xpos = 1 + ((tileId % 16) * 8 * SCALE) + (tileId % 16);
+        int ypos = 1 + ((tileId / 16) * 8 * SCALE) + (tileId / 16);
+        pixmap->setPos(xpos, ypos);
+    }
 }
