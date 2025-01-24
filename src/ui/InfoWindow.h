@@ -31,12 +31,7 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private:
-    QString GetChipsetString(uint8_t chipset);
     void GeneratePalette();
-    void UpdateTileView();
-    void UpdatePaletteView();
-    void UpdateMemoryView();
-    void UpdateTilemapView();
 
     Ui::InfoWindow *ui;
 
@@ -52,6 +47,22 @@ private slots:
 signals:
     void SignalInfoWindowClosed();
     void SignalDrawFrame();
+
+// Memory Tab /////////////////////////////////////////////////////////////////
+
+private:
+    void ClearMemoryTab();
+    void UpdateMemoryTab();
+    QString GetChipsetString(uint8_t chipset);
+
+// Tiles Tab //////////////////////////////////////////////////////////////////
+
+private:
+    void ClearTilesTab();
+    void UpdatePaletteView();
+    void UpdateTilesTab();
+    void UpdateTileView();
+    void UpdateTilemapView();
 
 // Sprite Tab /////////////////////////////////////////////////////////////////
 

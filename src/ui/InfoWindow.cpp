@@ -58,6 +58,104 @@ InfoWindow::~InfoWindow()
 }
 
 
+void InfoWindow::ClearWidgets()
+{
+    ClearMemoryTab();
+    ClearTilesTab();
+    ClearSpriteTab();
+}
+
+
+void InfoWindow::DrawFrame()
+{
+    // This should be called from the same thread, but it crashes sometimes without this emit. ¯\_(ツ)_/¯
+    emit SignalDrawFrame();
+}
+
+
+void InfoWindow::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+}
+
+
+void InfoWindow::closeEvent(QCloseEvent *event)
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_INFOWINDOW_GEOMETRY, saveGeometry());
+
+    emit SignalInfoWindowClosed();
+
+    QWidget::closeEvent(event);
+}
+
+
+void InfoWindow::GeneratePalette()
+{
+    if (ioPorts21 == nullptr || ppu == nullptr)
+        return;
+
+    // If the palette data hasn't changed, do nothing.
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    hash.addData(reinterpret_cast<const char *>(ppu->cgram.data()), ppu->cgram.size());
+    if (paletteHash == hash.result())
+        return;
+
+    paletteHash = hash.result();
+
+    // Use the ppu palette but set full brightness.
+    for (int i = 0; i < 256; i++)
+        paletteData[i] = 0xFF000000 | ppu->palette[i];
+
+    // Make the palette icons for the sprite tab.
+    GeneratePaletteIcons();
+}
+
+
+void InfoWindow::SlotDrawFrame()
+{
+    if (!this->isVisible())
+        return;
+
+    GeneratePalette();
+    UpdateMemoryTab();
+    UpdateTilesTab();
+    UpdateSpriteTab();
+}
+
+
+// Memory Tab /////////////////////////////////////////////////////////////////
+
+
+void InfoWindow::ClearMemoryTab()
+{
+    ui->labelTitle->setText("");
+    ui->labelRomType->setText("");
+    ui->labelRomSpeed->setText("");
+    ui->labelChipset->setText("");
+    ui->labelChipsetSubtype->setText("");
+    ui->labelRomSize->setText("");
+    ui->labelRamSize->setText("");
+    ui->labelExpansionRamSize->setText("");
+    ui->labelExpansionFlashSize->setText("");
+    ui->labelInterleaved->setText("");
+    ui->labelCountry->setText("");
+    ui->labelDevId->setText("");
+    ui->labelRomVersion->setText("");
+    ui->labelSpecialVersion->setText("");
+    ui->labelChecksum1->setText("");
+    ui->labelChecksum2->setText("");
+    ui->labelMakerCode->setText("");
+    ui->labelGameCode->setText("");
+}
+
+
+void InfoWindow::UpdateMemoryTab()
+{
+
+}
+
+
 void InfoWindow::UpdateCartridgeInfo(const Cartridge &cartridge)
 {
     Cartridge::StandardHeader standardHeader = cartridge.GetStandardHeader();
@@ -101,87 +199,6 @@ void InfoWindow::UpdateCartridgeInfo(const Cartridge &cartridge)
     ui->labelChecksum2->setText(UiUtils::FormatHex(standardHeader.checksumComplement));
     ui->labelMakerCode->setText(QString::fromLatin1(extendedHeader.makerCode, sizeof(extendedHeader.makerCode)));
     ui->labelGameCode->setText(QString::fromLatin1(extendedHeader.gameCode, sizeof(extendedHeader.gameCode)));
-}
-
-
-void InfoWindow::DrawFrame()
-{
-    // This should be called from the same thread, but it crashes sometimes without this emit. ¯\_(ツ)_/¯
-    emit SignalDrawFrame();
-}
-
-
-void InfoWindow::showEvent(QShowEvent *event)
-{
-    QWidget::showEvent(event);
-}
-
-
-void InfoWindow::closeEvent(QCloseEvent *event)
-{
-    QSettings settings;
-    settings.setValue(SETTINGS_INFOWINDOW_GEOMETRY, saveGeometry());
-
-    emit SignalInfoWindowClosed();
-
-    QWidget::closeEvent(event);
-}
-
-
-void InfoWindow::ClearWidgets()
-{
-    ui->labelTitle->setText("");
-    ui->labelRomType->setText("");
-    ui->labelRomSpeed->setText("");
-    ui->labelChipset->setText("");
-    ui->labelChipsetSubtype->setText("");
-    ui->labelRomSize->setText("");
-    ui->labelRamSize->setText("");
-    ui->labelExpansionRamSize->setText("");
-    ui->labelExpansionFlashSize->setText("");
-    ui->labelInterleaved->setText("");
-    ui->labelCountry->setText("");
-    ui->labelDevId->setText("");
-    ui->labelRomVersion->setText("");
-    ui->labelSpecialVersion->setText("");
-    ui->labelChecksum1->setText("");
-    ui->labelChecksum2->setText("");
-    ui->labelMakerCode->setText("");
-    ui->labelGameCode->setText("");
-
-    ui->labelVideoMode->setText("");
-
-    ui->labelBG1Enabled->setText("");
-    ui->labelBG4Enabled->setText("");
-    ui->labelBG2Enabled->setText("");
-    ui->labelBG3Enabled->setText("");
-
-    ui->labelBG1ChrSize->setText("");
-    ui->labelBG2ChrSize->setText("");
-    ui->labelBG3ChrSize->setText("");
-    ui->labelBG4ChrSize->setText("");
-
-    ui->labelBG1Tileset->setText("");
-    ui->labelBG2Tileset->setText("");
-    ui->labelBG3Tileset->setText("");
-    ui->labelBG4Tileset->setText("");
-
-    ui->labelBG1Tilemap->setText("");
-    ui->labelBG2Tilemap->setText("");
-    ui->labelBG3Tilemap->setText("");
-    ui->labelBG4Tilemap->setText("");
-
-    ui->labelBG1HOFS->setText("");
-    ui->labelBG2HOFS->setText("");
-    ui->labelBG3HOFS->setText("");
-    ui->labelBG4HOFS->setText("");
-
-    ui->labelBG1VOFS->setText("");
-    ui->labelBG2VOFS->setText("");
-    ui->labelBG3VOFS->setText("");
-    ui->labelBG4VOFS->setText("");
-
-    ClearSpriteTab();
 }
 
 
@@ -232,25 +249,118 @@ QString InfoWindow::GetChipsetString(uint8_t chipset)
 }
 
 
-void InfoWindow::GeneratePalette()
+// Tiles Tab //////////////////////////////////////////////////////////////////
+
+
+void InfoWindow::ClearTilesTab()
 {
-    if (ioPorts21 == nullptr || ppu == nullptr)
+    ui->labelVideoMode->setText("");
+
+    ui->labelBG1Enabled->setText("");
+    ui->labelBG4Enabled->setText("");
+    ui->labelBG2Enabled->setText("");
+    ui->labelBG3Enabled->setText("");
+
+    ui->labelBG1ChrSize->setText("");
+    ui->labelBG2ChrSize->setText("");
+    ui->labelBG3ChrSize->setText("");
+    ui->labelBG4ChrSize->setText("");
+
+    ui->labelBG1Tileset->setText("");
+    ui->labelBG2Tileset->setText("");
+    ui->labelBG3Tileset->setText("");
+    ui->labelBG4Tileset->setText("");
+
+    ui->labelBG1Tilemap->setText("");
+    ui->labelBG2Tilemap->setText("");
+    ui->labelBG3Tilemap->setText("");
+    ui->labelBG4Tilemap->setText("");
+
+    ui->labelBG1HOFS->setText("");
+    ui->labelBG2HOFS->setText("");
+    ui->labelBG3HOFS->setText("");
+    ui->labelBG4HOFS->setText("");
+
+    ui->labelBG1VOFS->setText("");
+    ui->labelBG2VOFS->setText("");
+    ui->labelBG3VOFS->setText("");
+    ui->labelBG4VOFS->setText("");
+}
+
+
+void InfoWindow::UpdateTilesTab()
+{
+    if (ppu == nullptr)
         return;
 
-    // If the palette data hasn't changed, do nothing.
-    QCryptographicHash hash(QCryptographicHash::Md5);
-    hash.addData(reinterpret_cast<const char *>(ppu->cgram.data()), ppu->cgram.size());
-    if (paletteHash == hash.result())
-        return;
+    ui->labelVideoMode->setText(QString::number(ppu->bgMode));
+    ui->labelBG1ChrSize->setText(QStringLiteral("%1x%2").arg(ppu->bgChrSize[eBG1]).arg(ppu->bgChrSize[eBG1]));
+    ui->labelBG2ChrSize->setText(QStringLiteral("%1x%2").arg(ppu->bgChrSize[eBG2]).arg(ppu->bgChrSize[eBG2]));
+    ui->labelBG3ChrSize->setText(QStringLiteral("%1x%2").arg(ppu->bgChrSize[eBG3]).arg(ppu->bgChrSize[eBG3]));
+    ui->labelBG4ChrSize->setText(QStringLiteral("%1x%2").arg(ppu->bgChrSize[eBG4]).arg(ppu->bgChrSize[eBG4]));
 
-    paletteHash = hash.result();
+    ui->labelBG1Enabled->setText((ppu->mainScreenLayerEnabled[eBG1] ? "Main" : "") + QString(" ") + (ppu->subScreenLayerEnabled[eBG1] ? "Sub" : ""));
+    ui->labelBG2Enabled->setText((ppu->mainScreenLayerEnabled[eBG2] ? "Main" : "") + QString(" ") + (ppu->subScreenLayerEnabled[eBG2] ? "Sub" : ""));
+    ui->labelBG3Enabled->setText((ppu->mainScreenLayerEnabled[eBG3] ? "Main" : "") + QString(" ") + (ppu->subScreenLayerEnabled[eBG3] ? "Sub" : ""));
+    ui->labelBG4Enabled->setText((ppu->mainScreenLayerEnabled[eBG4] ? "Main" : "") + QString(" ") + (ppu->subScreenLayerEnabled[eBG4] ? "Sub" : ""));
+    
+    ui->labelBG1Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG1]));
+    ui->labelBG2Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG2]));
+    ui->labelBG3Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG4]));
+    ui->labelBG4Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG4]));
+    
+    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG1]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG1]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG1]));
 
-    // Use the ppu palette but set full brightness.
-    for (int i = 0; i < 256; i++)
-        paletteData[i] = 0xFF000000 | ppu->palette[i];
+    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG2]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG2]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG2]));
 
-    // Make the palette icons for the sprite tab.
-    GeneratePaletteIcons();
+    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG3]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG3]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG3]));
+
+    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG4]) +
+                                 " " + QString::number(ppu->bgTilemapWidth[eBG4]) +
+                                 "x" + QString::number(ppu->bgTilemapHeight[eBG4]));
+
+    ui->labelBG1HOFS->setText(QString::number(ppu->bgHOffset[0]));
+    ui->labelBG2HOFS->setText(QString::number(ppu->bgHOffset[1]));
+    ui->labelBG3HOFS->setText(QString::number(ppu->bgHOffset[2]));
+    ui->labelBG4HOFS->setText(QString::number(ppu->bgHOffset[3]));
+
+    ui->labelBG1VOFS->setText(QString::number(ppu->bgVOffset[0]));
+    ui->labelBG2VOFS->setText(QString::number(ppu->bgVOffset[1]));
+    ui->labelBG3VOFS->setText(QString::number(ppu->bgVOffset[2]));
+    ui->labelBG4VOFS->setText(QString::number(ppu->bgVOffset[3]));
+
+    UpdatePaletteView();
+    UpdateTileView();
+    UpdateTilemapView();
+}
+
+
+void InfoWindow::UpdatePaletteView()
+{
+    const int SCALE = 16;
+    ui->gvPalette->scene()->clear();
+    ui->gvPalette->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
+    
+    QPen pen;
+    QBrush brush;
+
+    for (int x = 0; x < 16; x++)
+    {
+        for (int y = 0; y < 16; y++)
+        {
+            uint32_t color = paletteData[(y * 16) + x];
+            pen.setColor(color);
+            brush.setColor(color);
+            brush.setStyle(Qt::SolidPattern);
+            ui->gvPalette->scene()->addRect((x * SCALE), (y * SCALE), SCALE, SCALE, pen, brush);
+        }
+    }
 }
 
 
@@ -302,87 +412,6 @@ void InfoWindow::UpdateTileView()
         int ypos = 1 + ((tile / 16) * 8 * SCALE) + (tile / 16);
         pixmap->setPos(xpos, ypos);
     }
-}
-
-
-void InfoWindow::UpdatePaletteView()
-{
-    const int SCALE = 16;
-    ui->gvPalette->scene()->clear();
-    ui->gvPalette->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
-    
-    QPen pen;
-    QBrush brush;
-
-    for (int x = 0; x < 16; x++)
-    {
-        for (int y = 0; y < 16; y++)
-        {
-            uint32_t color = paletteData[(y * 16) + x];
-            pen.setColor(color);
-            brush.setColor(color);
-            brush.setStyle(Qt::SolidPattern);
-            ui->gvPalette->scene()->addRect((x * SCALE), (y * SCALE), SCALE, SCALE, pen, brush);
-        }
-    }
-}
-
-
-void InfoWindow::UpdateMemoryView()
-{
-    if (ioPorts21 == nullptr || ppu == nullptr)
-        return;
-
-    uint8_t value;
-    uint8_t value2;
-
-    value = ioPorts21[eRegBGMODE & 0xFF];
-    ui->labelVideoMode->setText(QString::number(value & 0x07));
-    ui->labelBG1ChrSize->setText(Bytes::GetBit<4>(value) ? "16x16" : "8x8");
-    ui->labelBG2ChrSize->setText(Bytes::GetBit<5>(value) ? "16x16" : "8x8");
-    ui->labelBG3ChrSize->setText(Bytes::GetBit<6>(value) ? "16x16" : "8x8");
-    ui->labelBG4ChrSize->setText(Bytes::GetBit<7>(value) ? "16x16" : "8x8");
-
-    value = ioPorts21[eRegTM & 0xFF];
-    value2 = ioPorts21[eRegTS & 0xFF];
-    ui->labelBG1Enabled->setText((Bytes::GetBit<0>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<0>(value2) ? "Sub" : ""));
-    ui->labelBG2Enabled->setText((Bytes::GetBit<1>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<1>(value2) ? "Sub" : ""));
-    ui->labelBG3Enabled->setText((Bytes::GetBit<2>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<2>(value2) ? "Sub" : ""));
-    ui->labelBG4Enabled->setText((Bytes::GetBit<3>(value) ? "Main" : "") + QString(" ") + (Bytes::GetBit<3>(value2) ? "Sub" : ""));
-
-    value = ioPorts21[eRegBG12NBA & 0xFF];
-    ui->labelBG1Tileset->setText(UiUtils::FormatHexWord((value & 0x0F) << 13));
-    ui->labelBG2Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
-
-    value = ioPorts21[eRegBG34NBA & 0xFF];
-    ui->labelBG3Tileset->setText(UiUtils::FormatHexWord((value & 0x0F) << 13));
-    ui->labelBG4Tileset->setText(UiUtils::FormatHexWord((value & 0xF0) << 9));
-    
-    ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG1]) +
-                                 " " + QString::number(ppu->bgTilemapWidth[eBG1]) +
-                                 "x" + QString::number(ppu->bgTilemapHeight[eBG1]));
-
-    ui->labelBG2Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG2]) +
-                                 " " + QString::number(ppu->bgTilemapWidth[eBG2]) +
-                                 "x" + QString::number(ppu->bgTilemapHeight[eBG2]));
-
-    ui->labelBG3Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG3]) +
-                                 " " + QString::number(ppu->bgTilemapWidth[eBG3]) +
-                                 "x" + QString::number(ppu->bgTilemapHeight[eBG3]));
-
-    ui->labelBG4Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG4]) +
-                                 " " + QString::number(ppu->bgTilemapWidth[eBG4]) +
-                                 "x" + QString::number(ppu->bgTilemapHeight[eBG4]));
-
-    ui->labelBG1HOFS->setText(QString::number(ppu->bgHOffset[0]));
-    ui->labelBG2HOFS->setText(QString::number(ppu->bgHOffset[1]));
-    ui->labelBG3HOFS->setText(QString::number(ppu->bgHOffset[2]));
-    ui->labelBG4HOFS->setText(QString::number(ppu->bgHOffset[3]));
-
-    ui->labelBG1VOFS->setText(QString::number(ppu->bgVOffset[0]));
-    ui->labelBG2VOFS->setText(QString::number(ppu->bgVOffset[1]));
-    ui->labelBG3VOFS->setText(QString::number(ppu->bgVOffset[2]));
-    ui->labelBG4VOFS->setText(QString::number(ppu->bgVOffset[3]));
 }
 
 
@@ -481,38 +510,7 @@ void InfoWindow::UpdateTilemapView()
 }
 
 
-void InfoWindow::SlotDrawFrame()
-{
-    if (!this->isVisible())
-        return;
-
-    GeneratePalette();
-    UpdateTileView();
-    UpdatePaletteView();
-    UpdateMemoryView();
-    UpdateSpriteTab();
-    UpdateTilemapView();
-}
-
-
 // Sprite Tab /////////////////////////////////////////////////////////////////
-
-
-void InfoWindow::ClearSpriteTab()
-{
-    ui->labelObjTable1Addr->setText("");
-    ui->labelObjTable2Addr->setText("");
-    ui->labelObjSizes->setText("");
-
-    ui->gvObjTable1->scene()->clear();
-    ui->gvObjTable2->scene()->clear();
-
-    ui->cmbSpritePalette->clear();
-    for (int i = 0; i < 8; i++)
-    {
-        ui->cmbSpritePalette->addItem("Palette " + QString::number(i));
-    }
-}
 
 
 void InfoWindow::on_chkSpriteLive_clicked(bool checked)
@@ -537,6 +535,23 @@ void InfoWindow::on_cmbSpritePalette_currentIndexChanged(int index)
     spritePaletteId = index;
 
     on_btnSpriteUpdate_clicked();
+}
+
+
+void InfoWindow::ClearSpriteTab()
+{
+    ui->labelObjTable1Addr->setText("");
+    ui->labelObjTable2Addr->setText("");
+    ui->labelObjSizes->setText("");
+
+    ui->gvObjTable1->scene()->clear();
+    ui->gvObjTable2->scene()->clear();
+
+    ui->cmbSpritePalette->clear();
+    for (int i = 0; i < 8; i++)
+    {
+        ui->cmbSpritePalette->addItem("Palette " + QString::number(i));
+    }
 }
 
 
@@ -594,6 +609,9 @@ void InfoWindow::GeneratePaletteIcons()
 void InfoWindow::DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv)
 {
     if (ppu == nullptr || ioPorts21 == nullptr)
+        return;
+
+    if (!gv->isVisible())
         return;
 
     const int SCALE = 3;
