@@ -299,7 +299,7 @@ void Dma::RunHDma()
             uint8_t aBank = channel.dmap.indirect ? channel.indirectBank : channel.aBusBank;
             uint16_t &aOffset = channel.dmap.indirect ? channel.indirectOffset : channel.directOffset;
 
-            LogDma("  HDMA%d: dmap=%02X, mode=%d, bToA=%d, aBusAddr=%02%04X, bBusAddr=21%02X, linecount=%02X",
+            LogDma("  HDMA%d: dmap=%02X, mode=%d, bToA=%d, aBusAddr=%02X%04X, bBusAddr=21%02X, linecount=%02X",
                    i, channel.dmap, channel.dmap.mode, channel.dmap.bToA, aBank, aOffset, channel.bBusPort, channel.lineCount);
 
             for (int j = 0; j < HDMA_BYTES_LOOKUP[channel.dmap.mode]; j++)
