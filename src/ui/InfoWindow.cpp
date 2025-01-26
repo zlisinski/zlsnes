@@ -14,6 +14,8 @@
 #include "core/Ppu.h"
 #include "core/PpuConstants.h"
 
+static const int MaxLayers[] = {4, 3, 2, 2, 2, 2, 1, 1};
+
 
 InfoWindow::InfoWindow(QWidget *parent) :
     QDialog(parent),
@@ -21,6 +23,9 @@ InfoWindow::InfoWindow(QWidget *parent) :
     ioPorts21(nullptr),
     ppu(nullptr),
     paletteData{0},
+    tilesetBgLayer(0),
+    tilesetBgPalette(0),
+    bgMode(-1),
     spriteLiveUpdate(true),
     spritePaletteId(0)
 {
@@ -107,8 +112,36 @@ void InfoWindow::GeneratePalette()
     for (int i = 0; i < 256; i++)
         paletteData[i] = 0xFF000000 | ppu->palette[i];
 
-    // Make the palette icons for the sprite tab.
-    GeneratePaletteIcons();
+    // Make the palette icons for the tileset and sprite tabs.
+    GenerateTilesetPaletteIcons();
+    GenerateSpritePaletteIcons();
+}
+
+
+QIcon InfoWindow::GeneratePaletteIcon(int paletteOffset, int paletteSize)
+{
+    int iconSize = 32;
+    int colorSize = paletteSize == 4 ? 16 : 8;
+    int colorsPerRow = iconSize / colorSize;
+
+    QImage img(iconSize, iconSize, QImage::Format_ARGB32);
+
+    for (int colorId = 0; colorId < paletteSize; colorId++)
+    {
+        int x = (colorId % colorsPerRow) * colorSize;
+        int y = (colorId / colorsPerRow) * colorSize;
+        uint32_t color = paletteData[paletteOffset + colorId];
+
+        for (int x2 = 0; x2 < colorSize; x2++)
+        {
+            for (int y2 = 0; y2 < colorSize; y2++)
+            {
+                img.setPixel(x + x2, y + y2, color);
+            }
+        }
+    }
+
+    return QIcon(QPixmap::fromImage(img));
 }
 
 
@@ -252,6 +285,44 @@ QString InfoWindow::GetChipsetString(uint8_t chipset)
 // Tiles Tab //////////////////////////////////////////////////////////////////
 
 
+void InfoWindow::on_cmbTilesetBgLayer_currentIndexChanged(int index)
+{
+    if (index < 0 || bgMode < 0)
+        return;
+
+    tilesetBgLayer = index;
+    ui->cmbTilesetBgPalette->setEnabled(true);
+    ui->cmbTilesetBgPalette->clear();
+
+    int paletteSize = 1 << BG_BPP_LOOKUP[bgMode][index];
+    if (paletteSize == 256)
+    {
+        // 8 bpp uses the entire palette.
+        ui->cmbTilesetBgPalette->setEnabled(false);
+        return;
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+        ui->cmbTilesetBgPalette->addItem("Palette " + QString::number(i));
+    }
+
+    GenerateTilesetPaletteIcons();
+
+    ui->cmbTilesetBgPalette->setCurrentIndex(0);
+}
+
+
+void InfoWindow::on_cmbTilesetBgPalette_currentIndexChanged(int index)
+{
+    if (index < 0)
+        return;
+
+    tilesetBgPalette = index;
+    UpdateTilesetView();
+}
+
+
 void InfoWindow::ClearTilesTab()
 {
     ui->labelVideoMode->setText("");
@@ -285,6 +356,10 @@ void InfoWindow::ClearTilesTab()
     ui->labelBG2VOFS->setText("");
     ui->labelBG3VOFS->setText("");
     ui->labelBG4VOFS->setText("");
+
+    ui->cmbTilesetBgLayer->clear();
+    ui->cmbTilesetBgPalette->clear();
+    ui->cmbTilesetBgPalette->setIconSize(QSize(32, 32));
 }
 
 
@@ -306,7 +381,7 @@ void InfoWindow::UpdateTilesTab()
     
     ui->labelBG1Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG1]));
     ui->labelBG2Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG2]));
-    ui->labelBG3Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG4]));
+    ui->labelBG3Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG3]));
     ui->labelBG4Tileset->setText(UiUtils::FormatHexWord(ppu->bgChrAddr[eBG4]));
     
     ui->labelBG1Tilemap->setText(UiUtils::FormatHexWord(ppu->bgTilemapAddr[eBG1]) +
@@ -335,9 +410,52 @@ void InfoWindow::UpdateTilesTab()
     ui->labelBG3VOFS->setText(QString::number(ppu->bgVOffset[2]));
     ui->labelBG4VOFS->setText(QString::number(ppu->bgVOffset[3]));
 
+    if (ppu->bgMode != bgMode)
+    {
+        bgMode = ppu->bgMode;
+
+        ui->cmbTilesetBgLayer->clear();
+        for (int i = 0; i < MaxLayers[bgMode]; i++)
+            ui->cmbTilesetBgLayer->addItem("Layer " + QString::number(i + 1));
+        ui->cmbTilesetBgLayer->setCurrentIndex(0);
+    }
+
     UpdatePaletteView();
-    UpdateTileView();
+    UpdateTilesetView();
     UpdateTilemapView();
+}
+
+
+void InfoWindow::GenerateTilesetPaletteIcons()
+{
+    if (tilesetBgLayer < 0 || bgMode < 0)
+        return;
+
+    int numPalettes = 8;
+    int paletteSize = 1 << BG_BPP_LOOKUP[bgMode][tilesetBgLayer];
+
+    if (bgMode == 0)
+    {
+        for (int i = 0; i < numPalettes; i++)
+        {
+            int paletteOffset = (i * paletteSize) + (tilesetBgLayer * 0x20);
+            ui->cmbTilesetBgPalette->setItemIcon(i, GeneratePaletteIcon(paletteOffset, paletteSize));
+        }
+    }
+    else
+    {
+        if (paletteSize == 256)
+        {
+            // 8 bpp uses the entire palette.
+            return;
+        }
+
+        for (int i = 0; i < numPalettes; i++)
+        {
+            int paletteOffset = i * paletteSize;
+            ui->cmbTilesetBgPalette->setItemIcon(i, GeneratePaletteIcon(paletteOffset, paletteSize));
+        }
+    }
 }
 
 
@@ -364,52 +482,57 @@ void InfoWindow::UpdatePaletteView()
 }
 
 
-void InfoWindow::UpdateTileView()
+void InfoWindow::UpdateTilesetView()
 {
     if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
+    if (!ui->gvTiles->isVisible())
+        return;
+
     const int SCALE = 3;
-    const uint16_t bg1TileOffset = (ioPorts21[eRegBG12NBA & 0xFF] & 0x0F) << 13;
-    const uint8_t *tilesetData = &ppu->vram[bg1TileOffset];
+    int layer = ui->cmbTilesetBgLayer->currentIndex();
+    int bpp = BG_BPP_LOOKUP[bgMode][layer];
+    int tileCount = 1024;
+    int rows = tileCount / 16;
 
     ui->gvTiles->scene()->clear();
     ui->gvTiles->setBackgroundBrush(QBrush(Qt::black, Qt::SolidPattern));
     QPen pen(Qt::green, 1);
 
     // Draw grid.
-    for (int i = 0; i < 25; i++)
+    for (int i = 0; i < rows + 1; i++)
     {
-        int len = i * ((SCALE * 8) + 1);
-        ui->gvTiles->scene()->addLine(0, len, 400, len, pen);
+        // Horizontal lines.
+        int y = i * ((SCALE * 8) + 1);
+        ui->gvTiles->scene()->addLine(0, y, 400, y, pen);
     }
     for (int i = 0; i < 17; i++)
     {
-        int len = i * ((SCALE * 8) + 1);
-        ui->gvTiles->scene()->addLine(len, 0, len, 600, pen);
+        /// Vertical lines.
+        int x = i * ((SCALE * 8) + 1);
+        int y = rows * ((SCALE * 8) + 1);
+        ui->gvTiles->scene()->addLine(x, 0, x, y, pen);
     }
 
-    for (int tile = 0; tile < 384; tile++)
+    for (int tileId = 0; tileId < tileCount; tileId++)
     {
         QImage img(8, 8, QImage::Format_RGB32);
 
-        for (int y = 0; y < 8; y++)
+        for (int x = 0; x < 8; x++)
         {
-            const uint8_t *tileData = &tilesetData[(tile * 16) + (y * 2)];
-
-            for (int x = 0; x < 8; x++)
+            for (int y = 0; y < 8; y++)
             {
-                uint8_t lowBit = ((tileData[0] >> (7 - x)) & 0x01);
-                uint8_t highBit = ((tileData[1] >> (7 - x)) & 0x01);
-                uint8_t pixelVal = lowBit | (highBit << 1);
-                img.setPixel(x, y, paletteData[pixelVal]);
+                uint16_t addr = ppu->bgChrAddr[layer] + (tileId * 8 * bpp);
+                uint8_t pixelVal = ppu->GetTilePixelData(addr, x, y, bpp);
+                img.setPixel(x, y, paletteData[(tilesetBgPalette * (1 << bpp)) + pixelVal]);
             }
         }
 
         QGraphicsPixmapItem *pixmap = ui->gvTiles->scene()->addPixmap(QPixmap::fromImage(img));
         pixmap->setScale(SCALE);
-        int xpos = 1 + ((tile % 16) * 8 * SCALE) + (tile % 16);
-        int ypos = 1 + ((tile / 16) * 8 * SCALE) + (tile / 16);
+        int xpos = 1 + ((tileId % 16) * 8 * SCALE) + (tileId % 16);
+        int ypos = 1 + ((tileId / 16) * 8 * SCALE) + (tileId / 16);
         pixmap->setPos(xpos, ypos);
     }
 }
@@ -548,6 +671,7 @@ void InfoWindow::ClearSpriteTab()
     ui->gvObjTable2->scene()->clear();
 
     ui->cmbSpritePalette->clear();
+    ui->cmbSpritePalette->setIconSize(QSize(32, 32));
     for (int i = 0; i < 8; i++)
     {
         ui->cmbSpritePalette->addItem("Palette " + QString::number(i));
@@ -575,33 +699,13 @@ void InfoWindow::UpdateSpriteTab()
 }
 
 
-void InfoWindow::GeneratePaletteIcons()
+void InfoWindow::GenerateSpritePaletteIcons()
 {
-    int scale = 8;
-    int colorsPerRow = 4;
-    int iconSize = scale * colorsPerRow;
-    ui->cmbSpritePalette->setIconSize(QSize(iconSize, iconSize));
-
     for (int i = 0; i < 8; i++)
     {
-        QImage img(iconSize, iconSize, QImage::Format_ARGB32);
-        for (int colorId = 0; colorId < 16; colorId++)
-        {
-            int x = (colorId % colorsPerRow) * scale;
-            int y = (colorId / colorsPerRow) * scale;
-            uint32_t color = paletteData[128 + (i * 16) + colorId];
-
-            for (int x2 = 0; x2 < scale; x2++)
-            {
-                for (int y2 = 0; y2 < scale; y2++)
-                {
-                    img.setPixel(x + x2, y + y2, color);
-                }
-            }
-        }
-
-        QIcon icon(QPixmap::fromImage(img));
-        ui->cmbSpritePalette->setItemIcon(i, icon);
+        int paletteSize = 16;
+        int paletteOffset = 128 + (i * paletteSize);
+        ui->cmbSpritePalette->setItemIcon(i, GeneratePaletteIcon(paletteOffset, paletteSize));
     }
 }
 

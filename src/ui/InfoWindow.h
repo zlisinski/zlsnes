@@ -32,6 +32,7 @@ protected:
 
 private:
     void GeneratePalette();
+    QIcon GeneratePaletteIcon(int paletteOffset, int paletteSize);
 
     Ui::InfoWindow *ui;
 
@@ -57,12 +58,21 @@ private:
 
 // Tiles Tab //////////////////////////////////////////////////////////////////
 
+private slots:
+    void on_cmbTilesetBgLayer_currentIndexChanged(int index);
+    void on_cmbTilesetBgPalette_currentIndexChanged(int index);
+
 private:
     void ClearTilesTab();
-    void UpdatePaletteView();
     void UpdateTilesTab();
-    void UpdateTileView();
+    void GenerateTilesetPaletteIcons();
+    void UpdatePaletteView();
+    void UpdateTilesetView();
     void UpdateTilemapView();
+
+    int tilesetBgLayer;
+    int tilesetBgPalette;
+    int bgMode;
 
 // Sprite Tab /////////////////////////////////////////////////////////////////
 
@@ -74,7 +84,7 @@ private slots:
 private:
     void ClearSpriteTab();
     void UpdateSpriteTab();
-    void GeneratePaletteIcons();
+    void GenerateSpritePaletteIcons();
     void DrawSpriteTable(uint16_t baseAddr, QGraphicsView *gv);
 
     bool spriteLiveUpdate;
