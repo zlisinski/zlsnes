@@ -146,6 +146,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    emulator->EndEmulation();
+
     infoWindow->close();
     logWindow->close();
     debuggerWindow->close();
@@ -637,8 +639,7 @@ void MainWindow::SlotSetFpsCap()
 
 void MainWindow::SlotQuit()
 {
-    emulator->EndEmulation();
-    qApp->quit();
+    this->close();
 }
 
 
