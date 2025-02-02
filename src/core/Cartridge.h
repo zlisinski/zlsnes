@@ -70,6 +70,7 @@ protected:
     std::vector<uint8_t> rom;
     std::vector<uint8_t> sram;
     std::string sramFilename;
+    uint32_t sramSizeMask = 0;
 
     StandardHeader standardHeader;
     ExtendedHeader extendedHeader;

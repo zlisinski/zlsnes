@@ -43,6 +43,7 @@ bool Cartridge::LoadRom(const std::string &filename)
     if (standardHeader.ramSize != 0)
     {
         uint32_t ramSize = (1 << standardHeader.ramSize) * 1024;
+        sramSizeMask = ramSize - 1;
         sramFilename = filename + ".srm";
         std::ifstream file(sramFilename, std::ios::binary);
         if (file)
@@ -78,6 +79,8 @@ bool Cartridge::SaveSram()
     file.write(reinterpret_cast<char *>(sram.data()), sram.size());
     file.close();
 
+    LogInfo("Saved SRAM");
+
     return true;
 }
 
@@ -109,7 +112,7 @@ uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
 
             // Remove the high bit of the offset and shift the bank right one so that LSBit of bank is MSBit of offset.
             // Ignore the high nybble of bank.
-            uint32_t mappedAddr = ((addr & 0x0F0000) >> 1) | (addr & 0x7FFF);
+            uint32_t mappedAddr = (((addr & 0x0F0000) >> 1) | (addr & 0x7FFF)) & sramSizeMask;
             return mappedAddr;
         }
 
@@ -131,7 +134,7 @@ uint32_t Cartridge::MapAddress(uint32_t addr, std::vector<uint8_t> **mem)
             *mem = &sram;
 
             // Shift the bank down to fill the unused top 3 bits of the offset.
-            uint32_t mappedAddr = ((addr & 0xFF0000) >> 3) | (addr & 0x1FFF);
+            uint32_t mappedAddr = (((addr & 0xFF0000) >> 3) | (addr & 0x1FFF)) & sramSizeMask;
             return mappedAddr;
         }
 
