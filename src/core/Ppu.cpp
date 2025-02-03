@@ -1143,7 +1143,7 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
         if (cur.flipY)
         {
             uint8_t tilesPerY = cur.height / 8;
-            tileX = (tilesPerY - 1) - tileX;
+            tileY = (tilesPerY - 1) - tileY;
             yOff = 7 - yOff;
         }
 
