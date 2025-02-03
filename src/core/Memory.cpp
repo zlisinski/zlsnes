@@ -90,6 +90,11 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 //if constexpr (addTime)
                 //    timer->AddCycle(EClockSpeed::eClockOther);
                 //return ioPorts40[addr & 0xFF];
+            case 0x41:
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
+                LogError("Read from unused IO port %06X", addr);
+                return openBusValue;
             case 0x42:
                 if constexpr (addTime)
                     timer->AddCycle(EClockSpeed::eClockIoReg);
@@ -214,6 +219,11 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 LogMemory("Write to joypad port %04X %02X", addr & 0xFFFF, value);
                 if (debuggerInterface != NULL)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
+                return;
+            case 0x41:
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
+                LogError("Write to unused IO port %06X %02X", addr, value);
                 return;
             case 0x42:
                 if constexpr (addTime)
