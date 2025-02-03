@@ -1008,15 +1008,27 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     info.paletteId = tile.data.paletteId;
     info.priority = tile.data.priority;
 
-    // From here on, tiles are always 8x8.
-    // TODO: Offset if using 16px tiles.
-
     if (tile.data.flipX)
-        xOff = 7 - xOff;
+        xOff = (tileSize - 1) - xOff;
     if (tile.data.flipY)
-        yOff = 7 - yOff;
+        yOff = (tileSize - 1) - yOff;
 
-    uint16_t addr = bgChrAddr[bg] + (tile.data.tileId * 8 * bpp);
+    // Offset tileId if using 16x16 tiles.
+    uint16_t tileId = tile.data.tileId;
+    if (xOff >= 8)
+    {
+        tileId += 1;
+        xOff &= 0x07;
+    }
+    if (yOff >= 8)
+    {
+        tileId += 0x10;
+        yOff &= 0x07;
+    }
+
+    // From here on, tiles are always 8x8.
+
+    uint16_t addr = bgChrAddr[bg] + (tileId * 8 * bpp);
     uint8_t pixelVal = GetTilePixelData(addr, xOff, yOff, bpp);
 
     info.colorId = pixelVal;
