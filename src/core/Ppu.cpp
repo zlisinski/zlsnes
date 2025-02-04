@@ -1037,6 +1037,29 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
 }
 
 
+Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
+{
+    PixelInfo info;
+
+    int realX = screenX + bgHOffset[eBG1];
+    int realY = screenY + bgVOffset[eBG1];
+    int xOff = realX & 0x07;
+    int yOff = realY & 0x07;
+
+    uint16_t tileIdAddr = (((realY & ~0x07) << 4) + (realX >> 3)) << 1;
+    uint8_t tileId = vram[tileIdAddr];
+
+    uint16_t colorAddr = (((tileId << 6) + (yOff <<3 ) + xOff) << 1) + 1;
+    info.colorId = vram[colorAddr];
+
+    info.bg = eBG1;
+    info.isOnMainScreen = mainScreenLayerEnabled[eBG1];
+    info.isOnSubScreen = subScreenLayerEnabled[eBG1];
+
+    return info;
+}
+
+
 uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites)
 {
     uint8_t count = 0;
@@ -1325,7 +1348,7 @@ Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<
             if (spriteInfo.priority == 1 && spriteInfo.IsNotTransparent<Screen>())
                 return spriteInfo;
             // BG1
-            bgInfo[eBG1] = GetBgPixelInfo(eBG1, screenX, screenY);
+            bgInfo[eBG1] = GetBgPixelInfoMode7(screenX, screenY);
             if (bgInfo[eBG1].IsNotTransparent<Screen>())
                 return bgInfo[eBG1];
             // Sprites with priority 0

@@ -136,6 +136,7 @@ private:
 
     uint16_t GetBgTilemapEntry(EBgLayer bg, uint16_t tileX, uint16_t tileY) const;
     PixelInfo GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t screenY);
+    PixelInfo GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
     PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
