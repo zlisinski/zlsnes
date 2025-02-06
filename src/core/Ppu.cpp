@@ -242,16 +242,50 @@ uint8_t Ppu::ReadRegister(EIORegisters ioReg)
             return memory->GetOpenBusValue();
 
         case eRegRDOAM: // 0x2138
-            LogPpu("Read from RDOAM NYI");
-            return (ppu1OpenBus = regRDOAM);
+        {
+            uint8_t byte = oam[oamRwAddr];
+            LogPpu("Read from oam %04X=%02X", oamRwAddr, byte);
+
+            oamRwAddr = (oamRwAddr + 1) % oam.size();
+
+            return (ppu1OpenBus = byte);
+        }
 
         case eRegRDVRAML: // 0x2139
-            LogPpu("Read from RDVRAML NYI");
-            return (ppu1OpenBus = regRDVRAML);
+        {
+            uint8_t byte = vramPrefetch[0];
+            LogPpu("Read from vram %04X=%02X", vramRwAddr, byte);
+
+            if (!isVramIncrementOnHigh)
+            {
+                // This happens before the address increment.
+                vramPrefetch[0] = vram[vramRwAddr];
+                vramPrefetch[1] = vram[(vramRwAddr + 1) % vram.size()];
+
+                // This is a word address, so left shift 1 to get the byte address.
+                vramRwAddr += vramIncrement << 1;
+            }
+
+            return (ppu1OpenBus = byte);
+        }
 
         case eRegRDVRAMH: // 0x213A
-            LogPpu("Read from RDVRAMH NYI");
-            return (ppu1OpenBus = regRDVRAMH);
+        {
+            uint8_t byte = vramPrefetch[1];
+            LogPpu("Read from vram %04X=%02X", vramRwAddr + 1, byte);
+
+            if (isVramIncrementOnHigh)
+            {
+                // This happens before the address increment.
+                vramPrefetch[0] = vram[vramRwAddr];
+                vramPrefetch[1] = vram[(vramRwAddr + 1) % vram.size()];
+
+                // This is a word address, so left shift 1 to get the byte address.
+                vramRwAddr += vramIncrement << 1;
+            }
+
+            return (ppu1OpenBus = byte);
+        }
 
         case eRegRDCGRAM: // 0x213B
             LogPpu("Read from RDCGRAM NYI");
@@ -490,7 +524,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
             // Prefetch the bytes when the address changes.
             vramPrefetch[0] = vram[vramRwAddr];
-            vramPrefetch[1] = vram[vramRwAddr + 1];
+            vramPrefetch[1] = vram[(vramRwAddr + 1) % vram.size()];
 
             return true;
 
@@ -503,7 +537,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
             // Prefetch the bytes when the address changes.
             vramPrefetch[0] = vram[vramRwAddr];
-            vramPrefetch[1] = vram[vramRwAddr + 1];
+            vramPrefetch[1] = vram[(vramRwAddr + 1) % vram.size()];
 
             return true;
 
@@ -1049,7 +1083,7 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
     uint16_t tileIdAddr = (((realY & ~0x07) << 4) + (realX >> 3)) << 1;
     uint8_t tileId = vram[tileIdAddr];
 
-    uint16_t colorAddr = (((tileId << 6) + (yOff <<3 ) + xOff) << 1) + 1;
+    uint16_t colorAddr = (((tileId << 6) + (yOff << 3) + xOff) << 1) + 1;
     info.colorId = vram[colorAddr];
 
     info.bg = eBG1;
