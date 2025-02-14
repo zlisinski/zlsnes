@@ -61,14 +61,12 @@ private:
 
     struct PixelInfo
     {
-        uint8_t paletteId;
-        uint8_t colorId;
-        EBgLayer bg;
-        uint8_t priority;
-        bool isOnMainScreen;
-        bool isOnSubScreen;
-
-        PixelInfo() : paletteId(0), colorId(0), bg(eCOL), priority(0), isOnMainScreen(false), isOnSubScreen(false) {}
+        uint8_t paletteId = 0;
+        uint8_t colorId = 0;
+        EBgLayer bg = eCOL;
+        uint8_t priority = 0;
+        bool isOnMainScreen = false;
+        bool isOnSubScreen = false;
 
         template <EScreenType Screen = EScreenType::MainScreen>
         bool IsNotTransparent()
@@ -82,33 +80,31 @@ private:
 
     struct WindowInfo
     {
-        bool isInside;
-        bool isOnMainScreen;
-        bool isOnSubScreen;
-        bool isColorScreen;
-        WindowInfo() : isInside(false), isOnMainScreen(false), isOnSubScreen(false), isColorScreen(false) {}
+        bool isInside = false;
+        bool isOnMainScreen = false;
+        bool isOnSubScreen = false;
+        bool isColorScreen = false;
     };
 
     struct Sprite
     {
-        int16_t xPos;
-        uint8_t yPos;
-        uint8_t tileId;
-        bool isUpperTable;
-        uint8_t paletteId;
-        uint8_t priority;
-        bool flipX;
-        bool flipY;
-        uint8_t width;
-        uint8_t height;
-        Sprite() : xPos(0), yPos(0), tileId(0), isUpperTable(false), paletteId(0), priority(0), flipX(0), flipY(0), width(0), height(0) {}
+        int16_t xPos = 0;
+        uint8_t yPos = 0;
+        uint8_t tileId = 0;
+        bool isUpperTable = false;
+        uint8_t paletteId = 0;
+        uint8_t priority = 0;
+        bool flipX = false;
+        bool flipY = false;
+        uint8_t width = 0;
+        uint8_t height = 0;
     };
 
     struct BgTilemapCache
     {
         union
         {
-            uint16_t tileData;
+            uint16_t tileData = 0;
             struct
             {
                 uint16_t tileId : 10;
@@ -119,10 +115,10 @@ private:
             } data;
         };
 
-        uint8_t tileX;
-        uint8_t tileY;
+        uint8_t tileX = 0xFF;
+        uint8_t tileY = 0xFF;
 
-        BgTilemapCache() : tileData(0), tileX(0xFF), tileY(0xFF) {}
+        BgTilemapCache() {}
         BgTilemapCache(uint16_t tileData, uint16_t tileX, uint16_t tileY) : tileData{tileData}, tileX(tileX), tileY(tileY) {}
     };
 
@@ -158,128 +154,128 @@ private:
 
     void M7Multiply();
 
-    std::array<uint8_t, OAM_SIZE> oam;
-    std::array<uint8_t, VRAM_SIZE> vram;
-    std::array<uint8_t, CGRAM_SIZE> cgram;
-    std::array<uint32_t, CGRAM_SIZE / 2> palette;
-    std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer;
+    std::array<uint8_t, OAM_SIZE> oam = {0};
+    std::array<uint8_t, VRAM_SIZE> vram = {0};
+    std::array<uint8_t, CGRAM_SIZE> cgram = {0};
+    std::array<uint32_t, CGRAM_SIZE / 2> palette = {0};
+    std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer = {0};
 
-    Memory *memory;
-    Timer *timer;
-    DebuggerInterface *debuggerInterface;
-    DisplayInterface *displayInterface;
+    Memory *memory = nullptr;
+    Timer *timer = nullptr;
+    DebuggerInterface *debuggerInterface = nullptr;
+    DisplayInterface *displayInterface = nullptr;
 
     // PpuInterface.
-    bool enableLayer[5];
+    bool enableLayer[5] = {true, true, true, true, true};
 
     // Cache
     BgTilemapCache bgTilemapCache[5];
 
-    bool isHBlank;
-    bool isVBlank;
-    uint32_t scanline;
+    bool isHBlank = true;
+    bool isVBlank = false;
+    uint32_t scanline = 0;
 
     // INIDISP - 0x2100
-    bool isForcedBlank;
-    uint8_t brightness;
+    bool isForcedBlank = false;
+    uint8_t brightness = 0;
 
     // OBJSEL - 0x2101
-    uint8_t objSize;
-    uint16_t objBaseAddr[2];
+    uint8_t objSize = 0;
+    uint16_t objBaseAddr[2] = {0, 0};
 
     // OAMADDL/OAMADDH - 0x2102/0x2103
-    uint16_t oamRwAddr;
-    uint8_t oamLatch;
-    bool objPriorityRotation;
+    uint16_t oamRwAddr = 0;
+    uint8_t oamLatch = 0;
+    bool objPriorityRotation = false;
 
     // BGMODE - 0x2105
-    uint8_t bgMode;
-    bool bgMode1Bg3Priority;
-    uint8_t bgChrSize[4];
+    uint8_t bgMode = 0;
+    bool bgMode1Bg3Priority = false;
+    uint8_t bgChrSize[4] = {8, 8, 8, 8};
 
     // MOSAIC - 0x2106
-    bool bgEnableMosaic[4];
-    uint8_t bgMosaicSize;
-    uint16_t bgMosaicStartScanline;
+    bool bgEnableMosaic[4] = {false, false, false, false};
+    uint8_t bgMosaicSize = 0;
+    uint16_t bgMosaicStartScanline = 1;
 
     // BGxSC - 0x2107-0x210A
-    uint16_t bgTilemapAddr[4];
-    uint8_t bgTilemapWidth[4];
-    uint8_t bgTilemapHeight[4];
+    uint16_t bgTilemapAddr[4] = {0, 0, 0, 0};
+    uint8_t bgTilemapWidth[4] = {32, 32, 32, 32};
+    uint8_t bgTilemapHeight[4] = {32, 32, 32, 32};
 
     // BGxyNBA - 0x210B-0x210C
-    uint16_t bgChrAddr[4];
+    uint16_t bgChrAddr[4] = {0, 0, 0, 0};
 
     // BGxHOFS/BGxVOFS - 0x210D-0x2114
-    uint8_t bgOffsetLatch;
-    uint8_t bgHOffsetLatch;
-    uint16_t bgHOffset[4];
-    uint16_t bgVOffset[4];
+    uint8_t bgOffsetLatch = 0;
+    uint8_t bgHOffsetLatch = 0;
+    uint16_t bgHOffset[4] = {0, 0, 0, 0};
+    uint16_t bgVOffset[4] = {0, 0, 0, 0};
 
     // VMAIN - 0x2115
-    uint8_t vramIncrement;
-    bool isVramIncrementOnHigh;
-    uint8_t vramAddrTranslation;
+    uint8_t vramIncrement = 0;
+    bool isVramIncrementOnHigh = false;
+    uint8_t vramAddrTranslation = 0;
 
     // VMADDL/VMADDH - 0x2116/0x2117
-    uint16_t vramRwAddr;
-    uint8_t vramPrefetch[2];
+    uint16_t vramRwAddr = 0;
+    uint8_t vramPrefetch[2] = {0, 0};
 
     // M7[ABCDXY] - 0x211B-0x2120
-    uint8_t m7Latch;
-    uint16_t m7a;
-    uint16_t m7b;
+    uint8_t m7Latch = 0;
+    uint16_t m7a = 0;
+    uint16_t m7b = 0;
 
     // CGADD - 0x2121
-    uint16_t cgramRwAddr;
-    uint8_t cgramLatch;
+    uint16_t cgramRwAddr = 0;
+    uint8_t cgramLatch = 0;
 
     // WxSEL - 0x2123-0x2125
-    bool bgEnableWindow[6][2];
-    bool bgInvertWindow[6][2];
+    bool bgEnableWindow[6][2] = {{false, false}, {false, false}, {false, false}, {false, false}, {false, false}, {false, false}};
+    bool bgInvertWindow[6][2] = {{false, false}, {false, false}, {false, false}, {false, false}, {false, false}, {false, false}};
 
     // WHx - 0x2126-0x2129
-    uint8_t windowLeft[2];
-    uint8_t windowRight[2];
+    uint8_t windowLeft[2] = {0, 0};
+    uint8_t windowRight[2] = {0, 0};
 
     // WBGLOG/WOBJLOG - 0x212A/0x212B
-    uint8_t bgWindowMask[6];
+    uint8_t bgWindowMask[6] = {0, 0, 0, 0, 0, 0};
 
     // TM/TS - 0x212c/0x212D
-    bool mainScreenLayerEnabled[5];
-    bool subScreenLayerEnabled[5];
+    bool mainScreenLayerEnabled[5] = {false, false, false, false, false};
+    bool subScreenLayerEnabled[5] = {false, false, false, false, false};
 
     // TMW/TSW - 0x212E/0x212F
-    bool mainScreenWindowEnabled[5];
-    bool subScreenWindowEnabled[5];
+    bool mainScreenWindowEnabled[5] = {false, false, false, false, false};
+    bool subScreenWindowEnabled[5] = {false, false, false, false, false};
 
     // CGWSEL - 0x2130
-    bool colDirectMode;
-    bool colAddend;
-    uint8_t colSubScreenRegion;
-    uint8_t colMainScreenRegion;
+    bool colDirectMode = false;
+    bool colAddend = false;
+    uint8_t colSubScreenRegion = 0;
+    uint8_t colMainScreenRegion = 0;
 
     // CGADSUB - 0x2131
-    bool bgColorMathEnable[6];
-    bool halfColorMath;
-    bool colorSubtract;
+    bool bgColorMathEnable[6] = {false, false, false, false, false, false};
+    bool halfColorMath = false;
+    bool colorSubtract = false;
 
     // COLDATA - 0x2132
-    uint8_t redChannel;
-    uint8_t blueChannel;
-    uint8_t greenChannel;
-    uint16_t fixedColor;
+    uint8_t redChannel = 0;
+    uint8_t blueChannel = 0;
+    uint8_t greenChannel = 0;
+    uint16_t fixedColor = 0;
 
     // OPHCT - 0x213C
-    uint16_t hCount;
-    bool hCountFlipflop;
+    uint16_t hCount = 0xFFFF;
+    bool hCountFlipflop = false;
 
     // OPVCT - 0x213D
-    uint16_t vCount;
-    bool vCountFlipflop;
+    uint16_t vCount = 0xFFFF;
+    bool vCountFlipflop = false;
 
-    uint8_t ppu1OpenBus;
-    uint8_t ppu2OpenBus;
+    uint8_t ppu1OpenBus = 0;
+    uint8_t ppu2OpenBus = 0;
 
     //Write-only
     uint8_t &regINIDISP; // 0x2100 Display Control 1
