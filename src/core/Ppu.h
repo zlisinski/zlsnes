@@ -211,6 +211,8 @@ private:
     uint8_t bgHOffsetLatch = 0;
     uint16_t bgHOffset[4] = {0, 0, 0, 0};
     uint16_t bgVOffset[4] = {0, 0, 0, 0};
+    uint16_t m7HOffset = 0;
+    uint16_t m7VOffset = 0;
 
     // VMAIN - 0x2115
     uint8_t vramIncrement = 0;

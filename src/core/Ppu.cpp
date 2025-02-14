@@ -377,6 +377,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             bgTilemapHeight[eBG3] = 32 << Bytes::GetBit<1>(byte);
             LogPpu("BG3 Address=%04X Size=%dx%d", bgTilemapAddr[0], bgTilemapWidth[eBG3], bgTilemapHeight[eBG3]);
             return true;
+
         case eRegBG4SC: // 0x210A
             regBG4SC = byte;
             bgTilemapAddr[eBG4] = (byte & 0xFC) << 9;
@@ -402,11 +403,19 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegBG1HOFS: // 0x210D
             regBG1HOFS = byte;
             SetBgHOffsetWriteTwice(eBG1, byte);
+
+            // M7HOFS and BG1HOFS share the same address.
+            m7HOffset = Bytes::Make16Bit(byte, m7Latch) & 0x1FFF;
+            m7Latch = byte;
             return true;
 
         case eRegBG1VOFS: // 0x210E
             regBG1VOFS = byte;
             SetBgVOffsetWriteTwice(eBG1, byte);
+
+            // M7VOFS and BG1VOFS share the same address.
+            m7VOffset = Bytes::Make16Bit(byte, m7Latch) & 0x1FFF;
+            m7Latch = byte;
             return true;
 
         case eRegBG2HOFS: // 0x210F
@@ -1012,8 +1021,8 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
 {
     PixelInfo info;
 
-    int realX = screenX + bgHOffset[eBG1];
-    int realY = screenY + bgVOffset[eBG1];
+    int realX = screenX + m7HOffset;
+    int realY = screenY + m7VOffset;
     int xOff = realX & 0x07;
     int yOff = realY & 0x07;
 
