@@ -405,7 +405,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             SetBgHOffsetWriteTwice(eBG1, byte);
 
             // M7HOFS and BG1HOFS share the same address.
-            m7HOffset = Bytes::Make16Bit(byte, m7Latch) & 0x1FFF;
+            m7HOffset = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
             m7Latch = byte;
             return true;
 
@@ -414,7 +414,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             SetBgVOffsetWriteTwice(eBG1, byte);
 
             // M7VOFS and BG1VOFS share the same address.
-            m7VOffset = Bytes::Make16Bit(byte, m7Latch) & 0x1FFF;
+            m7VOffset = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
             m7Latch = byte;
             return true;
 
@@ -517,7 +517,11 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegM7SEL:
             regM7SEL = byte;
-            LogPpu("M7SEL=%02X. NYI", byte);
+            m7ExtendedFill = Bytes::TestBit<7>(byte);
+            m7FillColor0 = Bytes::TestBit<6>(byte);
+            m7FlipY = Bytes::TestBit<1>(byte);
+            m7FlipX = Bytes::TestBit<0>(byte);
+            LogPpu("M7SEL=%02X", byte);
             return true;
 
         case eRegM7A: // 0x211B
@@ -526,7 +530,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             m7Latch = byte;
             // Writes to this register also performs multiplication.
             M7Multiply();
-            LogPpu("M7A=%02X. NYI", byte);
+            LogPpu("M7A=%04X", m7a);
             return true;
 
         case eRegM7B: // 0x211C
@@ -535,27 +539,35 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             m7Latch = byte;
             // Writes to this register also performs multiplication.
             M7Multiply();
-            LogPpu("M7B=%02X. NYI", byte);
+            LogPpu("M7B=%04X", m7b);
             return true;
 
         case eRegM7C: // 0x211D
             regM7C = byte;
-            LogPpu("M7C=%02X. NYI", byte);
+            m7c = Bytes::Make16Bit(byte, m7Latch);
+            m7Latch = byte;
+            LogPpu("M7C=%04X", m7c);
             return true;
 
         case eRegM7D: // 0x211E
             regM7D = byte;
-            LogPpu("M7D=%02X. NYI", byte);
+            m7d = Bytes::Make16Bit(byte, m7Latch);
+            m7Latch = byte;
+            LogPpu("M7D=%04X", m7d);
             return true;
 
         case eRegM7X: // 0x211F
             regM7X = byte;
-            LogPpu("M7X=%02X. NYI", byte);
+            m7x = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7Latch = byte;
+            LogPpu("M7X=%04X", m7x);
             return true;
 
         case eRegM7Y: // 0x2120
             regM7Y = byte;
-            LogPpu("M7Y=%02X. NYI", byte);
+            m7y = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7Latch = byte;
+            LogPpu("M7Y=%04X", m7y);
             return true;
 
         case eRegCGADD: // 0x2121
@@ -1021,8 +1033,30 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
 {
     PixelInfo info;
 
-    int realX = screenX + m7HOffset;
-    int realY = screenY + m7VOffset;
+    auto Clip = [](int value)
+    {
+        if (value & 0x2000)
+            return value | ~0x03FF;
+        return value & 0x03FF;
+    };
+
+    int clippedX = Clip(m7HOffset - m7x);
+    int clippedY = Clip(m7VOffset - m7y);
+
+    int x = ((m7a * clippedX) & ~0x3F) +
+            ((m7b * clippedY) & ~0x3F) +
+            ((m7b * screenY) & ~0x3F) +
+            (m7x << 8);
+
+    int y = ((m7c * clippedX) & ~0x3F) +
+            ((m7d * clippedY) & ~0x3F) +
+            ((m7d * screenY) & ~0x3F) +
+            (m7y << 8);
+
+    // TODO: Move the above code to only execute once per scanline.
+
+    int realX = (x + (m7a * screenX)) >> 8;
+    int realY = (y + (m7c * screenX)) >> 8;
     int xOff = realX & 0x07;
     int yOff = realY & 0x07;
 

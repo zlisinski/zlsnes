@@ -211,8 +211,8 @@ private:
     uint8_t bgHOffsetLatch = 0;
     uint16_t bgHOffset[4] = {0, 0, 0, 0};
     uint16_t bgVOffset[4] = {0, 0, 0, 0};
-    uint16_t m7HOffset = 0;
-    uint16_t m7VOffset = 0;
+    int16_t m7HOffset = 0;
+    int16_t m7VOffset = 0;
 
     // VMAIN - 0x2115
     uint8_t vramIncrement = 0;
@@ -223,10 +223,20 @@ private:
     uint16_t vramRwAddr = 0;
     uint8_t vramPrefetch[2] = {0, 0};
 
+    // M7SEL - 0x211A
+    bool m7ExtendedFill = false;
+    bool m7FillColor0 = false;
+    bool m7FlipX = false;
+    bool m7FlipY = false;
+
     // M7[ABCDXY] - 0x211B-0x2120
     uint8_t m7Latch = 0;
     uint16_t m7a = 0;
     uint16_t m7b = 0;
+    uint16_t m7c = 0;
+    uint16_t m7d = 0;
+    int16_t m7x = 0;
+    int16_t m7y = 0;
 
     // CGADD - 0x2121
     uint16_t cgramRwAddr = 0;
