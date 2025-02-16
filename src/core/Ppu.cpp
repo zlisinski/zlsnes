@@ -526,7 +526,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegM7A: // 0x211B
             regM7A = byte;
-            m7a = Bytes::Make16Bit(byte, m7Latch);
+            m7a = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             // Writes to this register also performs multiplication.
             M7Multiply();
@@ -535,7 +535,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegM7B: // 0x211C
             regM7B = byte;
-            m7b = Bytes::Make16Bit(byte, m7Latch);
+            m7b = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             // Writes to this register also performs multiplication.
             M7Multiply();
@@ -544,14 +544,14 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegM7C: // 0x211D
             regM7C = byte;
-            m7c = Bytes::Make16Bit(byte, m7Latch);
+            m7c = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             LogPpu("M7C=%04X", m7c);
             return true;
 
         case eRegM7D: // 0x211E
             regM7D = byte;
-            m7d = Bytes::Make16Bit(byte, m7Latch);
+            m7d = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             LogPpu("M7D=%04X", m7d);
             return true;

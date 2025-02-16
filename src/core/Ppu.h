@@ -231,10 +231,10 @@ private:
 
     // M7[ABCDXY] - 0x211B-0x2120
     uint8_t m7Latch = 0;
-    uint16_t m7a = 0;
-    uint16_t m7b = 0;
-    uint16_t m7c = 0;
-    uint16_t m7d = 0;
+    int16_t m7a = 0;
+    int16_t m7b = 0;
+    int16_t m7c = 0;
+    int16_t m7d = 0;
     int16_t m7x = 0;
     int16_t m7y = 0;
 
