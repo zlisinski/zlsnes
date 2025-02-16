@@ -518,7 +518,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegM7SEL:
             regM7SEL = byte;
             m7ExtendedFill = Bytes::TestBit<7>(byte);
-            m7FillColor0 = Bytes::TestBit<6>(byte);
+            m7FillColorTile0 = Bytes::TestBit<6>(byte);
             m7FlipY = Bytes::TestBit<1>(byte);
             m7FlipX = Bytes::TestBit<0>(byte);
             LogPpu("M7SEL=%02X", byte);
@@ -1055,20 +1055,33 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
 
     // TODO: Move the above code to only execute once per scanline.
 
+    info.bg = eBG1;
+    info.isOnMainScreen = mainScreenLayerEnabled[eBG1];
+    info.isOnSubScreen = subScreenLayerEnabled[eBG1];
+
     int realX = (x + (m7a * screenX)) >> 8;
     int realY = (y + (m7c * screenX)) >> 8;
     int xOff = realX & 0x07;
     int yOff = realY & 0x07;
+
+    if (m7ExtendedFill && ((realX & ~0x3FF) || (realY & ~0x3FF)))
+    {
+        if (m7FillColorTile0)
+            info.colorId = vram[(((yOff << 3) + xOff) << 1) + 1];
+        else
+            info.colorId = 0;
+
+        return info;
+    }
+
+    realX &= 0x3FF;
+    realY &= 0x3FF;
 
     uint16_t tileIdAddr = (((realY & ~0x07) << 4) + (realX >> 3)) << 1;
     uint8_t tileId = vram[tileIdAddr];
 
     uint16_t colorAddr = (((tileId << 6) + (yOff << 3) + xOff) << 1) + 1;
     info.colorId = vram[colorAddr];
-
-    info.bg = eBG1;
-    info.isOnMainScreen = mainScreenLayerEnabled[eBG1];
-    info.isOnSubScreen = subScreenLayerEnabled[eBG1];
 
     return info;
 }

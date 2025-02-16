@@ -225,7 +225,7 @@ private:
 
     // M7SEL - 0x211A
     bool m7ExtendedFill = false;
-    bool m7FillColor0 = false;
+    bool m7FillColorTile0 = false;
     bool m7FlipX = false;
     bool m7FlipY = false;
 
