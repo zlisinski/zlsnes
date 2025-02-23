@@ -2,3 +2,7 @@
 	path = test_data/65816
 	url = https://github.com/SingleStepTests/65816.git
 	branch = main
+[submodule "test_data/spc700"]
+	path = test_data/spc700
+	url = https://github.com/SingleStepTests/spc700.git
+	branch = main
