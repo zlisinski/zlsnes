@@ -13,6 +13,7 @@ class Cartridge;
 class DebuggerInterface;
 class InfoInterface;
 class Timer;
+class Ppu;
 
 
 const uint32_t WRAM_OFFSET = 0x7E0000;
@@ -25,8 +26,9 @@ public:
     Memory(InfoInterface *infoInterface = nullptr, DebuggerInterface *debuggerInterface = nullptr);
     virtual ~Memory();
 
-    void SetCartridge(Cartridge *cart);
-    void SetTimer(Timer *timer);
+    void SetCartridge(Cartridge *cart) {(void)cart;}
+    void SetTimer(Timer *timer) {(void)timer;}
+    void SetPpu(Ppu *ppu) {(void)ppu;}
 
     template<bool addTime = true>
     uint8_t Read8Bit(uint32_t addr);
