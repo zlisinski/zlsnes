@@ -26,3 +26,5 @@ enable_testing()
 
 add_subdirectory(tests)
 add_compile_definitions("TESTING")
+
+add_subdirectory(Audio)
