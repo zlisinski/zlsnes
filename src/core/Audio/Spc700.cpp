@@ -8,13 +8,13 @@ namespace Audio
 
 
 // Use this for opcodes that don't have an AddressMode or data.
-#define LogInst(name) LogCpu("%02X: %s", opcode, (name))
+#define LogInst(name) LogSpc700("%02X: %s", opcode, (name))
 
 // This requires the opcode case to have an AddressMode variable named 'mode'.
-#define LogInstM(name) LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
+#define LogInstM(name) LogSpc700("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
 
 // This requires the opcode case to have an AddressMode pointer named 'mode'.
-#define LogInstMp(name) LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
+#define LogInstMp(name) LogSpc700("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
 
 
 Spc700::Spc700()
@@ -1284,7 +1284,7 @@ void Spc700::ProcessOpCode()
         case 0x2F: // BRA
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
+            LogSpc700("%02X %02X: BRA %d", opcode, offset, offset);
             reg.pc += offset;
             break;
         }
@@ -1300,7 +1300,7 @@ void Spc700::ProcessOpCode()
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-            LogCpu("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
+            LogSpc700("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
 
             // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
             // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.
@@ -1327,7 +1327,7 @@ void Spc700::ProcessOpCode()
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             uint8_t bit = opcode >> 5;
-            LogCpu("%02X%s %02X: BBS %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
+            LogSpc700("%02X%s %02X: BBS %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
 
             uint8_t value = mode.Read8Bit();
             if (value & (1 << bit))
@@ -1351,7 +1351,7 @@ void Spc700::ProcessOpCode()
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             uint8_t bit = opcode >> 5;
-            LogCpu("%02X%s %02X: BBC %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
+            LogSpc700("%02X%s %02X: BBC %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
 
             uint8_t value = mode.Read8Bit();
             if (!(value & (1 << bit)))
@@ -1367,7 +1367,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogCpu("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
 
             if (reg.a != mode.Read8Bit())
             {
@@ -1382,7 +1382,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirectIndexedX mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogCpu("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
 
             if (reg.a != mode.Read8Bit())
             {
@@ -1397,7 +1397,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogCpu("%02X%s %02X: DBNZ %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X%s %02X: DBNZ %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
 
             uint8_t value = mode.Read8Bit() - 1;
             mode.Write8Bit(value);
@@ -1412,7 +1412,7 @@ void Spc700::ProcessOpCode()
         case 0xFE: // DBNZ Y
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogCpu("%02X %02X: DBNZ Y", opcode, offset);
+            LogSpc700("%02X %02X: DBNZ Y", opcode, offset);
 
             reg.y--;
             if (reg.y != 0)

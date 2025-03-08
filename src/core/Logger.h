@@ -25,7 +25,8 @@ enum class InstructionLogLevel
     eTimer = 0x10,
     eInterrupt = 0x20,
     eApu = 0x40,
-    eDma = 0x80
+    eDma = 0x80,
+    eSpc700 = 0x100,
 };
 
 
@@ -117,3 +118,4 @@ private:
 #define LogInterrupt(...)   do {Logger::InstructionLog(InstructionLogLevel::eInterrupt, __VA_ARGS__);} while (0)
 #define LogApu(...)         do {Logger::InstructionLog(InstructionLogLevel::eApu, __VA_ARGS__);} while (0)
 #define LogDma(...)         do {Logger::InstructionLog(InstructionLogLevel::eDma, __VA_ARGS__);} while (0)
+#define LogSpc700(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpc700, __VA_ARGS__);} while (0)

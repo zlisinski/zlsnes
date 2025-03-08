@@ -25,6 +25,7 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override;
     void SetInstructionCheckboxEnabled(bool enable);
+    void SetInstructionLevel(InstructionLogLevel subsystem, bool checked);
 
 private:
     Ui::LogWindow *ui;
@@ -48,6 +49,7 @@ private slots:
     void on_chkInterrupt_clicked(bool checked);
     void on_chkApu_clicked(bool checked);
     void on_chkDma_clicked(bool checked);
+    void on_chkSpc700_clicked(bool checked);
     void on_btnClear_clicked();
     void on_btnSave_clicked();
 

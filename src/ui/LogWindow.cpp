@@ -49,6 +49,7 @@ LogWindow::LogWindow(QWidget *parent) :
     ui->chkInterrupt->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eInterrupt));
     ui->chkApu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eApu));
     ui->chkDma->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eDma));
+    ui->chkSpc700->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eSpc700));
 
     connect(this, SIGNAL(SignalLogWindowClosed()), parent, SLOT(SlotLogWindowClosed()));
     connect(this, SIGNAL(SignalMessageReady()), this, SLOT(SlotOutputMessage()));
@@ -117,6 +118,21 @@ void LogWindow::SetInstructionCheckboxEnabled(bool enable)
     ui->chkInterrupt->setEnabled(enable);
     ui->chkApu->setEnabled(enable);
     ui->chkDma->setEnabled(enable);
+    ui->chkSpc700->setEnabled(enable);
+}
+
+
+void LogWindow::SetInstructionLevel(InstructionLogLevel subsystem, bool checked)
+{
+    QSettings settings;
+    uint32_t newLevel = Logger::GetInstructionLogLevel();
+    if (checked)
+        newLevel |= static_cast<uint32_t>(subsystem);
+    else
+        newLevel &= ~static_cast<uint32_t>(subsystem);
+
+    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
+    Logger::SetInstructionLogLevel(newLevel);
 }
 
 
@@ -167,113 +183,55 @@ void LogWindow::on_rbInstruction_clicked()
 
 void LogWindow::on_chkCpu_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eCpu);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eCpu);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eCpu, checked);
 }
 
 
 void LogWindow::on_chkPpu_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::ePpu);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::ePpu);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::ePpu, checked);
 }
 
 
 void LogWindow::on_chkMemory_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eMemory);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eMemory);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eMemory, checked);
 }
 
 
 void LogWindow::on_chkInput_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eInput);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eInput);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eInput, checked);
 }
 
 
 void LogWindow::on_chkTimer_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eTimer);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eTimer);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eTimer, checked);
 }
 
 
 void LogWindow::on_chkInterrupt_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eInterrupt);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eInterrupt);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eInterrupt, checked);
 }
 
 
 void LogWindow::on_chkApu_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eApu);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eApu);
-
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+    SetInstructionLevel(InstructionLogLevel::eApu, checked);
 }
 
 
 void LogWindow::on_chkDma_clicked(bool checked)
 {
-    QSettings settings;
-    uint32_t newLevel = Logger::GetInstructionLogLevel();
-    if (checked)
-        newLevel |= static_cast<uint32_t>(InstructionLogLevel::eDma);
-    else
-        newLevel &= ~static_cast<uint32_t>(InstructionLogLevel::eDma);
+    SetInstructionLevel(InstructionLogLevel::eDma, checked);
+}
 
-    settings.setValue(SETTINGS_LOGGER_INSTRUCTION_LEVEL, newLevel);
-    Logger::SetInstructionLogLevel(newLevel);
+
+void LogWindow::on_chkSpc700_clicked(bool checked)
+{
+    SetInstructionLevel(InstructionLogLevel::eSpc700, checked);
 }
 
 
