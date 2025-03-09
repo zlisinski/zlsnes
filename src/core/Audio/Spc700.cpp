@@ -1,6 +1,7 @@
 #include "AddressMode.h"
 #include "Spc700.h"
 #include "Memory.h"
+#include "Timer.h"
 
 
 namespace Audio
@@ -17,10 +18,10 @@ namespace Audio
 #define LogInstMp(name) LogSpc700("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
 
 
-Spc700::Spc700()
+Spc700::Spc700(Memory *memory, Timer *timer) :
+    memory(memory),
+    timer(timer)
 {
-    memory = new Memory();
-
     addressModes[0x04] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x05] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x06] = std::make_unique<AddressModeIndirectX>(this, memory);
@@ -49,7 +50,7 @@ Spc700::Spc700()
 
 Spc700::~Spc700()
 {
-    delete memory;
+
 }
 
 
@@ -126,6 +127,24 @@ inline uint8_t Spc700::Pop()
     reg.sp++;
     uint8_t value = memory->Read8Bit(Bytes::Make16Bit(0x01, reg.sp));
     return value;
+}
+
+
+void Spc700::Step(int clocksToRun)
+{
+    clocksAhead -= clocksToRun;
+
+    if (clocksAhead <= 0)
+    {
+        timer->ResetCounter();
+
+        do
+        {
+            ProcessOpCode();
+            clocksAhead += timer->GetCounter();
+        }
+        while (clocksAhead < 0);
+    }
 }
 
 
@@ -1300,7 +1319,7 @@ void Spc700::ProcessOpCode()
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-            LogSpc700("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
+            LogSpc700("%02X %02X: %s %d", opcode, (uint8_t)offset, names[opcode >> 5], offset);
 
             // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
             // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.

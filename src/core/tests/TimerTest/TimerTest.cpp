@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 // Include the mocks first so they override subsequent includes.
+#include "mock/Apu.h"
 #include "mock/Memory.h"
 #include "mock/Interrupt.h"
 

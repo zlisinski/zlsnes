@@ -11,6 +11,7 @@
 
 #include "Bytes.h"
 #include "Audio/Spc700.h"
+#include "Audio/Timer.h"
 
 namespace Audio
 {
@@ -39,18 +40,22 @@ protected:
 
     Spc700 *cpu;
     Memory *memory;
+    Timer *timer;
 };
 
 
 Spc700Test::Spc700Test()
 {
-    cpu = new Spc700();
-    memory = cpu->memory;
+    memory = new Memory();
+    timer = new Timer(memory);
+    cpu = new Spc700(memory, timer);
 }
 
 Spc700Test::~Spc700Test()
 {
     delete cpu;
+    delete timer;
+    delete memory;
 }
 
 void Spc700Test::SetUp()

@@ -1,4 +1,5 @@
 #include "Timer.h"
+#include "Apu.h"
 #include "Interrupt.h"
 #include "Memory.h"
 
@@ -6,10 +7,12 @@
 const uint32_t CLOCKS_PER_H = 4;
 const uint32_t CLOCKS_PER_V = 1364;
 const uint32_t H_PER_V = CLOCKS_PER_V / CLOCKS_PER_H; // 341
+const uint32_t APU_CLOCKS = 21; // Apu runs 21 times slower.
 
 
 Timer::Timer(Memory *memory, Interrupt *interrupts) :
     clockCounter(0),
+    apuCounter(0),
     hCount(0),
     vCount(0),
     isHBlank(true),
@@ -19,6 +22,7 @@ Timer::Timer(Memory *memory, Interrupt *interrupts) :
     vTrigger(0x1FF),
     memory(memory),
     interrupts(interrupts),
+    apu(nullptr),
     regNMITIMEN(memory->RequestOwnership(eRegNMITIMEN, this)),
     regHTIMEL(memory->RequestOwnership(eRegHTIMEL, this)),
     regHTIMEH(memory->RequestOwnership(eRegHTIMEH, this)),
@@ -104,6 +108,15 @@ void Timer::AddCycle(uint8_t cycles)
     }
 
     NotifyTimerObservers(cycles);
+
+    // Rough hack for now.
+    // An Spc700 instruction takes at least 2 cycles
+    apuCounter += cycles;
+    if (apuCounter > APU_CLOCKS * 2)
+    {
+        apu->Step(apuCounter / APU_CLOCKS);
+        apuCounter %= APU_CLOCKS;
+    }
 }
 
 

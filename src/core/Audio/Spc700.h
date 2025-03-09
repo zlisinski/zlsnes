@@ -11,6 +11,7 @@ namespace Audio
 
 class AbsAddressMode;
 class Memory;
+class Timer;
 
 
 class Spc700
@@ -33,8 +34,8 @@ public:
         };
 
         uint8_t x = 0; // X index.
-        uint8_t sp = 0; // Stack pointer.
-        uint16_t pc = 0; // Program counter.
+        uint8_t sp = 0xFF; // Stack pointer.
+        uint16_t pc = 0xFFC0; // Program counter.
 
         union
         {
@@ -55,12 +56,13 @@ public:
 
     } reg;
 
-    Spc700();
+    Spc700(Memory *memory, Timer *timer);
     virtual ~Spc700();
 
     uint8_t ReadPC8Bit();
     uint16_t ReadPC16Bit();
 
+    void Step(int clocksToRun);
     void ProcessOpCode();
 
 private:
@@ -100,9 +102,11 @@ private:
     void Push(uint8_t value);
     uint8_t Pop();
 
-    Memory *memory;
+    Memory *memory = nullptr;
+    Timer *timer = nullptr;
 
-    bool waiting;
+    bool waiting = false;
+    int clocksAhead = 0;
 
     using AddressModePtr = std::unique_ptr<AbsAddressMode>;
     AddressModePtr addressModes[32];

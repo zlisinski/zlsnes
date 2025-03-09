@@ -12,6 +12,7 @@ add_executable(TimerTest
     ../../Logger.cpp
     ../../Timer.cpp
     ../../Utils.cpp
+    mock/Apu.cpp
     mock/Interrupt.cpp
     mock/Memory.cpp
 )

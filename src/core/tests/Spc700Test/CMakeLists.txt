@@ -11,6 +11,7 @@ find_package(Qt5 REQUIRED COMPONENTS Core)
 add_executable(Spc700Test
     Spc700Test.cpp
     ../../Audio/Spc700.cpp
+    ../../Audio/Timer.cpp
     ../../Logger.cpp
     ../../Utils.cpp
     mock/Memory.cpp

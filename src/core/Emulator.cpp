@@ -69,7 +69,7 @@ bool Emulator::LoadRom(const std::string &filename)
     memory->SetPpu(ppu);
     input = new Input(memory, timer);
     cpu = new Cpu(memory, timer, interrupts);
-    apu = new Apu(memory/*, timer, audioInterface, gameSpeedSubject*/);
+    apu = new Apu(memory, timer/*, audioInterface, gameSpeedSubject*/);
 
     memory->SetCartridge(&cartridge);
 

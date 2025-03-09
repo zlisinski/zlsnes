@@ -1,13 +1,38 @@
 #include "Apu.h"
+#include "Timer.h"
 
-Apu::Apu(IoRegisterSubject *memory) :
-    regAPUI00(memory->RequestOwnership(eRegAPUI00, this)),
-    regAPUI01(memory->RequestOwnership(eRegAPUI01, this)),
-    regAPUI02(memory->RequestOwnership(eRegAPUI02, this)),
-    regAPUI03(memory->RequestOwnership(eRegAPUI03, this)),
+#include "Audio/Memory.h"
+#include "Audio/Spc700.h"
+#include "Audio/Timer.h"
+
+
+Apu::Apu(IoRegisterSubject *io, Timer *timer) :
+    regAPUI00(io->RequestOwnership(eRegAPUI00, this)),
+    regAPUI01(io->RequestOwnership(eRegAPUI01, this)),
+    regAPUI02(io->RequestOwnership(eRegAPUI02, this)),
+    regAPUI03(io->RequestOwnership(eRegAPUI03, this)),
     isInit(false)
 {
+    apuMemory = new Audio::Memory();
+    apuTimer = new Audio::Timer(apuMemory);
+    apuCpu = new Audio::Spc700(apuMemory, apuTimer);
+    apuMemory->SetTimer(apuTimer);
 
+    timer->SetApu(this);
+}
+
+
+Apu::~Apu()
+{
+    delete apuCpu;
+    delete apuTimer;
+    delete apuMemory;
+}
+
+
+void Apu::Step(uint32_t clocks)
+{
+    apuCpu->Step(clocks);
 }
 
 

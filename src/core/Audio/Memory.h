@@ -11,15 +11,20 @@ namespace Audio
 {
 
 
+class Timer;
+
+
 class Memory
 {
 public:
     Memory();
     virtual ~Memory();
 
+    void SetTimer(Timer *timer) {this->timer = timer;}
+
     uint8_t Read8Bit(uint16_t addr);
     // Bypasses special read code. Only use for Debugger.
-    uint8_t ReadRaw8Bit(uint16_t addr) //const
+    uint8_t ReadRaw8Bit(uint16_t addr)
     {
         return ram[addr];
     }
@@ -66,7 +71,9 @@ public:
     void ClearMemory();
 
 protected:
-    std::array<uint8_t, 0x10000> ram;
+    std::array<uint8_t, 0x10000> ram = {0};
+
+    Timer *timer = nullptr;
 
     friend class MemoryTest;
 };

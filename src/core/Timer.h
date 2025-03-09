@@ -16,6 +16,7 @@ enum EClockSpeed
     eClockOther = 12
 };
 
+class Apu;
 class Interrupt;
 class Memory;
 
@@ -24,6 +25,8 @@ class Timer : public TimerSubject, public IoRegisterProxy
 public:
     Timer(Memory *memory, Interrupt *interrupts);
     virtual ~Timer() {}
+
+    void SetApu(Apu *apu) {this->apu = apu;}
 
     void AddCycle(uint8_t cycles);
 
@@ -43,6 +46,7 @@ private:
     void ProcessVBlankEnd();
 
     uint32_t clockCounter;
+    uint32_t apuCounter;
     uint16_t hCount;
     uint16_t vCount;
 
@@ -58,6 +62,7 @@ private:
 
     Memory *memory;
     Interrupt *interrupts;
+    Apu *apu;
 
     uint8_t &regNMITIMEN; // 0x4200
     uint8_t &regHTIMEL; // 0x4207
