@@ -72,7 +72,7 @@ public:
         }
     }
 
-    static void InstructionLog(InstructionLogLevel level, const char *format, ...)
+    static void InstructionLog(InstructionLogLevel level, const char *label, const char *format, ...)
     {
         if ((logLevel == LogLevel::eInstruction) && (instructionLogLevel & static_cast<uint32_t>(level)) && (loggerOutput != NULL))
         {
@@ -80,7 +80,9 @@ public:
             va_start(args, format);
 
             char buf[1024];
-            vsnprintf(buf, sizeof(buf), format, args);
+            strncpy(buf, label, sizeof(buf) - 1);
+            size_t labelLen = strlen(buf);
+            vsnprintf(buf + labelLen, sizeof(buf) - labelLen, format, args);
 
             loggerOutput->Output(std::unique_ptr<LogEntry>(new LogEntry(LogLevel::eInstruction, buf)));
 
@@ -110,12 +112,12 @@ private:
 #define LogInstruction(...) do {Logger::Log(LogLevel::eInstruction, __VA_ARGS__);} while (0)
 
 // Subsystem specific instruction-level logs.
-#define LogCpu(...)         do {Logger::InstructionLog(InstructionLogLevel::eCpu, __VA_ARGS__);} while (0)
-#define LogPpu(...)         do {Logger::InstructionLog(InstructionLogLevel::ePpu, __VA_ARGS__);} while (0)
-#define LogMemory(...)      do {Logger::InstructionLog(InstructionLogLevel::eMemory, __VA_ARGS__);} while (0)
-#define LogInput(...)       do {Logger::InstructionLog(InstructionLogLevel::eInput, __VA_ARGS__);} while (0)
-#define LogTimer(...)       do {Logger::InstructionLog(InstructionLogLevel::eTimer, __VA_ARGS__);} while (0)
-#define LogInterrupt(...)   do {Logger::InstructionLog(InstructionLogLevel::eInterrupt, __VA_ARGS__);} while (0)
-#define LogApu(...)         do {Logger::InstructionLog(InstructionLogLevel::eApu, __VA_ARGS__);} while (0)
-#define LogDma(...)         do {Logger::InstructionLog(InstructionLogLevel::eDma, __VA_ARGS__);} while (0)
-#define LogSpc700(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpc700, __VA_ARGS__);} while (0)
+#define LogCpu(...)         do {Logger::InstructionLog(InstructionLogLevel::eCpu,       "Cpu:    ", __VA_ARGS__);} while (0)
+#define LogPpu(...)         do {Logger::InstructionLog(InstructionLogLevel::ePpu,       "Ppu     ", __VA_ARGS__);} while (0)
+#define LogMemory(...)      do {Logger::InstructionLog(InstructionLogLevel::eMemory,    "Memory: ", __VA_ARGS__);} while (0)
+#define LogInput(...)       do {Logger::InstructionLog(InstructionLogLevel::eInput,     "Input:  ", __VA_ARGS__);} while (0)
+#define LogTimer(...)       do {Logger::InstructionLog(InstructionLogLevel::eTimer,     "Timer:  ", __VA_ARGS__);} while (0)
+#define LogInterrupt(...)   do {Logger::InstructionLog(InstructionLogLevel::eInterrupt, "Int:    ", __VA_ARGS__);} while (0)
+#define LogApu(...)         do {Logger::InstructionLog(InstructionLogLevel::eApu,       "Apu:    ", __VA_ARGS__);} while (0)
+#define LogDma(...)         do {Logger::InstructionLog(InstructionLogLevel::eDma,       "Dma:    ", __VA_ARGS__);} while (0)
+#define LogSpc700(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpc700,    "Spc:    ", __VA_ARGS__);} while (0)
