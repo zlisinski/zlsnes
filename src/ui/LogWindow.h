@@ -50,6 +50,7 @@ private slots:
     void on_chkApu_clicked(bool checked);
     void on_chkDma_clicked(bool checked);
     void on_chkSpc700_clicked(bool checked);
+    void on_chkSpcMem_clicked(bool checked);
     void on_btnClear_clicked();
     void on_btnSave_clicked();
 

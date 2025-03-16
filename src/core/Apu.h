@@ -27,16 +27,19 @@ private:
     uint8_t ReadRegister(EIORegisters ioReg) override;
     bool WriteRegister(EIORegisters ioReg, uint8_t byte) override;
 
-    Audio::Spc700 *apuCpu;
     Audio::Memory *apuMemory;
     Audio::Timer *apuTimer;
+    Audio::Spc700 *apuCpu;
 
-    uint8_t &regAPUI00; // 0x2140 Main CPU to Sound CPU Communication Port 0
-    uint8_t &regAPUI01; // 0x2141 Main CPU to Sound CPU Communication Port 1
-    uint8_t &regAPUI02; // 0x2142 Main CPU to Sound CPU Communication Port 2
-    uint8_t &regAPUI03; // 0x2143 Main CPU to Sound CPU Communication Port 3
+    uint8_t &regAPUIO0; // 0x2140 Main CPU to Sound CPU Communication Port 0
+    uint8_t &regAPUIO1; // 0x2141 Main CPU to Sound CPU Communication Port 1
+    uint8_t &regAPUIO2; // 0x2142 Main CPU to Sound CPU Communication Port 2
+    uint8_t &regAPUIO3; // 0x2143 Main CPU to Sound CPU Communication Port 3
 
-    bool isInit;
+    uint8_t &regCPUIO0; // CPU Input and Output Register 0 (R and W)
+    uint8_t &regCPUIO1; // CPU Input and Output Register 1 (R and W)
+    uint8_t &regCPUIO2; // CPU Input and Output Register 2 (R and W)
+    uint8_t &regCPUIO3; // CPU Input and Output Register 3 (R and W)
 };
 
 #endif

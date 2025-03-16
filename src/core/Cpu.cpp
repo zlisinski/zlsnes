@@ -1534,7 +1534,7 @@ void Cpu::ProcessOpCode()
         case 0x80: // BRA - Branch
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-                LogCpu("%02X %02X: BRA %d", opcode, offset, offset);
+                LogCpu("%02X %02X: BRA %d", opcode, (uint8_t)offset, offset);
                 timer->AddCycle(eClockInternal);
 
 #ifndef TESTING
@@ -1574,7 +1574,7 @@ void Cpu::ProcessOpCode()
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
-                LogCpu("%02X %02X: %s %d", opcode, offset, names[opcode >> 5], offset);
+                LogCpu("%02X %02X: %s %d", opcode, (uint8_t)offset, names[opcode >> 5], offset);
 
                 // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
                 // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.

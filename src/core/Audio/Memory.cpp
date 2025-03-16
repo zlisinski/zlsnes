@@ -1,3 +1,4 @@
+#include "../IoRegisters.h"
 #include "Memory.h"
 #include "Timer.h"
 
@@ -17,30 +18,17 @@ static const std::array<uint8_t, 64> bootRom = {
     0x5D, 0xD0, 0xDB, 0x1F, 0x00, 0x00, 0xC0, 0xFF
 };
 
-enum IoRegisters
-{
-    eRegTEST = 0x00F0,
-    eRegCONTROL = 0x00F1,
-    eRegDSPADDR = 0x00F2,
-    eRegDSPDATA = 0x00F3,
-    eRegCPUIO0 = 0x00F4,
-    eRegCPUIO1 = 0x00F5,
-    eRegCPUIO2 = 0x00F6,
-    eRegCPUIO3 = 0x00F7,
-    eRegAUXIO4 = 0x00F8,
-    eRegAUXIO5 = 0x00F9,
-    eRegT0DIV = 0x00FA,
-    eRegT1DIV = 0x00FB,
-    eRegT2DIV = 0x00FC,
-    eRegT0OUT = 0x00FD,
-    eRegT1OUT = 0x00FE,
-    eRegT2OUT = 0x00FF
-};
-
 
 Memory::Memory()
 {
+    ram[eRegTEST] = 0x0A;
     ram[eRegCONTROL] = 0x80;
+    ram[eRegDSPADDR] = 0xFF;
+    ram[eRegAUXIO4] = 0xFF;
+    ram[eRegAUXIO5] = 0xFF;
+    ram[eRegT0DIV] = 0xFF;
+    ram[eRegT1DIV] = 0xFF;
+    ram[eRegT2DIV] = 0xFF;
 }
 
 
@@ -54,7 +42,19 @@ uint8_t Memory::Read8Bit(uint16_t addr)
 {
     timer->AddCycle();
 
-    if ((addr & 0xFFC0) == 0xFFC0 && Bytes::TestBit<7>(ram[eRegCONTROL]))
+    if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
+    {
+        return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
+    }
+
+    switch (addr)
+    {
+        case eRegDSPDATA: // 0xF3
+            LogSpcMem("Read from DSPDATA %02X NYI", ram[eRegDSPADDR]);
+            return ram[eRegDSPDATA];
+    }
+
+    if ((addr & 0xFFC0) == 0xFFC0 && bootRomEnabled)
     {
         return bootRom[addr & 0x3F];
     }
@@ -67,6 +67,31 @@ void Memory::Write8Bit(uint16_t addr, uint8_t value)
 {
     timer->AddCycle();
 
+    // Let observers handle the update. If there are no observers for this address, continue with normal processing.
+    if (WriteIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF), value))
+    {
+        return;
+    }
+
+    switch (addr)
+    {
+        case eRegCONTROL: // 0xF1
+            timer->EnableTimer0(Bytes::TestBit<0>(value));
+            timer->EnableTimer1(Bytes::TestBit<1>(value));
+            timer->EnableTimer2(Bytes::TestBit<2>(value));
+            if (Bytes::TestBit<4>(value))
+                LogSpcMem("Clearing CPUIO 0-1 NYI");
+            if (Bytes::TestBit<5>(value))
+                LogSpcMem("Clearing CPUIO 2-3 NYI");
+            bootRomEnabled = Bytes::TestBit<7>(value);
+            return;
+
+        case eRegDSPDATA: // 0xF3
+            LogSpcMem("Write to DSPDATA %02X=%02X NYI", ram[eRegDSPADDR], value);
+            ram[eRegDSPDATA] = value;
+            return;
+    }
+
     ram[addr] = value;
 }
 
@@ -75,6 +100,25 @@ void Memory::ClearMemory()
 {
     ram.fill(0);
 }
+
+
+uint8_t *Memory::GetBytePtr(uint32_t addr)
+{
+    if (addr > 0xFFFF)
+        throw std::range_error(fmt("Invalid address %08X", addr));
+
+    return &ram[addr];
+}
+
+
+uint8_t &Memory::GetIoRegisterRef(EIORegisters ioReg)
+{
+    if (ioReg < 0xF0 || ioReg > 0xFF)
+        throw std::range_error(fmt("Invalid IO register %04X", ioReg));
+
+    return ram[ioReg];
+}
+
 
 
 }

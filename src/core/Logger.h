@@ -27,6 +27,7 @@ enum class InstructionLogLevel
     eApu = 0x40,
     eDma = 0x80,
     eSpc700 = 0x100,
+    eSpcMem = 0x200,
 };
 
 
@@ -121,3 +122,4 @@ private:
 #define LogApu(...)         do {Logger::InstructionLog(InstructionLogLevel::eApu,       "Apu:    ", __VA_ARGS__);} while (0)
 #define LogDma(...)         do {Logger::InstructionLog(InstructionLogLevel::eDma,       "Dma:    ", __VA_ARGS__);} while (0)
 #define LogSpc700(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpc700,    "Spc:    ", __VA_ARGS__);} while (0)
+#define LogSpcMem(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpcMem,    "SpcMem: ", __VA_ARGS__);} while (0)

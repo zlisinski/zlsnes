@@ -34,4 +34,16 @@ void Memory::ClearMemory()
 }
 
 
+uint8_t *Memory::GetBytePtr(uint32_t addr)
+{
+    return &ram[addr];
+}
+
+
+uint8_t &Memory::GetIoRegisterRef(EIORegisters ioReg)
+{
+    return ram[ioReg];
+}
+
+
 }

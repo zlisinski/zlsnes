@@ -5,21 +5,27 @@
 
 #include "Zlsnes.h"
 #include "Bytes.h"
+#include "IoRegisterProxy.h"
 
 
 namespace Audio
 {
 
 
-class Memory
+class Timer;
+
+
+class Memory : public IoRegisterSubject
 {
 public:
     Memory();
     virtual ~Memory();
 
+    void SetTimer(Timer *timer) {(void)timer;}
+
     uint8_t Read8Bit(uint16_t addr);
     // Bypasses special read code. Only use for Debugger.
-    uint8_t ReadRaw8Bit(uint16_t addr) //const
+    uint8_t ReadRaw8Bit(uint16_t addr)
     {
         return ram[addr];
     }
@@ -66,6 +72,9 @@ public:
     void ClearMemory();
 
 protected:
+    uint8_t *GetBytePtr(uint32_t addr) override;
+    uint8_t &GetIoRegisterRef(EIORegisters ioReg) override;
+
     std::array<uint8_t, 0x10000> ram;
 
     friend class MemoryTest;

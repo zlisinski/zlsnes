@@ -71,10 +71,10 @@ enum EIORegisters
     eRegSTAT78   = 0x213F, //  PPU2 Status and PPU2 Version Number
 
 // APU
-    eRegAPUI00   = 0x2140, //  Main CPU to Sound CPU Communication Port 0
-    eRegAPUI01   = 0x2141, //  Main CPU to Sound CPU Communication Port 1
-    eRegAPUI02   = 0x2142, //  Main CPU to Sound CPU Communication Port 2
-    eRegAPUI03   = 0x2143, //  Main CPU to Sound CPU Communication Port 3
+    eRegAPUIO0   = 0x2140, //  Main CPU to Sound CPU Communication Port 0
+    eRegAPUIO1   = 0x2141, //  Main CPU to Sound CPU Communication Port 1
+    eRegAPUIO2   = 0x2142, //  Main CPU to Sound CPU Communication Port 2
+    eRegAPUIO3   = 0x2143, //  Main CPU to Sound CPU Communication Port 3
 
 // WRAM
     eRegWMDATA   = 0x2180, //  WRAM Data Read/Write       (R/W)
@@ -120,6 +120,24 @@ enum EIORegisters
     eRegJOY3H    = 0x421D, //  Joypad 3 (gameport 1, pin 5) (upper 8bit)
     eRegJOY4L    = 0x421E, //  Joypad 4 (gameport 2, pin 5) (lower 8bit)
     eRegJOY4H    = 0x421F, //  Joypad 4 (gameport 2, pin 5) (upper 8bit)
+
+// SPC700 Registers
+    eRegTEST     = 0x00F0, // Testing functions (W)
+    eRegCONTROL  = 0x00F1, // Timer, I/O and ROM Control (W)
+    eRegDSPADDR  = 0x00F2, // DSP Register Index (R/W)
+    eRegDSPDATA  = 0x00F3, // DSP Register Data (R/W)
+    eRegCPUIO0   = 0x00F4, // CPU Input and Output Register 0 (R and W)
+    eRegCPUIO1   = 0x00F5, // CPU Input and Output Register 1 (R and W)
+    eRegCPUIO2   = 0x00F6, // CPU Input and Output Register 2 (R and W)
+    eRegCPUIO3   = 0x00F7, // CPU Input and Output Register 3 (R and W)
+    eRegAUXIO4   = 0x00F8, // Unused
+    eRegAUXIO5   = 0x00F9, // Unused
+    eRegT0DIV    = 0x00FA, // Timer 0 Divider (for 8000Hz clock source) (W)
+    eRegT1DIV    = 0x00FB, // Timer 1 Divider (for 8000Hz clock source) (W)
+    eRegT2DIV    = 0x00FC, // Timer 2 Divider (for 64000Hz clock source) (W)
+    eRegT0OUT    = 0x00FD, // Timer 0 Output (R)
+    eRegT1OUT    = 0x00FE, // Timer 1 Output (R)
+    eRegT2OUT    = 0x00FF  // Timer 2 Output (R)
 };
 
 // DMA port offsets. The real address of each port is (0x4300 | (dma_channel << 4) | offset), so BBAD for channel 6 would be 0x4361.

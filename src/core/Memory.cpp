@@ -177,12 +177,6 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     timer->AddCycle(EClockSpeed::eClockIoReg);
                 switch (addr & 0xFFFF)
                 {
-                    case eRegAPUI00: // 0x2140
-                    case eRegAPUI01: // 0x2141
-                    case eRegAPUI02: // 0x2142
-                    case eRegAPUI03: // 0x2143
-                        ioPorts21[addr & 0xFF] = value;
-                        break;
                     case eRegWMDATA: // 0x2180
                         wram[wramRWAddr] = value;
                         LogMemory("Write to wram through WMData %06X=%02X", wramRWAddr, value);

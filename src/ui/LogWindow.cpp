@@ -50,6 +50,7 @@ LogWindow::LogWindow(QWidget *parent) :
     ui->chkApu->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eApu));
     ui->chkDma->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eDma));
     ui->chkSpc700->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eSpc700));
+    ui->chkSpcMem->setChecked(instLevel & static_cast<uint32_t>(InstructionLogLevel::eSpcMem));
 
     connect(this, SIGNAL(SignalLogWindowClosed()), parent, SLOT(SlotLogWindowClosed()));
     connect(this, SIGNAL(SignalMessageReady()), this, SLOT(SlotOutputMessage()));
@@ -119,6 +120,7 @@ void LogWindow::SetInstructionCheckboxEnabled(bool enable)
     ui->chkApu->setEnabled(enable);
     ui->chkDma->setEnabled(enable);
     ui->chkSpc700->setEnabled(enable);
+    ui->chkSpcMem->setEnabled(enable);
 }
 
 
@@ -232,6 +234,12 @@ void LogWindow::on_chkDma_clicked(bool checked)
 void LogWindow::on_chkSpc700_clicked(bool checked)
 {
     SetInstructionLevel(InstructionLogLevel::eSpc700, checked);
+}
+
+
+void LogWindow::on_chkSpcMem_clicked(bool checked)
+{
+    SetInstructionLevel(InstructionLogLevel::eSpcMem, checked);
 }
 
 

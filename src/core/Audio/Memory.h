@@ -5,6 +5,7 @@
 
 #include "../Zlsnes.h"
 #include "../Bytes.h"
+#include "../IoRegisterProxy.h"
 
 
 namespace Audio
@@ -14,7 +15,7 @@ namespace Audio
 class Timer;
 
 
-class Memory
+class Memory : public IoRegisterSubject
 {
 public:
     Memory();
@@ -71,7 +72,13 @@ public:
     void ClearMemory();
 
 protected:
+    // Inherited from IoRegisterSubject.
+    uint8_t *GetBytePtr(uint32_t addr) override;
+    uint8_t &GetIoRegisterRef(EIORegisters ioReg) override;
+
     std::array<uint8_t, 0x10000> ram = {0};
+
+    bool bootRomEnabled = true;
 
     Timer *timer = nullptr;
 

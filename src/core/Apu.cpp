@@ -7,15 +7,18 @@
 
 
 Apu::Apu(IoRegisterSubject *io, Timer *timer) :
-    regAPUI00(io->RequestOwnership(eRegAPUI00, this)),
-    regAPUI01(io->RequestOwnership(eRegAPUI01, this)),
-    regAPUI02(io->RequestOwnership(eRegAPUI02, this)),
-    regAPUI03(io->RequestOwnership(eRegAPUI03, this)),
-    isInit(false)
+    apuMemory(new Audio::Memory),
+    apuTimer(new Audio::Timer(apuMemory)),
+    apuCpu(new Audio::Spc700(apuMemory, apuTimer)),
+    regAPUIO0(io->RequestOwnership(eRegAPUIO0, this)),
+    regAPUIO1(io->RequestOwnership(eRegAPUIO1, this)),
+    regAPUIO2(io->RequestOwnership(eRegAPUIO2, this)),
+    regAPUIO3(io->RequestOwnership(eRegAPUIO3, this)),
+    regCPUIO0(apuMemory->RequestOwnership(eRegCPUIO0, this)),
+    regCPUIO1(apuMemory->RequestOwnership(eRegCPUIO1, this)),
+    regCPUIO2(apuMemory->RequestOwnership(eRegCPUIO2, this)),
+    regCPUIO3(apuMemory->RequestOwnership(eRegCPUIO3, this))
 {
-    apuMemory = new Audio::Memory();
-    apuTimer = new Audio::Timer(apuMemory);
-    apuCpu = new Audio::Spc700(apuMemory, apuTimer);
     apuMemory->SetTimer(apuTimer);
 
     timer->SetApu(this);
@@ -42,20 +45,23 @@ uint8_t Apu::ReadRegister(EIORegisters ioReg)
 
     switch(ioReg)
     {
-        case eRegAPUI00:
-            if (isInit)
-                return regAPUI00;
-            else
-                return 0xAA;
-        case eRegAPUI01:
-            if (isInit)
-                return regAPUI01;
-            else
-                return 0xBB;
-        case eRegAPUI02:
-            return regAPUI02;
-        case eRegAPUI03:
-            return regAPUI03;
+        // Reads from APU registers return the value of the CPU register, and vice versa.
+        case eRegAPUIO0:
+            return regCPUIO0;
+        case eRegAPUIO1:
+            return regCPUIO1;
+        case eRegAPUIO2:
+            return regCPUIO2;
+        case eRegAPUIO3:
+            return regCPUIO3;
+        case eRegCPUIO0:
+            return regAPUIO0;
+        case eRegCPUIO1:
+            return regAPUIO1;
+        case eRegCPUIO2:
+            return regAPUIO2;
+        case eRegCPUIO3:
+            return regAPUIO3;
         default:
             throw std::range_error(fmt("Apu doesnt handle reads to 0x%04X", ioReg));
     }
@@ -68,27 +74,29 @@ bool Apu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
     switch (ioReg)
     {
-        case eRegAPUI00:
-            if (byte == 0xCC && !isInit)
-            {
-                LogApu("Go to stage2");
-                isInit = true;
-            }
-            regAPUI00 = byte;
+        case eRegAPUIO0:
+            regAPUIO0 = byte;
             return true;
-        case eRegAPUI01:
-            if (byte == 0xFF && regAPUI00 == 0x00 && regAPUI01 == 0x00 && regAPUI02 == 0x00 && regAPUI03 == 0x00)
-            {
-                LogApu("Go to stage1");
-                isInit = false;
-            }
-            regAPUI01 = byte;
+        case eRegAPUIO1:
+            regAPUIO1 = byte;
             return true;
-        case eRegAPUI02:
-            regAPUI02 = byte;
+        case eRegAPUIO2:
+            regAPUIO2 = byte;
             return true;
-        case eRegAPUI03:
-            regAPUI03 = byte;
+        case eRegAPUIO3:
+            regAPUIO3 = byte;
+            return true;
+        case eRegCPUIO0:
+            regCPUIO0 = byte;
+            return true;
+        case eRegCPUIO1:
+            regCPUIO1 = byte;
+            return true;
+        case eRegCPUIO2:
+            regCPUIO2 = byte;
+            return true;
+        case eRegCPUIO3:
+            regCPUIO3 = byte;
             return true;
         default:
             throw std::range_error(fmt("Apu doesnt handle writes to 0x%04X", ioReg));
