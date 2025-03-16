@@ -106,12 +106,8 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                     case eRegRDMPYL:
                         return ioPorts42[addr & 0xFF];
                     default:
-                        throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
+                        return openBusValue;
                 }
-                throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //if constexpr (addTime)
-                //    timer->AddCycle(EClockSpeed::eClockIoReg);
-                //return ioPorts42[addr & 0xFF];
             default:
                 LogError("Read from unhandled address %06X", addr);
                 throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
@@ -279,8 +275,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                         LogMemory("MEMSEL: %s %s", (value & 0x01) ? "fast" : "slow", isFastSpeed ? "fast" : "slow");
                         break;
                     default:
-                        throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                        //ioPorts42[addr & 0xFF] = value;
+                        LogError("Write to read-only IO port %06X %02X", addr, value);
                         break;
                 }
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
