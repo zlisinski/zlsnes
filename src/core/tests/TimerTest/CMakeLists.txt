@@ -12,9 +12,9 @@ add_executable(TimerTest
     ../../Logger.cpp
     ../../Timer.cpp
     ../../Utils.cpp
-    mock/Apu.cpp
-    mock/Interrupt.cpp
-    mock/Memory.cpp
+    ../CommonMocks/Apu.cpp
+    ../CommonMocks/Interrupt.cpp
+    ../CommonMocks/Memory.cpp
 )
 
 target_link_libraries(TimerTest

@@ -14,8 +14,8 @@ add_executable(CpuTest
     ../../Interrupt.cpp
     ../../Logger.cpp
     ../../Utils.cpp
-    mock/Memory.cpp
-    mock/Timer.cpp
+    ../CommonMocks/Memory.cpp
+    ../CommonMocks/Timer.cpp
 )
 
 target_link_libraries(CpuTest

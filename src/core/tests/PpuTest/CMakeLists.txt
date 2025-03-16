@@ -12,8 +12,8 @@ add_executable(PpuTest
     ../../Ppu.cpp
     ../../Logger.cpp
     ../../Utils.cpp
-    mock/Memory.cpp
-    mock/Timer.cpp
+    ../CommonMocks/Memory.cpp
+    ../CommonMocks/Timer.cpp
 )
 
 target_link_libraries(PpuTest

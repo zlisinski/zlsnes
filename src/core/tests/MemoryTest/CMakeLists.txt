@@ -14,7 +14,7 @@ add_executable(MemoryTest
     ../../Memory.cpp
     ../../Ppu.cpp
     ../../Utils.cpp
-    mock/Timer.cpp
+    ../CommonMocks/Timer.cpp
 )
 
 target_link_libraries(MemoryTest

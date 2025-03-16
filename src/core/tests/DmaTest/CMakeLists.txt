@@ -13,7 +13,7 @@ add_executable(DmaTest
     ../../Logger.cpp
     ../../Utils.cpp
     mock/Memory.cpp
-    mock/Timer.cpp
+    ../CommonMocks/Timer.cpp
 )
 
 target_link_libraries(DmaTest

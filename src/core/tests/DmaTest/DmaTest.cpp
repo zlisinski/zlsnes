@@ -2,7 +2,7 @@
 
 // Include the mocks first so they override subsequent includes.
 #include "mock/Memory.h"
-#include "mock/Timer.h"
+#include "../CommonMocks/Timer.h"
 
 #include "Dma.h"
 #include "../TestLogger.h"
@@ -52,6 +52,8 @@ void DmaTest::TearDown()
 class FakeIo : public IoRegisterProxy
 {
 public:
+    virtual ~FakeIo() {}
+
     uint8_t ReadRegister(EIORegisters ioReg) override
     {
         (void)ioReg;

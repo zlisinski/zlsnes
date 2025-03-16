@@ -2,7 +2,7 @@
 #include <unordered_map>
 
 // Include the mocks first so they override subsequent includes.
-#include "mock/Timer.h"
+#include "../CommonMocks/Timer.h"
 
 #include "Memory.h"
 

@@ -7,8 +7,8 @@
 #include <QString>
 
 // Include the mocks first so they override subsequent includes.
-#include "mock/Memory.h"
-#include "mock/Timer.h"
+#include "../CommonMocks/Memory.h"
+#include "../CommonMocks/Timer.h"
 
 #include "Bytes.h"
 #include "Cpu.h"
