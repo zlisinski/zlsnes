@@ -337,6 +337,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             bgChrSize[2] = 8 << Bytes::GetBit<6>(byte);
             bgChrSize[3] = 8 << Bytes::GetBit<7>(byte);
             LogPpu("bgMode=%d bg3Prio=%d bgChrSize=%d,%d,%d,%d", bgMode, bgMode1Bg3Priority, bgChrSize[0], bgChrSize[1], bgChrSize[2], bgChrSize[3]);
+            if (bgMode == 2 || bgMode == 4 || bgMode == 6)
+                LogWarning("Mode %d OPT NYI", bgMode);
             return true;
 
         case eRegMOSAIC: // 0x2106
@@ -735,6 +737,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             colMainScreenRegion = byte >> 6;
             LogPpu("CGWSEL=%02X mainScree=%d subScreen=%d addend=%d directColor=%d", byte,
                    colMainScreenRegion, colSubScreenRegion, colAddend, colDirectMode);
+            if (colDirectMode)
+                LogWarning("Direct color mode NYI");
             return true;
 
         case eRegCGADSUB: // 0x2131
