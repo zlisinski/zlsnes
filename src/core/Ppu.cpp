@@ -636,13 +636,13 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             bgEnableWindow[eOBJ][0] = Bytes::TestBit<1>(byte);
             bgInvertWindow[eOBJ][1] = Bytes::TestBit<2>(byte);
             bgEnableWindow[eOBJ][1] = Bytes::TestBit<3>(byte);
-            bgEnableWindow[eCOL][0] = Bytes::TestBit<4>(byte);
+            bgInvertWindow[eCOL][0] = Bytes::TestBit<4>(byte);
             bgEnableWindow[eCOL][0] = Bytes::TestBit<5>(byte);
-            bgEnableWindow[eCOL][1] = Bytes::TestBit<6>(byte);
+            bgInvertWindow[eCOL][1] = Bytes::TestBit<6>(byte);
             bgEnableWindow[eCOL][1] = Bytes::TestBit<7>(byte);
             LogPpu("WOBJSEL=%02X ObjEn=%d,%d ObjIn=%d,%d ColEn=%d,%d ColIn=%d,%d", byte,
                    bgEnableWindow[eOBJ][0], bgEnableWindow[eOBJ][1], bgInvertWindow[eOBJ][0], bgInvertWindow[eOBJ][1],
-                   bgEnableWindow[eCOL][0], bgEnableWindow[eCOL][1], bgEnableWindow[eCOL][0], bgEnableWindow[eCOL][1]);
+                   bgEnableWindow[eCOL][0], bgEnableWindow[eCOL][1], bgInvertWindow[eCOL][0], bgInvertWindow[eCOL][1]);
             return true;
 
         case eRegWH0: // 0x2126
@@ -1505,7 +1505,6 @@ void Ppu::DrawScanline(uint8_t scanline)
             }
             // If colMainScreenRegion == 3, pixel is always 0.
 
-            // Ignore color window for now
             if (colAddend)
             {
                 PixelInfo subScreenPixel = GetPixelInfo<EScreenType::SubScreen>(x, scanline, sprites, spriteCount);
@@ -1517,7 +1516,26 @@ void Ppu::DrawScanline(uint8_t scanline)
                 subColor = fixedColor;
             }
 
-            color = PerformColorMath(pixel.bg, mainColor, subColor);
+            if (colSubScreenRegion == 0)
+            {
+                // Always perform color math.
+                color = PerformColorMath(pixel.bg, mainColor, subColor);
+            }
+            else if (colSubScreenRegion == 1 || colSubScreenRegion == 2)
+            {
+                bool isInside = IsPointInsideWindow(eCOL, x);
+                if (colSubScreenRegion == 2)
+                    isInside = !isInside;
+                if (isInside)
+                    color = PerformColorMath(pixel.bg, mainColor, subColor);
+                else
+                    color = ConvertBGR555toARGB888(mainColor);
+            }
+            else
+            {
+                // Never perform color math.
+                color = ConvertBGR555toARGB888(mainColor);
+            }
         }
         else
         {
