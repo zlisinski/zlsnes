@@ -593,15 +593,18 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             }
             else
             {
+                byte &= 0x7F;
                 cgram[cgramRwAddr - 1] = cgramLatch;
                 cgram[cgramRwAddr] = byte;
                 LogPpu("Writing word to cgram %04X %02X%02X", cgramRwAddr - 1, byte, cgramLatch);
 
+                uint16_t color = Bytes::Make16Bit(byte, cgramLatch);
+
                 // Convert to ARGB and store in palette.
-                palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(Bytes::Make16Bit(byte, cgramLatch));
+                palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(color);
 
                 if ((cgramRwAddr >> 1) == 0)
-                    PixelInfo::color0 = Bytes::Make16Bit(byte, cgramLatch);
+                    PixelInfo::color0 = color;
             }
             cgramRwAddr = (cgramRwAddr + 1) & 0x1FF;
             return true;
