@@ -24,7 +24,6 @@ MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t r
     fpsTimer(),
     frameCount(0),
     frameCapTimer(),
-    frameCapSetting(60),
 #ifdef QT_GAMEPAD_LIB
     gamepad(NULL),
 #endif
@@ -56,6 +55,8 @@ MainWindow::MainWindow(const QString &romFilename, bool startInDebug, uint32_t r
         logWindow->show();
 
     setWindowTitle("ZLSNES");
+
+    frameCapSetting = settings.value(SETTINGS_VIDEO_FRAME_CAP, 60).toInt();
 
     SetupMenuBar();
     SetupStatusBar();
@@ -633,6 +634,8 @@ void MainWindow::SlotSetFpsCap()
     if (action)
     {
         frameCapSetting = action->data().toInt();
+        QSettings settings;
+        settings.setValue(SETTINGS_VIDEO_FRAME_CAP, frameCapSetting);
     }
 }
 

@@ -51,3 +51,4 @@ const char *SETTINGS_LOGWINDOW_DISPLAY = "LogWindow/Display";
 const char *SETTINGS_MAINWINDOW_GEOMETRY = "MainWindow/Geometry";
 
 const char *SETTINGS_VIDEO_SCALE = "Video/Scale";
+const char *SETTINGS_VIDEO_FRAME_CAP = "Video/FrameCap";

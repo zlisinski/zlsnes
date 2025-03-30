@@ -51,3 +51,4 @@ extern const char *SETTINGS_LOGWINDOW_DISPLAY;
 extern const char *SETTINGS_MAINWINDOW_GEOMETRY;
 
 extern const char *SETTINGS_VIDEO_SCALE;
+extern const char *SETTINGS_VIDEO_FRAME_CAP;
