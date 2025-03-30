@@ -59,22 +59,34 @@ private:
         SubScreen
     };
 
+    enum class EColorRegion
+    {
+        Never,
+        Outside,
+        Inside,
+        Always
+    };
+
     struct PixelInfo
     {
         uint8_t paletteId = 0;
         uint8_t colorId = 0;
+        uint16_t color = color0;
+        bool isTransparent = true;
         EBgLayer bg = eCOL;
         uint8_t priority = 0;
         bool isOnMainScreen = false;
         bool isOnSubScreen = false;
 
+        static uint16_t color0;
+
         template <EScreenType Screen = EScreenType::MainScreen>
         bool IsNotTransparent()
         {
             if constexpr (Screen == EScreenType::MainScreen)
-                return colorId != 0 && isOnMainScreen;
+                return !isTransparent && isOnMainScreen;
             else
-                return colorId != 0 && isOnSubScreen;
+                return !isTransparent && isOnSubScreen;
         }
     };
 
@@ -135,13 +147,13 @@ private:
     PixelInfo GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY);
 
     uint8_t GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &sprites);
-    PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
+    PixelInfo GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
     template <EScreenType Screen = EScreenType::MainScreen>
-    PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
+    PixelInfo GetPixelInfo(uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
     uint16_t GetColorValueFromPalette(EBgLayer bg, uint8_t paletteId, uint8_t colorId);
-    uint32_t PerformColorMath(EBgLayer mainBg, uint16_t mainColor, uint16_t subColor);
+    uint32_t PerformColorMath(uint16_t mainColor, bool colorClipped, uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount);
 
     void DrawScanline(uint8_t scanline);
     void DrawScreen();
@@ -264,8 +276,8 @@ private:
     // CGWSEL - 0x2130
     bool colDirectMode = false;
     bool colAddend = false;
-    uint8_t colSubScreenRegion = 0;
-    uint8_t colMainScreenRegion = 0;
+    EColorRegion preventColorMath = EColorRegion::Never;
+    EColorRegion clipToBlack = EColorRegion::Never;
 
     // CGADSUB - 0x2131
     bool bgColorMathEnable[6] = {false, false, false, false, false, false};

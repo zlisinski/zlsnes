@@ -6,6 +6,9 @@
 #include "Timer.h"
 
 
+uint16_t Ppu::PixelInfo::color0 = 0;
+
+
 Ppu::Ppu(Memory *memory, Timer *timer, DisplayInterface *displayInterface, DebuggerInterface *debuggerInterface) :
     memory(memory),
     timer(timer),
@@ -596,6 +599,9 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
                 // Convert to ARGB and store in palette.
                 palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(Bytes::Make16Bit(byte, cgramLatch));
+
+                if ((cgramRwAddr >> 1) == 0)
+                    PixelInfo::color0 = Bytes::Make16Bit(byte, cgramLatch);
             }
             cgramRwAddr = (cgramRwAddr + 1) & 0x1FF;
             return true;
@@ -733,10 +739,10 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             regCGWSEL = byte;
             colDirectMode = Bytes::TestBit<0>(byte);
             colAddend = Bytes::TestBit<1>(byte);
-            colSubScreenRegion = (byte >> 4) & 0x03;
-            colMainScreenRegion = byte >> 6;
-            LogPpu("CGWSEL=%02X mainScree=%d subScreen=%d addend=%d directColor=%d", byte,
-                   colMainScreenRegion, colSubScreenRegion, colAddend, colDirectMode);
+            preventColorMath = static_cast<EColorRegion>((byte >> 4) & 0x03);
+            clipToBlack = static_cast<EColorRegion>(byte >> 6);
+            LogPpu("CGWSEL=%02X clipToBlack=%d preventColorMath=%d addend=%d directColor=%d", byte,
+                   (int)clipToBlack, (int)preventColorMath, colAddend, colDirectMode);
             if (colDirectMode)
                 LogWarning("Direct color mode NYI");
             return true;
@@ -1028,6 +1034,8 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     uint8_t pixelVal = GetTilePixelData(addr, xOff, yOff, bpp);
 
     info.colorId = pixelVal;
+    info.color = GetColorValueFromPalette(bg, tile.data.paletteId, pixelVal);
+    info.isTransparent = (pixelVal == 0);
     info.bg = bg;
     return info;
 }
@@ -1071,9 +1079,17 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
     if (m7ExtendedFill && ((realX & ~0x3FF) || (realY & ~0x3FF)))
     {
         if (m7FillColorTile0)
+        {
             info.colorId = vram[(((yOff << 3) + xOff) << 1) + 1];
+            info.color = GetColorValueFromPalette(eBG1, 0, info.colorId);
+            info.isTransparent = (info.colorId == 0);
+        }
         else
+        {
             info.colorId = 0;
+            info.color = GetColorValueFromPalette(eBG1, 0, 0);
+            info.isTransparent = true;
+        }
 
         return info;
     }
@@ -1086,6 +1102,8 @@ Ppu::PixelInfo Ppu::GetBgPixelInfoMode7(uint16_t screenX, uint16_t screenY)
 
     uint16_t colorAddr = (((tileId << 6) + (yOff << 3) + xOff) << 1) + 1;
     info.colorId = vram[colorAddr];
+    info.color = GetColorValueFromPalette(eBG1, 0, info.colorId);
+    info.isTransparent = (info.colorId == 0);
 
     return info;
 }
@@ -1151,7 +1169,7 @@ uint8_t Ppu::GetSpritesOnScanline(uint8_t scanline, std::array<Sprite, 32> &spri
 }
 
 
-Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
+Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo info;
 
@@ -1178,7 +1196,7 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
 
     for (int i = 0; i < spriteCount; i++)
     {
-        Sprite &cur = sprites[i];
+        const Sprite &cur = sprites[i];
 
         if (screenX < cur.xPos || screenX > (cur.xPos + cur.width - 1))
             continue;
@@ -1214,6 +1232,8 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
             info.colorId = pixelVal;
             info.bg = eOBJ;
             info.priority = cur.priority;
+            info.color = GetColorValueFromPalette(eOBJ, info.paletteId, info.colorId);
+            info.isTransparent = (pixelVal == 0);
             break;
         }
     }
@@ -1223,7 +1243,7 @@ Ppu::PixelInfo Ppu::GetSpritePixelInfo(uint16_t screenX, uint16_t screenY, std::
 
 
 template <Ppu::EScreenType Screen>
-Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
+Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo bgInfo[4];
     PixelInfo spriteInfo = GetSpritePixelInfo(screenX, screenY, sprites, spriteCount);
@@ -1408,46 +1428,52 @@ uint16_t Ppu::GetColorValueFromPalette(EBgLayer bg, uint8_t paletteId, uint8_t c
 
     paletteOffset = (paletteOffset + colorId) << 1;
 
-    return Bytes::Make16Bit(cgram[paletteOffset + 1], cgram[paletteOffset]);
+    uint16_t color = Bytes::Make16Bit(cgram[paletteOffset + 1], cgram[paletteOffset]);
+    return color;
 }
 
 
-uint32_t Ppu::PerformColorMath(EBgLayer mainBg, uint16_t mainColor, uint16_t subColor)
+uint32_t Ppu::PerformColorMath(uint16_t mainColor, bool colorClipped, uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
+    uint16_t subColor = fixedColor;
+    bool shift = halfColorMath && !colorClipped;
+
+    if (colAddend)
+    {
+        PixelInfo subScreenPixel = GetPixelInfo<EScreenType::SubScreen>(screenX, screenY, sprites, spriteCount);
+        if (subScreenPixel.IsNotTransparent<EScreenType::SubScreen>())
+        {
+            subColor = subScreenPixel.color;
+        }
+        else
+        {
+            // Transparent, use default fixed color value for subColor and disable half math.
+            shift = false;
+        }
+    }
+
+    uint8_t newBlue = mainColor >> 10;
+    uint8_t newGreen = (mainColor >> 5) & 0x1F;
+    uint8_t newRed = mainColor & 0x1F;
+
     if (colorSubtract)
     {
-        int8_t newBlue = (mainColor >> 10) - (subColor >> 10);
-        int8_t newGreen = ((mainColor >> 5) & 0x1F) - ((subColor >> 5) & 0x1F);
-        int8_t newRed = (mainColor & 0x1F) - (subColor & 0x1F);
+        newBlue = (newBlue - (subColor >> 10)) >> shift;
+        newGreen = (newGreen - ((subColor >> 5) & 0x1F)) >> shift;
+        newRed = (newRed - (subColor & 0x1F)) >> shift;
 
-        if (halfColorMath)
-        {
-            newBlue >>= 1;
-            newGreen >>= 1;
-            newRed >>= 1;
-        }
-
-        if (newBlue < 0)
+        if (newBlue > 31)
             newBlue = 0;
-        if (newGreen < 0)
+        if (newGreen > 31)
             newGreen = 0;
-        if (newRed < 0)
+        if (newRed > 31)
             newRed = 0;
-
-        return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
     }
     else
     {
-        uint8_t newBlue = (mainColor >> 10) + (subColor >> 10);
-        uint8_t newGreen = ((mainColor >> 5) & 0x1F) + ((subColor >> 5) & 0x1F);
-        uint8_t newRed = (mainColor & 0x1F) + (subColor & 0x1F);
-
-        if (halfColorMath)
-        {
-            newBlue >>= 1;
-            newGreen >>= 1;
-            newRed >>= 1;
-        }
+        newBlue = (newBlue + (subColor >> 10)) >> shift;
+        newGreen = (newGreen + ((subColor >> 5) & 0x1F)) >> shift;
+        newRed = (newRed + (subColor & 0x1F)) >> shift;
 
         if (newBlue > 31)
             newBlue = 31;
@@ -1455,9 +1481,9 @@ uint32_t Ppu::PerformColorMath(EBgLayer mainBg, uint16_t mainColor, uint16_t sub
             newGreen = 31;
         if (newRed > 31)
             newRed = 31;
-
-        return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
     }
+
+    return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
 }
 
 
@@ -1482,75 +1508,32 @@ void Ppu::DrawScanline(uint8_t scanline)
         PixelInfo pixel = GetPixelInfo<EScreenType::MainScreen>(x, scanline, sprites, spriteCount);
 
         uint32_t color;
+        uint16_t mainColor = pixel.color;
+        bool isInside = IsPointInsideWindow(eCOL, x);
+        bool isClipped = false;
 
-        if (bgColorMathEnable[pixel.bg] && (pixel.bg != eOBJ || (pixel.bg == eOBJ && pixel.paletteId > 3)))
+        // Clip to black depending on the color window.
+        if ((clipToBlack == EColorRegion::Outside && !isInside) ||
+            (clipToBlack == EColorRegion::Inside && isInside) ||
+             clipToBlack == EColorRegion::Always)
         {
-            uint16_t mainColor = 0;
-            uint16_t subColor = fixedColor;
+            mainColor = 0;
+            isClipped = true;
+        }
 
-            // Apply clipping to black and the color window to the main pixel.
-            if (colMainScreenRegion == 0)
-            {
-                // Never clip to black.
-                mainColor = GetColorValueFromPalette(pixel.bg, pixel.paletteId, pixel.colorId);
-            }
-            else if (colMainScreenRegion == 1 || colMainScreenRegion == 2)
-            {
-                // Clip based on inside/outside color window.
-                bool isInside = IsPointInsideWindow(eCOL, x);
-                if (colMainScreenRegion == 1)
-                    isInside = !isInside;
-                if (!isInside)
-                    mainColor = GetColorValueFromPalette(pixel.bg, pixel.paletteId, pixel.colorId);
-            }
-            // If colMainScreenRegion == 3, pixel is always 0.
-
-            if (colAddend)
-            {
-                PixelInfo subScreenPixel = GetPixelInfo<EScreenType::SubScreen>(x, scanline, sprites, spriteCount);
-                if (subScreenPixel.colorId != 0)
-                    subColor = GetColorValueFromPalette(subScreenPixel.bg, subScreenPixel.paletteId, subScreenPixel.colorId);
-            }
-            else
-            {
-                subColor = fixedColor;
-            }
-
-            if (colSubScreenRegion == 0)
-            {
-                // Always perform color math.
-                color = PerformColorMath(pixel.bg, mainColor, subColor);
-            }
-            else if (colSubScreenRegion == 1 || colSubScreenRegion == 2)
-            {
-                bool isInside = IsPointInsideWindow(eCOL, x);
-                if (colSubScreenRegion == 2)
-                    isInside = !isInside;
-                if (isInside)
-                    color = PerformColorMath(pixel.bg, mainColor, subColor);
-                else
-                    color = ConvertBGR555toARGB888(mainColor);
-            }
-            else
-            {
-                // Never perform color math.
-                color = ConvertBGR555toARGB888(mainColor);
-            }
+        if ((preventColorMath == EColorRegion::Outside && !isInside) ||
+            (preventColorMath == EColorRegion::Inside && isInside) ||
+             preventColorMath == EColorRegion::Always)
+        {
+            color = ConvertBGR555toARGB888(mainColor);
+        }
+        else if (bgColorMathEnable[pixel.bg] && (pixel.bg != eOBJ || (pixel.bg == eOBJ && pixel.paletteId > 3)))
+        {
+            color = PerformColorMath(mainColor, isClipped, x, scanline, sprites, spriteCount);
         }
         else
         {
-            uint8_t paletteOffset = 0;
-            if (pixel.colorId != 0)
-            {
-                if (pixel.bg == eOBJ)
-                    paletteOffset = (pixel.paletteId << OBJ_BPP) + 128;
-                else if (bgMode == 0)
-                    paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]) + (pixel.bg * 0x20);
-                else
-                    paletteOffset = (pixel.paletteId << BG_BPP_LOOKUP[bgMode][pixel.bg]);
-            }
-
-            color = palette[pixel.colorId + paletteOffset];
+            color = ConvertBGR555toARGB888(mainColor);
         }
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
