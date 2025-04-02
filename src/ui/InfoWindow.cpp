@@ -9,6 +9,7 @@
 #include "ui_InfoWindow.h"
 #include "UiUtils.h"
 
+#include "core/Bgr555.h"
 #include "core/Cartridge.h"
 #include "core/Memory.h"
 #include "core/Ppu.h"
@@ -100,9 +101,11 @@ void InfoWindow::GeneratePalette()
     if (ioPorts21 == nullptr || ppu == nullptr)
         return;
 
+    const uint8_t *cgram = ppu->cgram.data();
+
     // If the palette data hasn't changed, do nothing.
     QCryptographicHash hash(QCryptographicHash::Md5);
-    hash.addData(reinterpret_cast<const char *>(ppu->cgram.data()), ppu->cgram.size());
+    hash.addData(reinterpret_cast<const char *>(cgram), ppu->cgram.size());
     if (paletteHash == hash.result())
         return;
 
@@ -110,7 +113,11 @@ void InfoWindow::GeneratePalette()
 
     // Use the ppu palette but set full brightness.
     for (int i = 0; i < 256; i++)
-        paletteData[i] = 0xFF000000 | ppu->palette[i];
+    {
+        uint16_t color = Bytes::Make16Bit(cgram[(i * 2) + 1], cgram[i * 2]);
+        Bgr555 bgr(color);
+        paletteData[i] = bgr.ToARGB888(0xFF);
+    }
 
     // Make the palette icons for the tileset and sprite tabs.
     GenerateTilesetPaletteIcons();

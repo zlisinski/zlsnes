@@ -134,9 +134,6 @@ private:
         BgTilemapCache(uint16_t tileData, uint16_t tileX, uint16_t tileY) : tileData{tileData}, tileX(tileX), tileY(tileY) {}
     };
 
-    uint32_t ConvertBGR555toARGB888(uint16_t bgrColor);
-    void AdjustBrightness(uint8_t brightness);
-
     bool IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const;
     WindowInfo GetBgWindowValue(EBgLayer bg, uint16_t screenX) const;
 
@@ -169,7 +166,6 @@ private:
     std::array<uint8_t, OAM_SIZE> oam = {0};
     std::array<uint8_t, VRAM_SIZE> vram = {0};
     std::array<uint8_t, CGRAM_SIZE> cgram = {0};
-    std::array<uint32_t, CGRAM_SIZE / 2> palette = {0};
     std::array<uint32_t, SCREEN_X * SCREEN_Y> frameBuffer = {0};
 
     Memory *memory = nullptr;

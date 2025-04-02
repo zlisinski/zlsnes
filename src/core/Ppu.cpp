@@ -1,3 +1,4 @@
+#include "Bgr555.h"
 #include "IoRegisters.h"
 #include "DebuggerInterface.h"
 #include "Memory.h"
@@ -275,7 +276,6 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             regINIDISP = byte;
             isForcedBlank = byte & 0x80;
             brightness = byte & 0x0F;
-            AdjustBrightness(brightness);
             // TODO: reset oamRwAddr if this is written on the first scanline of vblank (225/240).
             LogPpu("ForcedBlank=%d Brightness=%d", isForcedBlank, brightness);
             return true;
@@ -600,9 +600,6 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
                 uint16_t color = Bytes::Make16Bit(byte, cgramLatch);
 
-                // Convert to ARGB and store in palette.
-                palette[cgramRwAddr >> 1] = ConvertBGR555toARGB888(color);
-
                 if ((cgramRwAddr >> 1) == 0)
                     PixelInfo::color0 = color;
             }
@@ -826,33 +823,6 @@ void Ppu::ProcessVBlankEnd()
 
     // Reset which scanline is the starting vertical block for mosaic.
     bgMosaicStartScanline = 1;
-}
-
-
-uint32_t Ppu::ConvertBGR555toARGB888(uint16_t bgrColor)
-{
-    uint8_t r = bgrColor & 0x1F;
-    r = (r << 3) | ((r >> 2) & 0x07);
-
-    bgrColor >>= 5;
-    uint8_t g = bgrColor & 0x1F;
-    g = (g << 3) | ((g >> 2) & 0x07);
-
-    bgrColor >>= 5;
-    uint8_t b = bgrColor & 0x1F;
-    b = (b << 3) | ((b >> 2) & 0x07);
-
-    return ((brightness * 17) << 24) | Bytes::Make24Bit(r, g, b);
-}
-
-
-void Ppu::AdjustBrightness(uint8_t brightness)
-{
-    // Update alpha value of each palette entry.
-    for (uint32_t i = 0; i < palette.size(); i++)
-    {
-        palette[i] = ((brightness * 17) << 24) | (palette[i] & 0xFFFFFF);
-    }
 }
 
 
@@ -1438,8 +1408,8 @@ uint16_t Ppu::GetColorValueFromPalette(EBgLayer bg, uint8_t paletteId, uint8_t c
 
 uint32_t Ppu::PerformColorMath(uint16_t mainColor, bool colorClipped, uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
-    uint16_t subColor = fixedColor;
-    bool shift = halfColorMath && !colorClipped;
+    Bgr555 subColor;
+    bool halve = halfColorMath && !colorClipped;
 
     if (colAddend)
     {
@@ -1451,42 +1421,23 @@ uint32_t Ppu::PerformColorMath(uint16_t mainColor, bool colorClipped, uint16_t s
         else
         {
             // Transparent, use default fixed color value for subColor and disable half math.
-            shift = false;
+            subColor = fixedColor;
+            halve = false;
         }
     }
 
-    uint8_t newBlue = mainColor >> 10;
-    uint8_t newGreen = (mainColor >> 5) & 0x1F;
-    uint8_t newRed = mainColor & 0x1F;
+    Bgr555 newColor(mainColor);
 
     if (colorSubtract)
     {
-        newBlue = (newBlue - (subColor >> 10)) >> shift;
-        newGreen = (newGreen - ((subColor >> 5) & 0x1F)) >> shift;
-        newRed = (newRed - (subColor & 0x1F)) >> shift;
-
-        if (newBlue > 31)
-            newBlue = 0;
-        if (newGreen > 31)
-            newGreen = 0;
-        if (newRed > 31)
-            newRed = 0;
+        newColor.Subtract(subColor, halve);
     }
     else
     {
-        newBlue = (newBlue + (subColor >> 10)) >> shift;
-        newGreen = (newGreen + ((subColor >> 5) & 0x1F)) >> shift;
-        newRed = (newRed + (subColor & 0x1F)) >> shift;
-
-        if (newBlue > 31)
-            newBlue = 31;
-        if (newGreen > 31)
-            newGreen = 31;
-        if (newRed > 31)
-            newRed = 31;
+        newColor.Add(subColor, halve);
     }
 
-    return ConvertBGR555toARGB888((newBlue << 10) | (newGreen << 5) | newRed);
+    return newColor.ToARGB888(brightness);
 }
 
 
@@ -1528,7 +1479,7 @@ void Ppu::DrawScanline(uint8_t scanline)
             (preventColorMath == EColorRegion::Inside && isInside) ||
              preventColorMath == EColorRegion::Always)
         {
-            color = ConvertBGR555toARGB888(mainColor);
+            color = Bgr555(mainColor).ToARGB888(brightness);
         }
         else if (bgColorMathEnable[pixel.bg] && (pixel.bg != eOBJ || (pixel.bg == eOBJ && pixel.paletteId > 3)))
         {
@@ -1536,7 +1487,7 @@ void Ppu::DrawScanline(uint8_t scanline)
         }
         else
         {
-            color = ConvertBGR555toARGB888(mainColor);
+            color = Bgr555(mainColor).ToARGB888(brightness);
         }
 
         uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
