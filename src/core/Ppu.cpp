@@ -607,6 +607,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
 
         case eRegW12SEL: // 0x2123
+            if (byte != regW12SEL)
+                windowChanged = true;
             regW12SEL = byte;
             bgInvertWindow[eBG1][0] = Bytes::TestBit<0>(byte);
             bgEnableWindow[eBG1][0] = Bytes::TestBit<1>(byte);
@@ -622,6 +624,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
 
         case eRegW34SEL: // 0x2124
+            if (byte != regW34SEL)
+                windowChanged = true;
             regW34SEL = byte;
             bgInvertWindow[eBG3][0] = Bytes::TestBit<0>(byte);
             bgEnableWindow[eBG3][0] = Bytes::TestBit<1>(byte);
@@ -637,6 +641,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
 
         case eRegWOBJSEL: // 0x2125
+            if (byte != regWOBJSEL)
+                windowChanged = true;
             regWOBJSEL = byte;
             bgInvertWindow[eOBJ][0] = Bytes::TestBit<0>(byte);
             bgEnableWindow[eOBJ][0] = Bytes::TestBit<1>(byte);
@@ -652,30 +658,40 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
 
         case eRegWH0: // 0x2126
+            if (byte != regWH0)
+                windowChanged = true;
             regWH0 = byte;
             windowLeft[0] = byte;
             LogPpu("WH0 Window 1 Left=%02X", byte);
             return true;
 
         case eRegWH1: // 0x2127
+            if (byte != regWH1)
+                windowChanged = true;
             regWH1 = byte;
             windowRight[0] = byte;
             LogPpu("WH1 Window 1 Right=%02X", byte);
             return true;
 
         case eRegWH2: // 0x2128
+            if (byte != regWH2)
+                windowChanged = true;
             regWH2 = byte;
             windowLeft[1] = byte;
             LogPpu("WH2 Window 2 Left=%02X", byte);
             return true;
 
         case eRegWH3: // 0x2129
+            if (byte != regWH3)
+                windowChanged = true;
             regWH3 = byte;
             windowRight[1] = byte;
             LogPpu("WH3 Window 2 Right=%02X", byte);
             return true;
 
         case eRegWBGLOG: // 0x212A
+            if (byte != regWBGLOG)
+                windowChanged = true;
             regWBGLOG = byte;
             bgWindowMask[eBG1] = byte & 0x03;
             bgWindowMask[eBG2] = (byte >> 2) & 0x03;
@@ -685,6 +701,8 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             return true;
 
         case eRegWOBJLOG: // 0x212B
+            if (byte != regWOBJLOG)
+                windowChanged = true;
             regWOBJLOG = byte;
             bgWindowMask[eOBJ] = byte & 0x03;
             bgWindowMask[eCOL] = (byte >> 2) & 0x03;
@@ -826,40 +844,111 @@ void Ppu::ProcessVBlankEnd()
 }
 
 
-bool Ppu::IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const
+void Ppu::GenerateWindowBitmaps()
 {
-    bool isInside[2] = {false, false};
-    int enabledCount = 0;
+    memset(windowBitmap, 0, sizeof(windowBitmap));
 
-    for (int i = 0; i < 2; i++)
+    for (int bg = 0; bg < 6; bg++)
     {
-        if (!bgEnableWindow[bg][i])
-            continue;
-
-        enabledCount++;
-
-        if (screenX >= windowLeft[i] && screenX <= windowRight[i])
-            isInside[i] = true;
-        if (bgInvertWindow[bg][i])
-            isInside[i] = !isInside[i];
-    }
-
-    if (enabledCount == 2)
-    {
-        switch (bgWindowMask[bg])
+        if (bgEnableWindow[bg][0] && !bgEnableWindow[bg][1])
         {
-            case 0:
-                return isInside[0] || isInside[1];
-            case 1:
-                return isInside[0] && isInside[1];
-            case 2:
-                return isInside[0] ^ isInside[1];
-            case 3:
-                return !(isInside[0] ^ isInside[1]);
+            // Only window 0.
+            GenerateWindowLayerBitmap(static_cast<EBgLayer>(bg), 0, windowBitmap[bg]);
+        }
+        else if (!bgEnableWindow[bg][0] && bgEnableWindow[bg][1])
+        {
+            // Only window 1.
+            GenerateWindowLayerBitmap(static_cast<EBgLayer>(bg), 1, windowBitmap[bg]);
+        }
+        else if (bgEnableWindow[bg][0] && bgEnableWindow[bg][1])
+        {
+            // Both windows. Use combination logic.
+            uint64_t other[4] = {0};
+            GenerateWindowLayerBitmap(static_cast<EBgLayer>(bg), 0, windowBitmap[bg]);
+            GenerateWindowLayerBitmap(static_cast<EBgLayer>(bg), 1, other);
+
+            switch (bgWindowMask[bg])
+            {
+                case 0:
+                    windowBitmap[bg][0] |= other[0];
+                    windowBitmap[bg][1] |= other[1];
+                    windowBitmap[bg][2] |= other[2];
+                    windowBitmap[bg][3] |= other[3];
+                    break;
+                case 1:
+                    windowBitmap[bg][0] &= other[0];
+                    windowBitmap[bg][1] &= other[1];
+                    windowBitmap[bg][2] &= other[2];
+                    windowBitmap[bg][3] &= other[3];
+                    break;
+                case 2:
+                    windowBitmap[bg][0] ^= other[0];
+                    windowBitmap[bg][1] ^= other[1];
+                    windowBitmap[bg][2] ^= other[2];
+                    windowBitmap[bg][3] ^= other[3];
+                    break;
+                case 3:
+                    windowBitmap[bg][0] = !(windowBitmap[bg][0] ^ other[0]);
+                    windowBitmap[bg][1] = !(windowBitmap[bg][1] ^ other[1]);
+                    windowBitmap[bg][2] = !(windowBitmap[bg][2] ^ other[2]);
+                    windowBitmap[bg][3] = !(windowBitmap[bg][3] ^ other[3]);
+                    break;
+            }
         }
     }
 
-    return isInside[0] || isInside[1];
+    windowChanged = false;
+}
+
+
+void Ppu::GenerateWindowLayerBitmap(EBgLayer bg, uint8_t window, uint64_t *bitmap)
+{
+    if (windowLeft[window] > windowRight[window])
+    {
+        if (bgInvertWindow[bg][window])
+            memset(bitmap, 0xFF, 32);
+        return;
+    }
+
+    int startWord = windowLeft[window] / 64;
+    int startBit = windowLeft[window] % 64;
+    int endWord = windowRight[window] / 64;
+    int endBit = windowRight[window] % 64;
+
+    // Set bits in the first word
+    bitmap[startWord] = ~0UL << startBit;
+
+    if (startWord == endWord)
+    {
+        // Start and end word are the same.
+        bitmap[startWord] &= ~0UL >> (63 - endBit);
+    }
+    else
+    {
+        // Set partial bits in end word.
+        bitmap[endWord] = ~0UL >> (63 - endBit);
+
+        // Set all bits in full words between start and end
+        for (int i = startWord + 1; i < endWord; i++)
+            bitmap[i] = ~0UL;
+    }
+
+    if (bgInvertWindow[bg][window])
+    {
+        bitmap[0] ^= ~0UL;
+        bitmap[1] ^= ~0UL;
+        bitmap[2] ^= ~0UL;
+        bitmap[3] ^= ~0UL;
+    }
+}
+
+
+bool Ppu::IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const
+{
+    int word = screenX / 64;
+    int bit = screenX % 64;
+
+    return windowBitmap[bg][word] & (1UL << bit);
 }
 
 
@@ -1453,6 +1542,9 @@ void Ppu::DrawScanline(uint8_t scanline)
         }
         return;
     }
+
+    if (windowChanged)
+        GenerateWindowBitmaps();
 
     std::array<Sprite, 32> sprites;
     int spriteCount = GetSpritesOnScanline(scanline, sprites);

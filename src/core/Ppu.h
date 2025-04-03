@@ -134,6 +134,8 @@ private:
         BgTilemapCache(uint16_t tileData, uint16_t tileX, uint16_t tileY) : tileData{tileData}, tileX(tileX), tileY(tileY) {}
     };
 
+    void GenerateWindowBitmaps();
+    void GenerateWindowLayerBitmap(EBgLayer bg, uint8_t window, uint64_t *bitmask);
     bool IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const;
     WindowInfo GetBgWindowValue(EBgLayer bg, uint16_t screenX) const;
 
@@ -178,6 +180,8 @@ private:
 
     // Cache
     BgTilemapCache bgTilemapCache[5];
+    uint64_t windowBitmap[6][4];
+    bool windowChanged = true;
 
     bool isHBlank = true;
     bool isVBlank = false;
