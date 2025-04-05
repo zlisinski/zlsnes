@@ -96,6 +96,13 @@ private:
         SetZFlag(dest);
     }
 
+    inline void PrintState() const
+    {
+        LogSpc700("State: a=%02X, x=%02X, y=%02X, pc=%04X, sp=01%02X, p=%02X, flags=c:%X z:%X i:%X h:%X b:%X p:%X v:%X n:%X\n",
+                  reg.a, reg.x, reg.y, reg.pc, reg.sp, reg.p,
+                  reg.flags.c, reg.flags.z, reg.flags.i, reg.flags.h, reg.flags.v, reg.flags.p, reg.flags.v, reg.flags.n);
+    }
+
     uint8_t Add8Bit(uint8_t x, uint8_t y);
     uint8_t Sub8Bit(uint8_t x, uint8_t y);
     void Compare(uint8_t x, uint8_t y);

@@ -30,6 +30,7 @@ void Timer::AddCycle(uint8_t cycles)
     clockCounter += cycles;
     counter8k += cycles;
     counter64k += cycles;
+    LogSpcTimer("Timer::AddCycle cycles=%02X counter8k=%d counter64k=%d", cycles, counter8k, counter64k);
 
     if (counter8k >= 128)
     {
@@ -39,14 +40,14 @@ void Timer::AddCycle(uint8_t cycles)
         if (isTimerEnabled[0] && timerVal[0] >= timerDiv[0])
         {
             timerVal[0] = 0;
-            regT0OUT++;
+            regT0OUT = (regT0OUT + 1) & 0x0F;
         }
 
         timerVal[1]++;
         if (isTimerEnabled[1] && timerVal[1] >= timerDiv[1])
         {
             timerVal[1] = 0;
-            regT1OUT++;
+            regT1OUT = (regT1OUT + 1) & 0x0F;
         }
     }
 
@@ -58,7 +59,7 @@ void Timer::AddCycle(uint8_t cycles)
         if (isTimerEnabled[2] && timerVal[2] >= timerDiv[2])
         {
             timerVal[2] = 0;
-            regT2OUT++;
+            regT2OUT = (regT2OUT + 1) & 0x0F;
         }
     }
 }
@@ -139,6 +140,7 @@ bool Timer::WriteRegister(EIORegisters ioReg, uint8_t byte)
         case eRegT1DIV: // 0xFB
         case eRegT2DIV: // 0xFC
             timerDiv[ioReg - eRegT0DIV] = byte;
+            LogSpcTimer("T%dDIV=%02X", ioReg - eRegT0DIV, byte);
             return true;
 
         default:

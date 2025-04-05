@@ -8,13 +8,13 @@
 #include "Timer.h"
 
 // Use this for opcodes that don't have an AddressMode or data.
-#define LogInst(name) LogCpu("%02X: %s", opcode, (name))
+#define LogInst(name) do {LogCpu("%02X: %s", opcode, (name)); PrintState();} while (0)
 
 // This requires the opcode case to have an AddressMode variable named 'mode'.
-#define LogInstM(name) LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
+#define LogInstM(name) do {LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str()); PrintState();} while (0)
 
 // This requires the opcode case to have an AddressMode pointer named 'mode'.
-#define LogInstMp(name) LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
+#define LogInstMp(name) do {LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str()); PrintState();} while (0)
 
 
 Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
@@ -604,6 +604,7 @@ void Cpu::ProcessOpCode()
             {
                 uint16_t value = ReadPC16Bit();
                 LogCpu("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                PrintState();
                 Push16Bit(value);
             }
             break;
@@ -621,6 +622,7 @@ void Cpu::ProcessOpCode()
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
                 LogCpu("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
+                PrintState();
 
                 timer->AddCycle(eClockInternal);
 
@@ -1535,6 +1537,7 @@ void Cpu::ProcessOpCode()
             {
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 LogCpu("%02X %02X: BRA %d", opcode, (uint8_t)offset, offset);
+                PrintState();
                 timer->AddCycle(eClockInternal);
 
 #ifndef TESTING
@@ -1551,6 +1554,7 @@ void Cpu::ProcessOpCode()
             {
                 int16_t offset = static_cast<int16_t>(ReadPC16Bit());
                 LogCpu("%02X %02X %02X: BRL %d", opcode, Bytes::GetByte<0>(offset), Bytes::GetByte<1>(offset), offset);
+                PrintState();
                 timer->AddCycle(eClockInternal);
 
 #ifndef TESTING
@@ -1575,6 +1579,7 @@ void Cpu::ProcessOpCode()
                 int8_t offset = static_cast<int8_t>(ReadPC8Bit());
                 const char *names[] = {"BPL", "BMI", "BVC", "BVS", "BCC", "BCS", "BNE", "BEQ"};
                 LogCpu("%02X %02X: %s %d", opcode, (uint8_t)offset, names[opcode >> 5], offset);
+                PrintState();
 
                 // Since you can't take the address of bitfield, a lookup table with pointers to the flags can't be used.
                 // Instead, shift the p register until the desired bit is lsb. This is n, v, c, and z.
@@ -1710,6 +1715,7 @@ void Cpu::ProcessOpCode()
                 const char *names[] = {"BRK", "COP"};
                 uint8_t signature = ReadPC8Bit();
                 LogCpu("%02X %02X: %s %02X", opcode, signature, names[opcode >> 1], signature);
+                PrintState();
 
                 if (reg.emulationMode)
                 {
@@ -1871,6 +1877,7 @@ void Cpu::ProcessOpCode()
                 uint8_t dstBank = ReadPC8Bit();
                 uint8_t srcBank = ReadPC8Bit();
                 LogCpu("%02X %02X %02X: MVP", opcode, dstBank, srcBank);
+                PrintState();
 
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
@@ -1901,6 +1908,7 @@ void Cpu::ProcessOpCode()
                 uint8_t dstBank = ReadPC8Bit();
                 uint8_t srcBank = ReadPC8Bit();
                 LogCpu("%02X %02X %02X: MVN", opcode, dstBank, srcBank);
+                PrintState();
 
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);

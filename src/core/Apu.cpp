@@ -54,14 +54,14 @@ uint8_t Apu::ReadRegister(EIORegisters ioReg)
             return regCPUIO2;
         case eRegAPUIO3:
             return regCPUIO3;
-        case eRegCPUIO0:
+        /*case eRegCPUIO0:
             return regAPUIO0;
         case eRegCPUIO1:
             return regAPUIO1;
         case eRegCPUIO2:
             return regAPUIO2;
         case eRegCPUIO3:
-            return regAPUIO3;
+            return regAPUIO3;*/
         default:
             throw std::range_error(fmt("Apu doesnt handle reads to 0x%04X", ioReg));
     }
@@ -76,15 +76,19 @@ bool Apu::WriteRegister(EIORegisters ioReg, uint8_t byte)
     {
         case eRegAPUIO0:
             regAPUIO0 = byte;
+            apuMemory->WriteIoPort(0, byte);
             return true;
         case eRegAPUIO1:
             regAPUIO1 = byte;
+            apuMemory->WriteIoPort(1, byte);
             return true;
         case eRegAPUIO2:
             regAPUIO2 = byte;
+            apuMemory->WriteIoPort(2, byte);
             return true;
         case eRegAPUIO3:
             regAPUIO3 = byte;
+            apuMemory->WriteIoPort(3, byte);
             return true;
         case eRegCPUIO0:
             regCPUIO0 = byte;

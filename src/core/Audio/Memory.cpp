@@ -38,20 +38,34 @@ Memory::~Memory()
 }
 
 
+void Memory::WriteIoPort(uint8_t port, uint8_t byte)
+{
+    cpuReadPorts[port] = byte;
+}
+
+
 uint8_t Memory::Read8Bit(uint16_t addr)
 {
     timer->AddCycle();
-
-    if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
-    {
-        return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
-    }
 
     switch (addr)
     {
         case eRegDSPDATA: // 0xF3
             LogSpcMem("Read from DSPDATA %02X NYI", ram[eRegDSPADDR]);
             return ram[eRegDSPDATA];
+        case eRegCPUIO0: // 0xF4
+            return cpuReadPorts[0];
+        case eRegCPUIO1: // 0xF5
+            return cpuReadPorts[1];
+        case eRegCPUIO2: // 0xF6
+            return cpuReadPorts[2];
+        case eRegCPUIO3: // 0xF7
+            return cpuReadPorts[3];
+    }
+
+    if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
+    {
+        return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
     }
 
     if ((addr & 0xFFC0) == 0xFFC0 && bootRomEnabled)
@@ -65,6 +79,8 @@ uint8_t Memory::Read8Bit(uint16_t addr)
 
 void Memory::Write8Bit(uint16_t addr, uint8_t value)
 {
+    LogSpcMem("Memory::Write8Bit %04X, %02X", addr, value);
+
     timer->AddCycle();
 
     // Let observers handle the update. If there are no observers for this address, continue with normal processing.
@@ -80,10 +96,21 @@ void Memory::Write8Bit(uint16_t addr, uint8_t value)
             timer->EnableTimer1(Bytes::TestBit<1>(value));
             timer->EnableTimer2(Bytes::TestBit<2>(value));
             if (Bytes::TestBit<4>(value))
-                LogSpcMem("Clearing CPUIO 0-1 NYI");
+            {
+                cpuReadPorts[0] = 0;
+                cpuReadPorts[1] = 0;
+                LogSpcMem("Clearing CPUIO 0-1");
+            }
             if (Bytes::TestBit<5>(value))
-                LogSpcMem("Clearing CPUIO 2-3 NYI");
+            {
+                cpuReadPorts[2] = 0;
+                cpuReadPorts[3] = 0;
+                LogSpcMem("Clearing CPUIO 2-3");
+            }
             bootRomEnabled = Bytes::TestBit<7>(value);
+            LogSpcMem("CONTROL=%02X t0=%d t1=%d t2=%d r01=%d r23=%d bootrom=%d", value,
+                      Bytes::TestBit<0>(value), Bytes::TestBit<1>(value), Bytes::TestBit<2>(value),
+                      Bytes::TestBit<4>(value), Bytes::TestBit<5>(value), bootRomEnabled);
             return;
 
         case eRegDSPDATA: // 0xF3

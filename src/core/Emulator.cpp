@@ -183,8 +183,6 @@ void Emulator::ThreadFunc()
                     cpu->ProcessOpCode();
                     if (debuggerInterface->GetDebuggingEnabled())
                         debuggerInterface->SetCurrentOp(cpu->GetFullPC());
-                    cpu->PrintState();
-                    //timer->PrintTimerData();
                 }
                 else
                 {

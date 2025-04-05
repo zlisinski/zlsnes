@@ -219,7 +219,7 @@ class AddressModeImmediate : public AbsAddressMode
 {
 public:
     AddressModeImmediate(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "#%04X", 1)
+        AbsAddressMode(cpu, memory, "#%02X", 1)
     {}
 
     // Does nothing.

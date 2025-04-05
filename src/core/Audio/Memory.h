@@ -23,6 +23,8 @@ public:
 
     void SetTimer(Timer *timer) {this->timer = timer;}
 
+    void WriteIoPort(uint8_t port, uint8_t byte);
+
     uint8_t Read8Bit(uint16_t addr);
     // Bypasses special read code. Only use for Debugger.
     uint8_t ReadRaw8Bit(uint16_t addr)
@@ -77,6 +79,7 @@ protected:
     uint8_t &GetIoRegisterRef(EIORegisters ioReg) override;
 
     std::array<uint8_t, 0x10000> ram = {0};
+    uint8_t cpuReadPorts[4] = {0};
 
     bool bootRomEnabled = true;
 

@@ -1083,7 +1083,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInst("INCW");
+            LogInstM("INCW");
             uint16_t value = mode.Read16Bit() + 1;
             SetNFlag(value);
             SetZFlag(value);
@@ -1683,6 +1683,8 @@ void Spc700::ProcessOpCode()
         }
         break;
     }
+
+    PrintState();
 }
 
 
