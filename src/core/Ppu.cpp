@@ -1514,6 +1514,10 @@ uint32_t Ppu::PerformColorMath(uint16_t mainColor, bool colorClipped, uint16_t s
             halve = false;
         }
     }
+    else
+    {
+        subColor = fixedColor;
+    }
 
     Bgr555 newColor(mainColor);
 
