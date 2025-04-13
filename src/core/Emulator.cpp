@@ -178,11 +178,25 @@ void Emulator::ThreadFunc()
             // Run multiple instruction per mutex lock to reduce the impact of locking the mutex.
             for (int i = 0; i < 100; i++)
             {
-                if (!paused && debuggerInterface->ShouldRun(cpu->GetFullPC()))
+                if (!paused)
                 {
-                    cpu->ProcessOpCode();
-                    if (debuggerInterface->GetDebuggingEnabled())
-                        debuggerInterface->SetCurrentOp(cpu->GetFullPC());
+                    if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
+                    {
+                        if (debuggerInterface->ShouldRun(cpu->GetFullPC()))
+                        {
+                            cpu->ProcessOpCode();
+                            debuggerInterface->SetCurrentOp(cpu->GetFullPC());
+                        }
+                        else
+                        {
+                            // Sleep to avoid pegging the CPU when paused.
+                            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        }
+                    }
+                    else
+                    {
+                        cpu->ProcessOpCode();
+                    }
                 }
                 else
                 {

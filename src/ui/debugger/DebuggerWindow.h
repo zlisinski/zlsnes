@@ -30,7 +30,6 @@ public:
 
     void SetEmulatorObjects(Memory *newMemory, Cpu *newCpu, Ppu *newPpu) override;
 
-    bool GetDebuggingEnabled() override {return debuggingEnabled;}
     bool ShouldRun(Address pc) override;
     void SetCurrentOp(Address pc) override;
 
@@ -51,7 +50,6 @@ private:
     Ppu *ppu;
     uint16_t currentSp;
 
-    std::atomic<bool> debuggingEnabled;
     std::atomic<bool> singleStep;
     std::atomic<uint32_t> runToAddress;
 

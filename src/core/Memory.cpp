@@ -150,7 +150,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
             if constexpr (addTime)
                 timer->AddCycle(EClockSpeed::eClockIoReg);
 
-            if (debuggerInterface != NULL)
+            if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                 debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
             return;
         }
@@ -165,7 +165,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 if constexpr (addTime)
                     timer->AddCycle(EClockSpeed::eClockWRam);
                 wram[addr & 0x1FFF] = value;
-                if (debuggerInterface != NULL)
+                if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                     debuggerInterface->MemoryChanged(Address(0x7E, addr & 0x1FFF), 1);
                 return;
             case 0x21:
@@ -198,7 +198,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 }
                 //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 //ioPorts21[addr & 0xFF] = value;
-                if (debuggerInterface != NULL)
+                if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x40:
@@ -207,7 +207,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     timer->AddCycle(EClockSpeed::eClockOther);
                 ioPorts40[addr & 0xFF] = value;
                 LogMemory("Write to joypad port %04X %02X", addr & 0xFFFF, value);
-                if (debuggerInterface != NULL)
+                if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             case 0x41:
@@ -282,7 +282,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                 //if constexpr (addTime)
                 //    timer->AddCycle(EClockSpeed::eClockIoReg);
                 //ioPorts42[addr & 0xFF] = value;
-                if (debuggerInterface != NULL)
+                if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             default:
@@ -297,7 +297,7 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
         if constexpr (addTime)
             timer->AddCycle(EClockSpeed::eClockWRam);
         wram[addr & 0x1FFFF] = value;
-        if (debuggerInterface != NULL)
+        if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
             debuggerInterface->MemoryChanged(Address(addr & 0x1FFFF), 1);
         return;
     }

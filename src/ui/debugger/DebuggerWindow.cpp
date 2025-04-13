@@ -18,12 +18,12 @@
 
 DebuggerWindow::DebuggerWindow(QWidget *parent, bool debuggingEnabled, uint32_t runToAddress) :
     QMainWindow(parent),
+    DebuggerInterface(debuggingEnabled),
     ui(new Ui::DebuggerWindow),
     cpu(nullptr),
     memory(nullptr),
     ppu(nullptr),
     currentSp(0),
-    debuggingEnabled(debuggingEnabled),
     singleStep(false),
     runToAddress(runToAddress),
     disassemblyModel(new DisassemblyModel(palette(), this)),
@@ -152,7 +152,8 @@ void DebuggerWindow::MemoryChanged(Address address, uint16_t len)
     //This function runs in the thread context of the Emulator worker thread.
 
     // Run the rest in current thread context.
-    emit SignalMemoryChanged(address, len);
+    if (debuggingEnabled)
+        emit SignalMemoryChanged(address, len);
 }
 
 
