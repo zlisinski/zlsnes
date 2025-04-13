@@ -10,11 +10,12 @@
 // Use this for opcodes that don't have an AddressMode or data.
 #define LogInst(name) do {LogCpu("%02X: %s", opcode, (name)); PrintState();} while (0)
 
-// This requires the opcode case to have an AddressMode variable named 'mode'.
-#define LogInstM(name) do {LogCpu("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str()); PrintState();} while (0)
+// Opcodes with data but no AddressMode
+#define LogInst1(name, param) do {LogCpu("%02X %02X: %s", opcode, (param), (name)); PrintState();} while (0)
+#define LogInst2(name, param1, param2) do {LogCpu("%02X %02X %02X: %s", opcode, (param1), (param2), (name)); PrintState();} while (0)
 
-// This requires the opcode case to have an AddressMode pointer named 'mode'.
-#define LogInstMp(name) do {LogCpu("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str()); PrintState();} while (0)
+// Opcodes with an AddressMode
+#define LogInstM(name, addrmode) do {(addrmode)->Log(name); PrintState();} while (0)
 
 
 Cpu::Cpu(Memory *memory, Timer *timer, Interrupt *interrupts) :
@@ -392,7 +393,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("LDA");
+                LogInstM("LDA", mode);
 
                 if (IsAccumulator16Bit())
                     LoadRegister(&reg.a, mode->Read16Bit());
@@ -411,7 +412,7 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0xB6 and 0xBE are special cases.
                 AddressModePtr &mode = (opcode & 0x10 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
-                LogInstMp("LDX");
+                LogInstM("LDX", mode);
 
                 if (IsIndex16Bit())
                     LoadRegister(&reg.x, mode->Read16Bit());
@@ -429,7 +430,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("LDY");
+                LogInstM("LDY", mode);
 
                 if (IsIndex16Bit())
                     LoadRegister(&reg.y, mode->Read16Bit());
@@ -462,7 +463,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("STA");
+                LogInstM("STA", mode);
 
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(reg.a);
@@ -479,7 +480,7 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0x96 is a special case.
                 AddressModePtr &mode = (opcode == 0x96 ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
-                LogInstMp("STX");
+                LogInstM("STX", mode);
 
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.x);
@@ -495,7 +496,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("STY");
+                LogInstM("STY", mode);
 
                 if (IsIndex16Bit())
                     mode->Write16Bit(reg.y);
@@ -513,7 +514,7 @@ void Cpu::ProcessOpCode()
                 // Opcodes 0x9C is a special case.
                 AddressModePtr &mode = (opcode == 0x9C ? addressModeAlternate[opcode & 0x1F] : addressModes[opcode & 0x1F]);
                 mode->LoadAddress();
-                LogInstMp("STZ");
+                LogInstM("STZ", mode);
 
                 if (IsAccumulator16Bit())
                     mode->Write16Bit(0);
@@ -603,8 +604,7 @@ void Cpu::ProcessOpCode()
         case 0xF4: // PEA - Push Effective Address
             {
                 uint16_t value = ReadPC16Bit();
-                LogCpu("%02X %02X %02X: PEA", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
-                PrintState();
+                LogInst2("PEA", Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
                 Push16Bit(value);
             }
             break;
@@ -613,7 +613,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeDirect mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("PEI");
+                LogInstM("PEI", &mode);
                 Push16Bit(mode.Read16Bit());
             }
             break;
@@ -621,8 +621,7 @@ void Cpu::ProcessOpCode()
         case 0x62: // PER - Push Effective Relative Address
             {
                 int16_t value = static_cast<int16_t>(ReadPC16Bit());
-                LogCpu("%02X %02X %02X: PER", opcode, Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
-                PrintState();
+                LogInst2("PER", Bytes::GetByte<1>(value), Bytes::GetByte<0>(value));
 
                 timer->AddCycle(eClockInternal);
 
@@ -747,7 +746,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("AND");
+                LogInstM("AND", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -785,7 +784,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("EOR");
+                LogInstM("EOR", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -823,7 +822,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("ORA");
+                LogInstM("ORA", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -867,7 +866,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("ADC");
+                LogInstM("ADC", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -955,7 +954,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("SBC");
+                LogInstM("SBC", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1032,7 +1031,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("DEC");
+                LogInstM("DEC", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1105,7 +1104,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("INC");
+                LogInstM("INC", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1195,7 +1194,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("CMP");
+                LogInstM("CMP", mode);
 
                 if (IsAccumulator16Bit())
                     Compare(reg.a, mode->Read16Bit());
@@ -1211,7 +1210,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("CPX");
+                LogInstM("CPX", mode);
 
                 if (IsIndex16Bit())
                     Compare(reg.x, mode->Read16Bit());
@@ -1227,7 +1226,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("CPY");
+                LogInstM("CPY", mode);
 
                 if (IsIndex16Bit())
                     Compare(reg.y, mode->Read16Bit());
@@ -1250,7 +1249,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("BIT");
+                LogInstM("BIT", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1281,7 +1280,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeImmediate mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("BIT");
+                LogInstM("BIT", &mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1309,7 +1308,7 @@ void Cpu::ProcessOpCode()
                 // TRB is a special case, use 0x0F for masking.
                 AddressModePtr &mode = addressModes[opcode & 0x0F];
                 mode->LoadAddress();
-                LogInstMp("TRB");
+                LogInstM("TRB", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1342,7 +1341,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("TSB");
+                LogInstM("TSB", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1384,7 +1383,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("ASL");
+                LogInstM("ASL", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1422,7 +1421,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("LSR");
+                LogInstM("LSR", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1460,7 +1459,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("ROL");
+                LogInstM("ROL", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1498,7 +1497,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = addressModes[opcode & 0x1F];
                 mode->LoadAddress();
-                LogInstMp("ROR");
+                LogInstM("ROR", mode);
 
                 if (IsAccumulator16Bit())
                 {
@@ -1607,7 +1606,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
-                LogInstMp("JMP");
+                LogInstM("JMP", mode);
 
                 uint16_t newPc = mode->GetAddress().GetOffset();
 
@@ -1627,7 +1626,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
-                LogInstMp("JMP");
+                LogInstM("JMP", mode);
 
                 uint8_t newPb = mode->GetAddress().GetBank();
                 uint16_t newPc = mode->GetAddress().GetOffset();
@@ -1649,7 +1648,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModePtr &mode = jmpAddressModes[opcode >> 4];
                 mode->LoadAddress();
-                LogInstMp("JSR");
+                LogInstM("JSR", mode);
 
                 timer->AddCycle(eClockInternal);
 
@@ -1663,7 +1662,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeAbsoluteLong mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("JSL");
+                LogInstM("JSL", &mode);
 
                 timer->AddCycle(eClockInternal);
 
@@ -1828,7 +1827,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeImmediate mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("REP");
+                LogInstM("REP", &mode);
 
                 reg.p &= ~mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
@@ -1842,7 +1841,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeImmediate mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("SEP");
+                LogInstM("SEP", &mode);
 
                 reg.p |= mode.Read8Bit();
                 UpdateRegistersAfterFlagChange();
@@ -1876,8 +1875,7 @@ void Cpu::ProcessOpCode()
             {
                 uint8_t dstBank = ReadPC8Bit();
                 uint8_t srcBank = ReadPC8Bit();
-                LogCpu("%02X %02X %02X: MVP", opcode, dstBank, srcBank);
-                PrintState();
+                LogInst2("MVP", dstBank, srcBank);
 
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
@@ -1907,8 +1905,7 @@ void Cpu::ProcessOpCode()
             {
                 uint8_t dstBank = ReadPC8Bit();
                 uint8_t srcBank = ReadPC8Bit();
-                LogCpu("%02X %02X %02X: MVN", opcode, dstBank, srcBank);
-                PrintState();
+                LogInst2("MVN", dstBank, srcBank);
 
                 Address dst(dstBank, reg.y);
                 Address src(srcBank, reg.x);
@@ -1952,7 +1949,7 @@ void Cpu::ProcessOpCode()
             {
                 AddressModeImmediate mode(this, memory);
                 mode.LoadAddress();
-                LogInstM("WDM");
+                LogInstM("WDM", &mode);
 
                 uint8_t nopData = mode.Read8Bit();
                 (void)nopData;

@@ -31,6 +31,7 @@ protected:
     uint32_t GetPC() {return Bytes::Make24Bit(cpu->reg.pb, cpu->reg.pc);}
     uint32_t GetCounter() {return timer->internalCounter;}
     void ClearCounter() {timer->internalCounter = 0;}
+    const char *GetFormatStr(AbsAddressMode *mode) {return mode->formatStr;}
 
     Cpu *cpu;
     Interrupt *interrupts;
@@ -339,7 +340,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
         memory[GetPC()] = 0xCD;
         memory[GetPC() + 1] = 0xAB;
         mode.LoadAddress();
-        EXPECT_EQ(mode.FormatArgs(), "#ABCD") << msg;
+        EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X %02X: %s #%04X") << msg;
         EXPECT_EQ(cpu->reg.pc, 2) << msg;
 
         ResetState();
@@ -348,7 +349,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
         memory[GetPC()] = 0xCD;
         memory[GetPC() + 1] = 0xAB;
         mode.LoadAddress();
-        EXPECT_EQ(mode.FormatArgs(), "#CD") << msg;
+        EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X: %s #%02X") << msg;
         EXPECT_EQ(cpu->reg.pc, 1) << msg;
     }
 
@@ -365,7 +366,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
         memory[GetPC()] = 0xCD;
         memory[GetPC() + 1] = 0xAB;
         mode.LoadAddress();
-        EXPECT_EQ(mode.FormatArgs(), "#ABCD") << msg;
+        EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X %02X: %s #%04X") << msg;
         EXPECT_EQ(cpu->reg.pc, 2) << msg;
 
         ResetState();
@@ -374,7 +375,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
         memory[GetPC()] = 0xCD;
         memory[GetPC() + 1] = 0xAB;
         mode.LoadAddress();
-        EXPECT_EQ(mode.FormatArgs(), "#CD") << msg;
+        EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X: %s #%02X") << msg;
         EXPECT_EQ(cpu->reg.pc, 1) << msg;
     }
 
@@ -385,7 +386,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
     memory[GetPC()] = 0xCD;
     memory[GetPC() + 1] = 0xAB;
     mode.LoadAddress();
-    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X: %s #%02X");
     EXPECT_EQ(cpu->reg.pc, 1);
 
     ResetState();
@@ -394,7 +395,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
     memory[GetPC()] = 0xCD;
     memory[GetPC() + 1] = 0xAB;
     mode.LoadAddress();
-    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X: %s #%02X");
     EXPECT_EQ(cpu->reg.pc, 1);
 
     ResetState();
@@ -403,7 +404,7 @@ TEST_F(AddressModeTest, TEST_AddressModeImmediate) // Immediate
     memory[GetPC()] = 0xCD;
     memory[GetPC() + 1] = 0xAB;
     mode.LoadAddress();
-    EXPECT_EQ(mode.FormatArgs(), "#CD");
+    EXPECT_STREQ(GetFormatStr(&mode), "%02X %02X: %s #%02X");
     EXPECT_EQ(cpu->reg.pc, 1);
 }
 

@@ -34,28 +34,23 @@ public:
     virtual void Write8Bit(uint8_t value) {memory->Write8Bit(address, value);}
     virtual void Write16Bit(uint16_t value) {memory->Write16Bit(address, value);}
 
-    std::string FormatBytes() const
+    void Log(const char *name)
     {
-        char buf[10] = {0};
-        if (dataLen == 1)
-            snprintf(buf, sizeof(buf), " %02X", dataBytes[0]);
-        else if (dataLen == 2)
-            snprintf(buf, sizeof(buf), " %02X %02X", dataBytes[0], dataBytes[1]);
-        else if (dataLen == 3)
-            snprintf(buf, sizeof(buf), " %02X %02X %02X", dataBytes[0], dataBytes[1], dataBytes[2]);
-        return std::string(buf);
-    }
-
-    std::string FormatArgs() const
-    {
-        char buf[20] = {0};
-        if (dataLen == 1)
-            snprintf(buf, sizeof(buf), formatStr, data8);
-        else if (dataLen == 2)
-            snprintf(buf, sizeof(buf), formatStr, data16);
-        else if (dataLen == 3)
-            snprintf(buf, sizeof(buf), formatStr, data24);
-        return std::string(buf);
+        switch (dataLen)
+        {
+            case 0:
+                LogCpu(formatStr, cpu->opcode, name);
+                break;
+            case 1:
+                LogCpu(formatStr, cpu->opcode, dataBytes[0], name, data8);
+                break;
+            case 2:
+                LogCpu(formatStr, cpu->opcode, dataBytes[0], dataBytes[1], name, data16);
+                break;
+            case 3:
+                LogCpu(formatStr, cpu->opcode, dataBytes[0], dataBytes[1], dataBytes[2], name, data24);
+                break;
+        }
     }
 
 protected:
@@ -81,7 +76,7 @@ class AddressModeAbsolute : public AbsAddressMode
 {
 public:
     AddressModeAbsolute(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%04X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %04X", 2)
     {}
 
     virtual void LoadAddress() override
@@ -97,7 +92,7 @@ class AddressModeAbsoluteIndexedX : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndexedX(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%04X,X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s %04X,X", 2)
     {}
 
     virtual void LoadAddress() override
@@ -121,7 +116,7 @@ class AddressModeAbsoluteIndexedY : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndexedY(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%04X,Y", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s %04X,Y", 2)
     {}
 
     virtual void LoadAddress() override
@@ -144,7 +139,7 @@ class AddressModeAbsoluteIndirect : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndirect(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%04X)", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s (%04X)", 2)
     {}
 
     virtual void LoadAddress() override
@@ -166,7 +161,7 @@ class AddressModeAbsoluteIndirectLong : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndirectLong(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "[%04X]", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s [%04X]", 2)
     {}
 
     virtual void LoadAddress() override
@@ -188,7 +183,7 @@ class AddressModeAbsoluteIndexedIndirect : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndexedIndirect(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%04X,X)", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s (%04X,X)", 2)
     {}
 
     virtual void LoadAddress() override
@@ -210,7 +205,7 @@ class AddressModeAbsoluteLong : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteLong(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%06X", 3)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X %02X: %s %06X", 3)
     {}
 
     virtual void LoadAddress() override
@@ -226,7 +221,7 @@ class AddressModeAbsoluteLongIndexedX : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteLongIndexedX(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%06X,X", 3)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X %02X: %s %06X,X", 3)
     {}
 
     virtual void LoadAddress() override
@@ -242,7 +237,7 @@ class AddressModeAccumulator : public AbsAddressMode
 {
 public:
     AddressModeAccumulator(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "", 0)
+        AbsAddressMode(cpu, memory, "%02X: %s Acc", 0)
     {}
 
     virtual void LoadAddress() override
@@ -262,7 +257,7 @@ class AddressModeDirect : public AbsAddressMode
 {
 public:
     AddressModeDirect(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X", 1)
     {}
 
     virtual void LoadAddress() override
@@ -286,7 +281,7 @@ class AddressModeDirectIndexedX : public AbsAddressMode
 {
 public:
     AddressModeDirectIndexedX(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X,X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X,X", 1)
     {}
 
     virtual void LoadAddress() override
@@ -318,7 +313,7 @@ class AddressModeDirectIndexedY : public AbsAddressMode
 {
 public:
     AddressModeDirectIndexedY(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X,Y", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X,Y", 1)
     {}
 
     virtual void LoadAddress() override
@@ -350,7 +345,7 @@ class AddressModeDirectIndirect : public AbsAddressMode
 {
 public:
     AddressModeDirectIndirect(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%02X)", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s (%02X)", 1)
     {}
 
     virtual void LoadAddress() override
@@ -373,7 +368,7 @@ class AddressModeDirectIndirectLong : public AbsAddressMode
 {
 public:
     AddressModeDirectIndirectLong(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "[%02X]", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s [%02X]", 1)
     {}
 
     virtual void LoadAddress() override
@@ -393,7 +388,7 @@ class AddressModeDirectIndexedIndirect : public AbsAddressMode
 {
 public:
     AddressModeDirectIndexedIndirect(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%02X,X)", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s (%02X,X)", 1)
     {}
 
     virtual void LoadAddress() override
@@ -426,7 +421,7 @@ class AddressModeDirectIndirectIndexed : public AbsAddressMode
 {
 public:
     AddressModeDirectIndirectIndexed(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%02X),Y", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s (%02X),Y", 1)
     {}
 
     virtual void LoadAddress() override
@@ -456,7 +451,7 @@ class AddressModeDirectIndirectLongIndexed : public AbsAddressMode
 {
 public:
     AddressModeDirectIndirectLongIndexed(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "[%02X],Y", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s [%02X],Y", 1)
     {}
 
     virtual void LoadAddress() override
@@ -478,7 +473,7 @@ class AddressModeImmediate : public AbsAddressMode
 {
 public:
     AddressModeImmediate(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "#%04X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s #%04X", 2)
     {}
 
     // Does nothing.
@@ -489,13 +484,13 @@ public:
             ((((cpu->opcode & 0x9F) == 0x80) || (cpu->opcode == 0xA2)) && cpu->reg.flags.x == 0)) // X/Y, opcode == 0xA2 or 0x[ACE]0
         {
             dataLen = 2;
-            formatStr = "#%04X";
+            formatStr = "%02X %02X %02X: %s #%04X";
             data16 = cpu->ReadPC16Bit();
         }
         else
         {
             dataLen = 1;
-            formatStr = "#%02X";
+            formatStr = "%02X %02X: %s #%02X";
             data8 = cpu->ReadPC8Bit();
         }
     }
@@ -518,7 +513,7 @@ class AddressModeStackRelative : public AbsAddressMode
 {
 public:
     AddressModeStackRelative(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X,S", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X,S", 1)
     {}
 
     virtual void LoadAddress() override
@@ -539,7 +534,7 @@ class AddressModeStackRelativeIndirectIndexed : public AbsAddressMode
 {
 public:
     AddressModeStackRelativeIndirectIndexed(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(%02X,S),Y", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s (%02X,S),Y", 1)
     {}
 
     virtual void LoadAddress() override
