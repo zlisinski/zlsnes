@@ -74,9 +74,9 @@ public:
         }
     }
 
-    static void InstructionLog(InstructionLogLevel level, const char *label, const char *format, ...)
+    static void InstructionLog(const char *label, const char *format, ...)
     {
-        if ((logLevel == LogLevel::eInstruction) && (instructionLogLevel & static_cast<uint32_t>(level)) && (loggerOutput != NULL))
+        if (loggerOutput != NULL)
         {
             va_list args;
             va_start(args, format);
@@ -97,6 +97,12 @@ public:
     static void SetInstructionLogLevel(uint32_t level) {instructionLogLevel = level;}
     static LogLevel GetLogLevel() {return logLevel;}
     static uint32_t GetInstructionLogLevel() {return instructionLogLevel;}
+    static inline bool IsInstLevel(InstructionLogLevel level)
+    {
+        return (logLevel == LogLevel::eInstruction) &&
+               (instructionLogLevel & static_cast<uint32_t>(level)) &&
+               (loggerOutput != NULL);
+    }
 
 private:
     // For now I only need one output at a time.
@@ -114,14 +120,14 @@ private:
 #define LogInstruction(...) do {Logger::Log(LogLevel::eInstruction, __VA_ARGS__);} while (0)
 
 // Subsystem specific instruction-level logs.
-#define LogCpu(...)         do {Logger::InstructionLog(InstructionLogLevel::eCpu,       "Cpu:      ", __VA_ARGS__);} while (0)
-#define LogPpu(...)         do {Logger::InstructionLog(InstructionLogLevel::ePpu,       "Ppu       ", __VA_ARGS__);} while (0)
-#define LogMemory(...)      do {Logger::InstructionLog(InstructionLogLevel::eMemory,    "Memory:   ", __VA_ARGS__);} while (0)
-#define LogInput(...)       do {Logger::InstructionLog(InstructionLogLevel::eInput,     "Input:    ", __VA_ARGS__);} while (0)
-#define LogTimer(...)       do {Logger::InstructionLog(InstructionLogLevel::eTimer,     "Timer:    ", __VA_ARGS__);} while (0)
-#define LogInterrupt(...)   do {Logger::InstructionLog(InstructionLogLevel::eInterrupt, "Int:      ", __VA_ARGS__);} while (0)
-#define LogApu(...)         do {Logger::InstructionLog(InstructionLogLevel::eApu,       "Apu:      ", __VA_ARGS__);} while (0)
-#define LogDma(...)         do {Logger::InstructionLog(InstructionLogLevel::eDma,       "Dma:      ", __VA_ARGS__);} while (0)
-#define LogSpc700(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpc700,    "Spc:      ", __VA_ARGS__);} while (0)
-#define LogSpcMem(...)      do {Logger::InstructionLog(InstructionLogLevel::eSpcMem,    "SpcMem:   ", __VA_ARGS__);} while (0)
-#define LogSpcTimer(...)    do {Logger::InstructionLog(InstructionLogLevel::eSpcTimer,  "SpcTimer: ", __VA_ARGS__);} while (0)
+#define LogCpu(...)       do {if (Logger::IsInstLevel(InstructionLogLevel::eCpu))       Logger::InstructionLog("Cpu:      ", __VA_ARGS__);} while (0)
+#define LogPpu(...)       do {if (Logger::IsInstLevel(InstructionLogLevel::ePpu))       Logger::InstructionLog("Ppu       ", __VA_ARGS__);} while (0)
+#define LogMemory(...)    do {if (Logger::IsInstLevel(InstructionLogLevel::eMemory))    Logger::InstructionLog("Memory:   ", __VA_ARGS__);} while (0)
+#define LogInput(...)     do {if (Logger::IsInstLevel(InstructionLogLevel::eInput))     Logger::InstructionLog("Input:    ", __VA_ARGS__);} while (0)
+#define LogTimer(...)     do {if (Logger::IsInstLevel(InstructionLogLevel::eTimer))     Logger::InstructionLog("Timer:    ", __VA_ARGS__);} while (0)
+#define LogInterrupt(...) do {if (Logger::IsInstLevel(InstructionLogLevel::eInterrupt)) Logger::InstructionLog("Int:      ", __VA_ARGS__);} while (0)
+#define LogApu(...)       do {if (Logger::IsInstLevel(InstructionLogLevel::eApu))       Logger::InstructionLog("Apu:      ", __VA_ARGS__);} while (0)
+#define LogDma(...)       do {if (Logger::IsInstLevel(InstructionLogLevel::eDma))       Logger::InstructionLog("Dma:      ", __VA_ARGS__);} while (0)
+#define LogSpc700(...)    do {if (Logger::IsInstLevel(InstructionLogLevel::eSpc700))    Logger::InstructionLog("Spc:      ", __VA_ARGS__);} while (0)
+#define LogSpcMem(...)    do {if (Logger::IsInstLevel(InstructionLogLevel::eSpcMem))    Logger::InstructionLog("SpcMem:   ", __VA_ARGS__);} while (0)
+#define LogSpcTimer(...)  do {if (Logger::IsInstLevel(InstructionLogLevel::eSpcTimer))  Logger::InstructionLog("SpcTimer: ", __VA_ARGS__);} while (0)
