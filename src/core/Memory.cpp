@@ -67,6 +67,7 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 // Save value for later open bus reads.
                 openBusValue = wram[addr & 0x1FFF];
                 return openBusValue;
+
             case 0x21:
                 if constexpr (addTime)
                     timer->AddCycle(EClockSpeed::eClockIoReg);
@@ -85,16 +86,19 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                 }
                 //throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 //return ioPorts21[addr & 0xFF];
+
             case 0x40:
-                throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //if constexpr (addTime)
-                //    timer->AddCycle(EClockSpeed::eClockOther);
-                //return ioPorts40[addr & 0xFF];
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockOther);
+                LogWarning("Read from unused IO port %06X", addr);
+                return openBusValue;
+
             case 0x41:
                 if constexpr (addTime)
                     timer->AddCycle(EClockSpeed::eClockIoReg);
-                LogError("Read from unused IO port %06X", addr);
+                LogWarning("Read from unused IO port %06X", addr);
                 return openBusValue;
+
             case 0x42:
                 if constexpr (addTime)
                     timer->AddCycle(EClockSpeed::eClockIoReg);
@@ -108,10 +112,12 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                     default:
                         return openBusValue;
                 }
+
             default:
-                LogError("Read from unhandled address %06X", addr);
-                throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                return 0;
+                if constexpr (addTime)
+                    timer->AddCycle(EClockSpeed::eClockIoReg);
+                LogWarning("Read from unhandled address %06X", addr);
+                return openBusValue;
         }
     }
 
