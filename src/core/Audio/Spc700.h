@@ -65,6 +65,8 @@ public:
     void Step(int clocksToRun);
     void ProcessOpCode();
 
+    uint8_t opcode;
+
 private:
 
     template <typename T>

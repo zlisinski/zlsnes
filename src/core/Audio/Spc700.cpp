@@ -9,13 +9,14 @@ namespace Audio
 
 
 // Use this for opcodes that don't have an AddressMode or data.
-#define LogInst(name) LogSpc700("%02X: %s", opcode, (name))
+#define LogInst(name) do {LogSpc700("%02X: %s", opcode, (name));} while (0)
 
-// This requires the opcode case to have an AddressMode variable named 'mode'.
-#define LogInstM(name) LogSpc700("%02X%s: %s %s", opcode, mode.FormatBytes().c_str(), (name), mode.FormatArgs().c_str())
+// Opcodes with data but no AddressMode
+#define LogInst1(name, param) do {LogSpc700("%02X %02X: %s", opcode, (param), (name));} while (0)
+#define LogInst2(name, param1, param2) do {LogSpc700("%02X %02X %02X: %s", opcode, (param1), (param2), (name));} while (0)
 
-// This requires the opcode case to have an AddressMode pointer named 'mode'.
-#define LogInstMp(name) LogSpc700("%02X%s: %s %s", opcode, mode->FormatBytes().c_str(), (name), mode->FormatArgs().c_str())
+// Opcodes with an AddressMode
+#define LogInstM(name, addrmode) do {(addrmode)->Log(name);} while (0)
 
 
 Spc700::Spc700(Memory *memory, Timer *timer) :
@@ -150,7 +151,7 @@ void Spc700::Step(int clocksToRun)
 
 void Spc700::ProcessOpCode()
 {
-    uint8_t opcode = ReadPC8Bit();
+    opcode = ReadPC8Bit();
 
     switch (opcode)
     {
@@ -174,7 +175,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV A, ");
+            LogInstM("MOV A, ", mode);
             LoadRegister(reg.a, mode->Read8Bit());
             break;
         }
@@ -182,7 +183,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeIndirectX mode(this, memory);
             mode.LoadAddress();
-            LogInst("MOV A, (X)+");
+            LogInstM("MOV A, (X)+", &mode);
             LoadRegister(reg.a, mode.Read8Bit());
             reg.x++;
             break;
@@ -196,7 +197,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModesMovXY[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV X, ");
+            LogInstM("MOV X, ", mode);
             LoadRegister(reg.x, mode->Read8Bit());
             break;
         }
@@ -209,7 +210,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModesMovXY[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV Y, ");
+            LogInstM("MOV Y, ", mode);
             LoadRegister(reg.y, mode->Read8Bit());
             break;
         }
@@ -218,7 +219,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("MOVW YA,");
+            LogInstM("MOVW YA,", &mode);
             reg.ya = mode.Read16Bit();
             SetNFlag(reg.ya);
             SetZFlag(reg.ya);
@@ -243,7 +244,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV n, A");
+            LogInstM("MOV n, A", mode);
             mode->Write8Bit(reg.a);
             break;
         }
@@ -251,7 +252,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeIndirectX mode(this, memory);
             mode.LoadAddress();
-            LogInst("MOV (X)+, A");
+            LogInstM("MOV (X)+, A", &mode);
             mode.Write8Bit(reg.a);
             reg.x++;
             break;
@@ -264,7 +265,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModesMovXY[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV n, X");
+            LogInstM("MOV n, X", mode);
             mode->Write8Bit(reg.x);
             break;
         }
@@ -276,7 +277,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModesMovXY[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("MOV n, Y");
+            LogInstM("MOV n, Y", mode);
             mode->Write8Bit(reg.y);
             break;
         }
@@ -285,7 +286,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("MOVW dp, YA");
+            LogInstM("MOVW dp, YA", &mode);
             mode.Write16Bit(reg.ya);
             break;
         }
@@ -354,7 +355,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("MOV dp, immediate");
+            LogInstM("MOV dp, immediate", &mode);
             mode.Write8Bit(byte);
             break;
         }
@@ -377,7 +378,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("ADC A, ");
+            LogInstM("ADC A, ", mode);
             reg.a = Add8Bit(reg.a, mode->Read8Bit());
             break;
         }
@@ -409,7 +410,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("ADC dp, immediate");
+            LogInstM("ADC dp, immediate", &mode);
             mode.Write8Bit(Add8Bit(mode.Read8Bit(), byte));
             break;
         }
@@ -418,7 +419,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("ADDW YA,");
+            LogInstM("ADDW YA,", &mode);
 
             uint16_t operand = mode.Read16Bit();
             uint32_t result32 = reg.ya + operand;
@@ -445,7 +446,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("SBC A, ");
+            LogInstM("SBC A, ", mode);
             reg.a = Sub8Bit(reg.a, mode->Read8Bit());
             break;
         }
@@ -477,7 +478,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("SBC dp, immediate");
+            LogInstM("SBC dp, immediate", &mode);
             mode.Write8Bit(Sub8Bit(mode.Read8Bit(), byte));
             break;
         }
@@ -486,7 +487,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("SUBW YA,");
+            LogInstM("SUBW YA,", &mode);
 
             uint16_t operand = ~mode.Read16Bit() + 1;
             uint32_t result32 = reg.ya + operand;
@@ -513,7 +514,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("CMP A, ");
+            LogInstM("CMP A, ", mode);
             Compare(reg.a, mode->Read8Bit());
             break;
         }
@@ -545,7 +546,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP dp, immediate");
+            LogInstM("CMP dp, immediate", &mode);
             Compare(mode.Read8Bit(), byte);
             break;
         }
@@ -554,7 +555,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeImmediate mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP X, ");
+            LogInstM("CMP X, ", &mode);
             Compare(reg.x, mode.Read8Bit());
             break;
         }
@@ -563,7 +564,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP X, ");
+            LogInstM("CMP X, ", &mode);
             Compare(reg.x, mode.Read8Bit());
             break;
         }
@@ -572,7 +573,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP X, ");
+            LogInstM("CMP X, ", &mode);
             Compare(reg.x, mode.Read8Bit());
             break;
         }
@@ -581,7 +582,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeImmediate mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP Y, ");
+            LogInstM("CMP Y, ", &mode);
             Compare(reg.y, mode.Read8Bit());
             break;
         }
@@ -590,7 +591,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP Y, ");
+            LogInstM("CMP Y, ", &mode);
             Compare(reg.y, mode.Read8Bit());
             break;
         }
@@ -599,7 +600,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMP Y, ");
+            LogInstM("CMP Y, ", &mode);
             Compare(reg.y, mode.Read8Bit());
             break;
         }
@@ -608,7 +609,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CMPW YA,");
+            LogInstM("CMPW YA,", &mode);
 
             uint16_t operand = mode.Read16Bit();
             uint16_t result = reg.ya - operand;
@@ -674,7 +675,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("AND A, ");
+            LogInstM("AND A, ", mode);
             uint8_t result = reg.a & mode->Read8Bit();
             SetNFlag(result);
             SetZFlag(result);
@@ -715,7 +716,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("AND dp, immediate");
+            LogInstM("AND dp, immediate", &mode);
             uint8_t result = mode.Read8Bit() & byte;
             SetNFlag(result);
             SetZFlag(result);
@@ -735,7 +736,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("OR A, ");
+            LogInstM("OR A, ", mode);
             uint8_t result = reg.a | mode->Read8Bit();
             SetNFlag(result);
             SetZFlag(result);
@@ -776,7 +777,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("OR dp, immediate");
+            LogInstM("OR dp, immediate", &mode);
             uint8_t result = mode.Read8Bit() | byte;
             SetNFlag(result);
             SetZFlag(result);
@@ -796,7 +797,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("EOR A, ");
+            LogInstM("EOR A, ", mode);
             uint8_t result = reg.a ^ mode->Read8Bit();
             SetNFlag(result);
             SetZFlag(result);
@@ -837,7 +838,7 @@ void Spc700::ProcessOpCode()
             uint8_t byte = ReadPC8Bit();
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("EOR dp, immediate");
+            LogInstM("EOR dp, immediate", &mode);
             uint8_t result = mode.Read8Bit() ^ byte;
             SetNFlag(result);
             SetZFlag(result);
@@ -862,7 +863,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("SET1");
+            LogInstM("SET1", &mode);
 
             uint8_t bit = opcode >> 5;
             uint8_t value = mode.Read8Bit();
@@ -883,7 +884,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CLR1");
+            LogInstM("CLR1", &mode);
 
             uint8_t bit = opcode >> 5;
             uint8_t value = mode.Read8Bit();
@@ -897,7 +898,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("TSET1");
+            LogInstM("TSET1", &mode);
 
             uint8_t value = mode.Read8Bit();
             mode.Write8Bit(value | reg.a);
@@ -912,7 +913,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("TCLR1");
+            LogInstM("TCLR1", &mode);
 
             uint8_t value = mode.Read8Bit();
             mode.Write8Bit(value & ~reg.a);
@@ -927,7 +928,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("AND1");
+            LogInstM("AND1", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -941,7 +942,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("AND1 !");
+            LogInstM("AND1 !", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -955,7 +956,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("OR1");
+            LogInstM("OR1", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -969,7 +970,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("OR1 !");
+            LogInstM("OR1 !", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -983,7 +984,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("EOR1");
+            LogInstM("EOR1", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -997,7 +998,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("NOT1");
+            LogInstM("NOT1", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -1013,7 +1014,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("MOV1 C, Abs");
+            LogInstM("MOV1 C, Abs", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -1027,7 +1028,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("MOV1 Abs, C");
+            LogInstM("MOV1 Abs, C", &mode);
 
             uint16_t addr = mode.GetAddress();
             uint8_t bit = addr >> 13;
@@ -1052,7 +1053,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("INC");
+            LogInstM("INC", mode);
             uint8_t result = mode->Read8Bit();
             result++;
             SetNFlag(result);
@@ -1083,7 +1084,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInstM("INCW");
+            LogInstM("INCW", &mode);
             uint16_t value = mode.Read16Bit() + 1;
             SetNFlag(value);
             SetZFlag(value);
@@ -1098,7 +1099,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("DEC");
+            LogInstM("DEC", mode);
             uint8_t result = mode->Read8Bit();
             result--;
             SetNFlag(result);
@@ -1129,7 +1130,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
-            LogInst("INCW");
+            LogInstM("INCW", &mode);
             uint16_t value = mode.Read16Bit() - 1;
             SetNFlag(value);
             SetZFlag(value);
@@ -1151,7 +1152,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("ASL");
+            LogInstM("ASL", mode);
 
             uint8_t value = mode->Read8Bit();
             uint8_t result = value << 1;
@@ -1171,7 +1172,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("LSR");
+            LogInstM("LSR", mode);
 
             uint8_t value = mode->Read8Bit();
             uint8_t result = value >> 1;
@@ -1191,7 +1192,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("ROL");
+            LogInstM("ROL", mode);
 
             uint8_t value = mode->Read8Bit();
             uint8_t result = (value << 1) | reg.flags.c;
@@ -1211,7 +1212,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModePtr &mode = addressModes[opcode & 0x1F];
             mode->LoadAddress();
-            LogInstMp("ROR");
+            LogInstM("ROR", mode);
 
             uint8_t value = mode->Read8Bit();
             uint8_t result = (value >> 1) | (reg.flags.c << 7);
@@ -1303,7 +1304,7 @@ void Spc700::ProcessOpCode()
         case 0x2F: // BRA
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogSpc700("%02X %02X: BRA %d", opcode, offset, offset);
+            LogSpc700("%02X %02X: BRA %d", opcode, (uint8_t)offset, offset);
             reg.pc += offset;
             break;
         }
@@ -1346,7 +1347,7 @@ void Spc700::ProcessOpCode()
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             uint8_t bit = opcode >> 5;
-            LogSpc700("%02X%s %02X: BBS %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
+            LogSpc700("%02X %02X %02X: BBS %d", opcode, mode.GetAddress() & 0xFF, (uint8_t)offset, offset);
 
             uint8_t value = mode.Read8Bit();
             if (value & (1 << bit))
@@ -1370,7 +1371,7 @@ void Spc700::ProcessOpCode()
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             uint8_t bit = opcode >> 5;
-            LogSpc700("%02X%s %02X: BBC %s.%d", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str(), bit);
+            LogSpc700("%02X %02X %02X: BBC %d", opcode, mode.GetAddress() & 0xFF, (uint8_t)offset, offset);
 
             uint8_t value = mode.Read8Bit();
             if (!(value & (1 << bit)))
@@ -1386,7 +1387,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogSpc700("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X %02X %02X: CBNE %d", opcode, mode.GetAddress() & 0xFF, (uint8_t)offset, offset);
 
             if (reg.a != mode.Read8Bit())
             {
@@ -1401,7 +1402,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirectIndexedX mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogSpc700("%02X%s %02X: CBNE %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X %02X %02X: CBNE %d", opcode, mode.GetAddress() & 0xFF, (uint8_t)offset, offset);
 
             if (reg.a != mode.Read8Bit())
             {
@@ -1416,7 +1417,7 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogSpc700("%02X%s %02X: DBNZ %s", opcode, mode.FormatBytes().c_str(), offset, mode.FormatArgs().c_str());
+            LogSpc700("%02X %02X %02X: DBNZ %d", opcode, mode.GetAddress() & 0xFF, (uint8_t)offset, offset);
 
             uint8_t value = mode.Read8Bit() - 1;
             mode.Write8Bit(value);
@@ -1431,7 +1432,7 @@ void Spc700::ProcessOpCode()
         case 0xFE: // DBNZ Y
         {
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
-            LogSpc700("%02X %02X: DBNZ Y", opcode, offset);
+            LogSpc700("%02X %02X: DBNZ Y %d", opcode, (uint8_t)offset, offset);
 
             reg.y--;
             if (reg.y != 0)
@@ -1446,7 +1447,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("JMP");
+            LogInstM("JMP", &mode);
 
             reg.pc = mode.GetAddress();
 
@@ -1457,7 +1458,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsoluteIndexedX mode(this, memory);
             mode.LoadAddress();
-            LogInstM("JMP");
+            LogInstM("JMP", &mode);
 
             reg.pc = mode.Read16Bit();
 
@@ -1474,7 +1475,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeAbsolute mode(this, memory);
             mode.LoadAddress();
-            LogInstM("CALL");
+            LogInstM("CALL", &mode);
 
             Push(reg.pc >> 8);
             Push(reg.pc);
@@ -1487,7 +1488,7 @@ void Spc700::ProcessOpCode()
         {
             AddressModeImmediate mode(this, memory);
             mode.LoadAddress();
-            LogInstM("PCALL");
+            LogInstM("PCALL", &mode);
 
             Push(reg.pc >> 8);
             Push(reg.pc);

@@ -37,24 +37,20 @@ public:
     virtual void Write8Bit(uint8_t value) {memory->Write8Bit(address, value);}
     virtual void Write16Bit(uint16_t value) {memory->Write16Bit(address, value);}
 
-    std::string FormatBytes() const
+    void Log(const char *name)
     {
-        char buf[10] = {0};
-        if (dataLen == 1)
-            snprintf(buf, sizeof(buf), " %02X", dataBytes[0]);
-        else if (dataLen == 2)
-            snprintf(buf, sizeof(buf), " %02X %02X", dataBytes[0], dataBytes[1]);
-        return std::string(buf);
-    }
-
-    std::string FormatArgs() const
-    {
-        char buf[20] = {0};
-        if (dataLen == 1)
-            snprintf(buf, sizeof(buf), formatStr, data8);
-        else if (dataLen == 2)
-            snprintf(buf, sizeof(buf), formatStr, data16);
-        return std::string(buf);
+        switch (dataLen)
+        {
+            case 0:
+                LogSpc700(formatStr, cpu->opcode, name);
+                break;
+            case 1:
+                LogSpc700(formatStr, cpu->opcode, dataBytes[0], name, data8);
+                break;
+            case 2:
+                LogSpc700(formatStr, cpu->opcode, dataBytes[0], dataBytes[1], name, data16);
+                break;
+        }
     }
 
 protected:
@@ -79,7 +75,7 @@ class AddressModeAbsolute : public AbsAddressMode
 {
 public:
     AddressModeAbsolute(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "!%04X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s !%04X", 2)
     {}
 
     void LoadAddress() override
@@ -95,7 +91,7 @@ class AddressModeAbsoluteIndexedX : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndexedX(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "!%04X,X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s !%04X,X", 2)
     {}
 
     void LoadAddress() override
@@ -111,7 +107,7 @@ class AddressModeAbsoluteIndexedY : public AbsAddressMode
 {
 public:
     AddressModeAbsoluteIndexedY(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "!%04X,Y", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s !%04X,Y", 2)
     {}
 
     void LoadAddress() override
@@ -127,7 +123,7 @@ class AddressModeAccumulator : public AbsAddressMode
 {
 public:
     AddressModeAccumulator(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "A", 0)
+        AbsAddressMode(cpu, memory, "%02X: %s A", 0)
     {}
 
     void LoadAddress() override {}
@@ -144,7 +140,7 @@ class AddressModeDirect : public AbsAddressMode
 {
 public:
     AddressModeDirect(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X", 1)
     {}
 
     void LoadAddress() override
@@ -169,7 +165,7 @@ class AddressModeDirectIndexedX : public AbsAddressMode
 {
 public:
     AddressModeDirectIndexedX(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X,X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X,X", 1)
     {}
 
     void LoadAddress() override
@@ -194,7 +190,7 @@ class AddressModeDirectIndexedY : public AbsAddressMode
 {
 public:
     AddressModeDirectIndexedY(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X,X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s %02X,X", 1)
     {}
 
     void LoadAddress() override
@@ -219,7 +215,7 @@ class AddressModeImmediate : public AbsAddressMode
 {
 public:
     AddressModeImmediate(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "#%02X", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s #%02X", 1)
     {}
 
     // Does nothing.
@@ -243,7 +239,7 @@ class AddressModeIndirectX : public AbsAddressMode
 {
 public:
     AddressModeIndirectX(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(X)", 0)
+        AbsAddressMode(cpu, memory, "%02X: %s (X)", 0)
     {}
 
     void LoadAddress() override
@@ -258,7 +254,7 @@ class AddressModeIndirectY : public AbsAddressMode
 {
 public:
     AddressModeIndirectY(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "(X)", 0)
+        AbsAddressMode(cpu, memory, "%02X: %s (X)", 0)
     {}
 
     void LoadAddress() override
@@ -273,7 +269,7 @@ class AddressModeIndirectIndexedX : public AbsAddressMode
 {
 public:
     AddressModeIndirectIndexedX(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "[%02X+X]", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s [%02X+X]", 1)
     {}
 
     void LoadAddress() override
@@ -290,7 +286,7 @@ class AddressModeIndirectIndexedY : public AbsAddressMode
 {
 public:
     AddressModeIndirectIndexedY(Spc700 *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "[%02X]+Y", 1)
+        AbsAddressMode(cpu, memory, "%02X %02X: %s [%02X]+Y", 1)
     {}
 
     void LoadAddress() override
