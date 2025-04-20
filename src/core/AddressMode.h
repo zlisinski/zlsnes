@@ -76,7 +76,7 @@ class AddressModeAbsolute : public AbsAddressMode
 {
 public:
     AddressModeAbsolute(Cpu *cpu, Memory *memory) :
-        AbsAddressMode(cpu, memory, "%02X %02X %02X: %04X", 2)
+        AbsAddressMode(cpu, memory, "%02X %02X %02X: %s %04X", 2)
     {}
 
     virtual void LoadAddress() override
