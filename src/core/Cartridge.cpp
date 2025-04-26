@@ -208,7 +208,10 @@ bool Cartridge::Validate()
     {
         //Skip checking ExHiROM, since it's only 2 Japanese games.
         LogError("Unable to determine cartridge type");
-        return false;
+        //return false;
+        // Default to LoROM for now.
+        offset = LOROM_HEADER_OFFSET;
+        memcpy(&standardHeader, &rom[offset], sizeof(StandardHeader));
     }
 
     LogInfo("Title = %.21s", standardHeader.title);

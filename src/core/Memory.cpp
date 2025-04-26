@@ -81,11 +81,9 @@ uint8_t Memory::Read8Bit(uint32_t addr)
                             return value;
                         }
                         break;
-                    default:
-                        throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
                 }
-                //throw NotYetImplementedException(fmt("Read from unhandled address %06X", addr));
-                //return ioPorts21[addr & 0xFF];
+                LogWarning("Read from unused IO port %06X", addr);
+                return openBusValue;
 
             case 0x40:
                 if constexpr (addTime)
@@ -200,10 +198,9 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                         LogMemory("wramRwAddr=%06X", wramRWAddr);
                         break;
                     default:
-                        throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
+                        LogWarning("Write to unhandled address %06X", addr);
+                        break;
                 }
-                //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
-                //ioPorts21[addr & 0xFF] = value;
                 if (debuggerInterface && debuggerInterface->GetDebuggingEnabled())
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
