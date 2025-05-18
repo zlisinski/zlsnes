@@ -134,6 +134,8 @@ private:
         BgTilemapCache(uint16_t tileData, uint16_t tileX, uint16_t tileY) : tileData{tileData}, tileX(tileX), tileY(tileY) {}
     };
 
+    inline bool IsHiRes() const {return bgMode == 5 || bgMode == 6;}
+
     void GenerateWindowBitmaps();
     void GenerateWindowLayerBitmap(EBgLayer bg, uint8_t window, uint64_t *bitmask);
     bool IsPointInsideWindow(EBgLayer bg, uint16_t screenX) const;

@@ -1058,11 +1058,14 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
         mosaicYOff = (screenY - bgMosaicStartScanline) % bgMosaicSize;
     }
 
-    int tileSize = bgChrSize[bg];
-    int tileX = ((screenX + bgHOffset[bg] - mosaicXOff) / tileSize) & (bgTilemapWidth[bg] - 1);
-    int tileY = ((screenY + bgVOffset[bg] - mosaicYOff) / tileSize) & (bgTilemapHeight[bg] - 1);
-    int xOff = (screenX + bgHOffset[bg] - mosaicXOff) & (tileSize - 1);
-    int yOff = (screenY + bgVOffset[bg] - mosaicYOff) & (tileSize - 1);
+    const int tileXSize = IsHiRes() ? 16 : bgChrSize[bg];
+    const int tileYSize = bgChrSize[bg];
+    const int hOffset = IsHiRes() ? bgHOffset[bg] * 2 : bgHOffset[bg];
+    const int vOffset = bgVOffset[bg];
+    const int tileX = ((screenX + hOffset - mosaicXOff) / tileXSize) & (bgTilemapWidth[bg] - 1);
+    const int tileY = ((screenY + vOffset - mosaicYOff) / tileYSize) & (bgTilemapHeight[bg] - 1);
+    int xOff = (screenX + hOffset - mosaicXOff) & (tileXSize - 1);
+    int yOff = (screenY + vOffset - mosaicYOff) & (tileYSize - 1);
 
     // Cache the tile since the next 8 pixels will use the same tile.
     BgTilemapCache &tile = bgTilemapCache[bg];
@@ -1073,9 +1076,9 @@ Ppu::PixelInfo Ppu::GetBgPixelInfo(EBgLayer bg, uint16_t screenX, uint16_t scree
     info.priority = tile.data.priority;
 
     if (tile.data.flipX)
-        xOff = (tileSize - 1) - xOff;
+        xOff = (tileXSize - 1) - xOff;
     if (tile.data.flipY)
-        yOff = (tileSize - 1) - yOff;
+        yOff = (tileYSize - 1) - yOff;
 
     // Offset tileId if using 16x16 tiles.
     uint16_t tileId = tile.data.tileId;
@@ -1308,7 +1311,9 @@ template <Ppu::EScreenType Screen>
 Ppu::PixelInfo Ppu::GetPixelInfo(uint16_t screenX, uint16_t screenY, const std::array<Ppu::Sprite, 32> &sprites, uint8_t spriteCount)
 {
     PixelInfo bgInfo[4];
-    PixelInfo spriteInfo = GetSpritePixelInfo(screenX, screenY, sprites, spriteCount);
+
+    const uint16_t spriteX = IsHiRes() ? screenX / 2 : screenX;
+    PixelInfo spriteInfo = GetSpritePixelInfo(spriteX, screenY, sprites, spriteCount);
 
     switch (bgMode)
     {
@@ -1553,7 +1558,8 @@ void Ppu::DrawScanline(uint8_t scanline)
     std::array<Sprite, 32> sprites;
     int spriteCount = GetSpritesOnScanline(scanline, sprites);
 
-    for (int x = 0; x < SCREEN_X / 2; x++)
+    const int screenWidth = IsHiRes() ? SCREEN_X : SCREEN_X / 2;
+    for (int x = 0; x < screenWidth; x++)
     {
         PixelInfo pixel = GetPixelInfo<EScreenType::MainScreen>(x, scanline, sprites, spriteCount);
 
@@ -1586,11 +1592,20 @@ void Ppu::DrawScanline(uint8_t scanline)
             color = Bgr555(mainColor).ToARGB888(brightness);
         }
 
-        uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
-        frameBuffer[pixelOffset] = color;
-        frameBuffer[pixelOffset + 1] = color;
-        frameBuffer[pixelOffset + SCREEN_X] = color;
-        frameBuffer[pixelOffset + SCREEN_X + 1] = color;
+        if (!IsHiRes())
+        {
+            const uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + (x * 2);
+            frameBuffer[pixelOffset] = color;
+            frameBuffer[pixelOffset + 1] = color;
+            frameBuffer[pixelOffset + SCREEN_X] = color;
+            frameBuffer[pixelOffset + SCREEN_X + 1] = color;
+        }
+        else
+        {
+            const uint32_t pixelOffset = ((scanline * 2) * SCREEN_X) + x;
+            frameBuffer[pixelOffset] = color;
+            frameBuffer[pixelOffset + SCREEN_X] = color;
+        }
     }
 }
 
