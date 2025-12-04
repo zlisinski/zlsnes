@@ -73,4 +73,15 @@ namespace Bytes
 
         return value & (0xFF << (N * 8));
     }
+
+    template <uint8_t BitSize, typename T>
+    inline std::make_signed_t<T> SignExtend(T value)
+    {
+        static_assert(std::is_integral<T>::value, "value must be integral type.");
+        static_assert(BitSize < sizeof(T) * 8, "BitSize must be less than sizeof(T) * 8");
+
+        constexpr int bits = (sizeof(T) * 8) - BitSize;
+
+        return static_cast<std::make_signed_t<T>>(value << bits) >> bits;
+    }
 }

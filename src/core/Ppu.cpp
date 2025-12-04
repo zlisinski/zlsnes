@@ -410,7 +410,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             SetBgHOffsetWriteTwice(eBG1, byte);
 
             // M7HOFS and BG1HOFS share the same address.
-            m7HOffset = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7HOffset = Bytes::SignExtend<13>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             return true;
 
@@ -419,7 +419,7 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
             SetBgVOffsetWriteTwice(eBG1, byte);
 
             // M7VOFS and BG1VOFS share the same address.
-            m7VOffset = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7VOffset = Bytes::SignExtend<13>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             return true;
 
@@ -563,14 +563,14 @@ bool Ppu::WriteRegister(EIORegisters ioReg, uint8_t byte)
 
         case eRegM7X: // 0x211F
             regM7X = byte;
-            m7x = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7x = Bytes::SignExtend<13>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             LogPpu("M7X=%04X", m7x);
             return true;
 
         case eRegM7Y: // 0x2120
             regM7Y = byte;
-            m7y = static_cast<int16_t>(Bytes::Make16Bit(byte, m7Latch) << 3) >> 3; // Sign extend 13-bit to 16-bit.
+            m7y = Bytes::SignExtend<13>(Bytes::Make16Bit(byte, m7Latch));
             m7Latch = byte;
             LogPpu("M7Y=%04X", m7y);
             return true;
