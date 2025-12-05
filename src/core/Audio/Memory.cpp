@@ -54,25 +54,33 @@ uint8_t Memory::Read8Bit(uint16_t addr)
             LogSpcMem("Read from DSPDATA %02X NYI", ram[eRegDSPADDR]);
             return ram[eRegDSPDATA];
         case eRegCPUIO0: // 0xF4
+            LogSpcMem("Memory::Read8Bit %04X=%02X", addr, cpuReadPorts[0]);
             return cpuReadPorts[0];
         case eRegCPUIO1: // 0xF5
+            LogSpcMem("Memory::Read8Bit %04X=%02X", addr, cpuReadPorts[1]);
             return cpuReadPorts[1];
         case eRegCPUIO2: // 0xF6
+            LogSpcMem("Memory::Read8Bit %04X=%02X", addr, cpuReadPorts[2]);
             return cpuReadPorts[2];
         case eRegCPUIO3: // 0xF7
+            LogSpcMem("Memory::Read8Bit %04X=%02X", addr, cpuReadPorts[3]);
             return cpuReadPorts[3];
     }
 
     if (HasIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF)))
     {
-        return ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
+        uint8_t byte = ReadIoRegisterProxy(static_cast<EIORegisters>(addr & 0xFFFF));
+        LogSpcMem("Memory::Read8Bit %04X=%02X", addr, byte);
+        return byte;
     }
 
     if ((addr & 0xFFC0) == 0xFFC0 && bootRomEnabled)
     {
+        LogSpcMem("Memory::Read8Bit %04X=%02X", addr, bootRom[addr & 0x3F]);
         return bootRom[addr & 0x3F];
     }
 
+    LogSpcMem("Memory::Read8Bit %04X=%02X", addr, ram[addr]);
     return ram[addr];
 }
 

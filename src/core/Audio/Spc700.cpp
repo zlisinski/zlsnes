@@ -28,6 +28,7 @@ Spc700::Spc700(Memory *memory, Timer *timer) :
     addressModes[0x06] = std::make_unique<AddressModeIndirectX>(this, memory);
     addressModes[0x07] = std::make_unique<AddressModeIndirectIndexedX>(this, memory);
     addressModes[0x08] = std::make_unique<AddressModeImmediate>(this, memory);
+    addressModes[0x09] = std::make_unique<AddressModeDirectToDirect>(this, memory);
     addressModes[0x0B] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x0C] = std::make_unique<AddressModeAbsolute>(this, memory);
     addressModes[0x0D] = std::make_unique<AddressModeImmediate>(this, memory);
@@ -35,6 +36,7 @@ Spc700::Spc700(Memory *memory, Timer *timer) :
     addressModes[0x15] = std::make_unique<AddressModeAbsoluteIndexedX>(this, memory);
     addressModes[0x16] = std::make_unique<AddressModeAbsoluteIndexedY>(this, memory);
     addressModes[0x17] = std::make_unique<AddressModeIndirectIndexedY>(this, memory);
+    addressModes[0x19] = std::make_unique<AddressModeIndirectToIndirect>(this, memory);
     addressModes[0x1A] = std::make_unique<AddressModeDirect>(this, memory);
     addressModes[0x1B] = std::make_unique<AddressModeDirectIndexedX>(this, memory);
     addressModes[0x1C] = std::make_unique<AddressModeAccumulator>(this, memory);
@@ -186,6 +188,7 @@ void Spc700::ProcessOpCode()
             LogInstM("MOV A, (X)+", &mode);
             LoadRegister(reg.a, mode.Read8Bit());
             reg.x++;
+            timer->AddCycle();
             break;
         }
 
@@ -220,6 +223,10 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             LogInstM("MOVW YA,", &mode);
+
+            // Technically, this should be between the two byte reads.
+            this->timer->AddCycle();
+
             reg.ya = mode.Read16Bit();
             SetNFlag(reg.ya);
             SetZFlag(reg.ya);
@@ -253,6 +260,7 @@ void Spc700::ProcessOpCode()
             AddressModeIndirectX mode(this, memory);
             mode.LoadAddress();
             LogInstM("MOV (X)+, A", &mode);
+            timer->AddCycle();
             mode.Write8Bit(reg.a);
             reg.x++;
             break;
@@ -287,6 +295,10 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             LogInstM("MOVW dp, YA", &mode);
+
+            // Unused read of destination low byte before writing.
+            memory->Read8Bit(Bytes::Make16Bit(reg.flags.p, mode.GetAddress()));
+
             mode.Write16Bit(reg.ya);
             break;
         }
@@ -301,6 +313,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV A, X");
             LoadRegister(reg.a, reg.x);
+            timer->AddCycle();
             break;
         }
 
@@ -308,6 +321,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV A, Y");
             LoadRegister(reg.a, reg.y);
+            timer->AddCycle();
             break;
         }
 
@@ -315,6 +329,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV X, A");
             LoadRegister(reg.x, reg.a);
+            timer->AddCycle();
             break;
         }
 
@@ -322,6 +337,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV Y, A");
             LoadRegister(reg.y, reg.a);
+            timer->AddCycle();
             break;
         }
 
@@ -329,6 +345,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV X, SP");
             LoadRegister(reg.x, reg.sp);
+            timer->AddCycle();
             break;
         }
 
@@ -336,17 +353,16 @@ void Spc700::ProcessOpCode()
         {
             LogInst("MOV SP, X");
             reg.sp = reg.x; // No flags set.
+            timer->AddCycle();
             break;
         }
 
         case 0xFA: //MOV Direct, Direct
         {
-            LogInst("MOV dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            dest.Write8Bit(src.Read8Bit());
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("MOV dp, dp", &mode);
+            mode.Write8Bit(mode.Read8BitSource());
             break;
         }
 
@@ -385,23 +401,19 @@ void Spc700::ProcessOpCode()
 
         case 0x99: // ADC (X), (Y)
         {
-            LogInst("ADC (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            dest.Write8Bit(Add8Bit(dest.Read8Bit(), src.Read8Bit()));
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("ADC (X), (Y)", &mode);
+            mode.Write8Bit(Add8Bit(mode.Read8BitDest(), mode.Read8BitSource()));
             break;
         }
 
         case 0x89: // ADC Direct, Direct
         {
-            LogInst("ADC dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            dest.Write8Bit(Add8Bit(dest.Read8Bit(), src.Read8Bit()));
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("ADC dp, dp", &mode);
+            mode.Write8Bit(Add8Bit(mode.Read8BitDest(), mode.Read8BitSource()));
             break;
         }
 
@@ -420,6 +432,9 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             LogInstM("ADDW YA,", &mode);
+
+            // Technically, this should be between the two byte reads.
+            this->timer->AddCycle();
 
             uint16_t operand = mode.Read16Bit();
             uint32_t result32 = reg.ya + operand;
@@ -453,23 +468,19 @@ void Spc700::ProcessOpCode()
 
         case 0xB9: // SBC (X), (Y)
         {
-            LogInst("SBC (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            dest.Write8Bit(Sub8Bit(dest.Read8Bit(), src.Read8Bit()));
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("SBC (X), (Y)", &mode);
+            mode.Write8Bit(Sub8Bit(mode.Read8BitDest(), mode.Read8BitSource()));
             break;
         }
 
         case 0xA9: // SBC Direct, Direct
         {
-            LogInst("SBC dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            dest.Write8Bit(Sub8Bit(dest.Read8Bit(), src.Read8Bit()));
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("SBC dp, dp", &mode);
+            mode.Write8Bit(Sub8Bit(mode.Read8BitDest(), mode.Read8BitSource()));
             break;
         }
 
@@ -488,6 +499,9 @@ void Spc700::ProcessOpCode()
             AddressModeDirect mode(this, memory);
             mode.LoadAddress();
             LogInstM("SUBW YA,", &mode);
+
+            // Technically, this should be between the two byte reads.
+            this->timer->AddCycle();
 
             uint16_t operand = ~mode.Read16Bit() + 1;
             uint32_t result32 = reg.ya + operand;
@@ -521,23 +535,21 @@ void Spc700::ProcessOpCode()
 
         case 0x79: // CMP (X), (Y)
         {
-            LogInst("CMP (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            Compare(dest.Read8Bit(), src.Read8Bit());
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("CMP (X), (Y)", &mode);
+            Compare(mode.Read8BitDest(), mode.Read8BitSource());
+            timer->AddCycle();
             break;
         }
 
         case 0x69: // CMP Direct, Direct
         {
-            LogInst("CMP dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            Compare(dest.Read8Bit(), src.Read8Bit());
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("CMP dp, dp", &mode);
+            Compare(mode.Read8BitDest(), mode.Read8BitSource());
+            timer->AddCycle();
             break;
         }
 
@@ -548,6 +560,7 @@ void Spc700::ProcessOpCode()
             mode.LoadAddress();
             LogInstM("CMP dp, immediate", &mode);
             Compare(mode.Read8Bit(), byte);
+            timer->AddCycle();
             break;
         }
 
@@ -625,6 +638,7 @@ void Spc700::ProcessOpCode()
             reg.ya = reg.y * reg.a;
             SetNFlag(reg.y);
             SetZFlag(reg.y);
+            timer->AddCycle(8);
             break;
         }
 
@@ -653,6 +667,8 @@ void Spc700::ProcessOpCode()
 
             SetNFlag(reg.a);
             SetZFlag(reg.a);
+
+            timer->AddCycle(11);
 
             break;
         }
@@ -685,29 +701,25 @@ void Spc700::ProcessOpCode()
 
         case 0x39: // AND (X), (Y)
         {
-            LogInst("AND (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            uint8_t result = dest.Read8Bit() & src.Read8Bit();
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("AND (X), (Y)", &mode);
+            uint8_t result = mode.Read8BitDest() & mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
         case 0x29: // AND Direct, Direct
         {
-            LogInst("AND dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            uint8_t result = dest.Read8Bit() & src.Read8Bit();
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("AND dp, dp", &mode);
+            uint8_t result = mode.Read8BitDest() & mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
@@ -746,29 +758,25 @@ void Spc700::ProcessOpCode()
 
         case 0x19: // OR (X), (Y)
         {
-            LogInst("OR (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            uint8_t result = dest.Read8Bit() | src.Read8Bit();
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("AND (X), (Y)", &mode);
+            uint8_t result = mode.Read8BitDest() | mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
         case 0x09: // OR Direct, Direct
         {
-            LogInst("OR dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            uint8_t result = dest.Read8Bit() | src.Read8Bit();
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("OR dp, dp", &mode);
+            uint8_t result = mode.Read8BitDest() | mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
@@ -807,29 +815,25 @@ void Spc700::ProcessOpCode()
 
         case 0x59: // EOR (X), (Y)
         {
-            LogInst("EOR (X),(Y)");
-            AddressModeIndirectX dest(this, memory);
-            dest.LoadAddress();
-            AddressModeIndirectY src(this, memory);
-            src.LoadAddress();
-            uint8_t result = dest.Read8Bit() ^ src.Read8Bit();
+            AddressModeIndirectToIndirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("AND (X), (Y)", &mode);
+            uint8_t result = mode.Read8BitDest() ^ mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
         case 0x49: // EOR Direct, Direct
         {
-            LogInst("EOR dp, dp");
-            AddressModeDirect src(this, memory);
-            src.LoadAddress();
-            AddressModeDirect dest(this, memory);
-            dest.LoadAddress();
-            uint8_t result = dest.Read8Bit() ^ src.Read8Bit();
+            AddressModeDirectToDirect mode(this, memory);
+            mode.LoadAddress();
+            LogInstM("EOR dp, dp", &mode);
+            uint8_t result = mode.Read8BitDest() ^ mode.Read8BitSource();
             SetNFlag(result);
             SetZFlag(result);
-            dest.Write8Bit(result);
+            mode.Write8Bit(result);
             break;
         }
 
@@ -963,6 +967,8 @@ void Spc700::ProcessOpCode()
             addr &= 0x1FFF;
             reg.flags.c |= (memory->Read8Bit(addr) >> bit) & 0x01;
 
+            timer->AddCycle();
+
             break;
         }
 
@@ -977,6 +983,8 @@ void Spc700::ProcessOpCode()
             addr &= 0x1FFF;
             reg.flags.c |= ~(memory->Read8Bit(addr) >> bit) & 0x01;
 
+            timer->AddCycle();
+
             break;
         }
 
@@ -990,6 +998,8 @@ void Spc700::ProcessOpCode()
             uint8_t bit = addr >> 13;
             addr &= 0x1FFF;
             reg.flags.c ^= (memory->Read8Bit(addr) >> bit) & 0x01;
+
+            timer->AddCycle();
 
             break;
         }
@@ -1035,6 +1045,7 @@ void Spc700::ProcessOpCode()
             addr &= 0x1FFF;
             uint8_t value = memory->Read8Bit(addr) & ~(1 << bit);
             value |= reg.flags.c << bit;
+            timer->AddCycle();
             memory->Write8Bit(addr, value);
 
             break;
@@ -1068,6 +1079,7 @@ void Spc700::ProcessOpCode()
             reg.x++;
             SetNFlag(reg.x);
             SetZFlag(reg.x);
+            timer->AddCycle();
             break;
         }
 
@@ -1077,6 +1089,7 @@ void Spc700::ProcessOpCode()
             reg.y++;
             SetNFlag(reg.y);
             SetZFlag(reg.y);
+            timer->AddCycle();
             break;
         }
 
@@ -1114,6 +1127,7 @@ void Spc700::ProcessOpCode()
             reg.x--;
             SetNFlag(reg.x);
             SetZFlag(reg.x);
+            timer->AddCycle();
             break;
         }
 
@@ -1123,6 +1137,7 @@ void Spc700::ProcessOpCode()
             reg.y--;
             SetNFlag(reg.y);
             SetZFlag(reg.y);
+            timer->AddCycle();
             break;
         }
 
@@ -1230,6 +1245,7 @@ void Spc700::ProcessOpCode()
             reg.a = (reg.a >> 4) | (reg.a << 4);
             SetNFlag(reg.a);
             SetZFlag(reg.a);
+            timer->AddCycle(4);
             break;
         }
 
@@ -1243,6 +1259,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("PUSH A");
             Push(reg.a);
+            timer->AddCycle(2);
             break;
         }
 
@@ -1250,6 +1267,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("PUSH X");
             Push(reg.x);
+            timer->AddCycle(2);
             break;
         }
 
@@ -1257,6 +1275,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("PUSH Y");
             Push(reg.y);
+            timer->AddCycle(2);
             break;
         }
 
@@ -1264,6 +1283,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("PUSH PSW");
             Push(reg.p);
+            timer->AddCycle(2);
             break;
         }
 
@@ -1271,6 +1291,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("POP A");
             reg.a = Pop();
+            timer->AddCycle(2);
             break;
         }
 
@@ -1278,6 +1299,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("POP X");
             reg.x = Pop();
+            timer->AddCycle(2);
             break;
         }
 
@@ -1285,6 +1307,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("POP Y");
             reg.y = Pop();
+            timer->AddCycle(2);
             break;
         }
 
@@ -1292,6 +1315,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("POP PSW");
             reg.p = Pop();
+            timer->AddCycle(2);
             break;
         }
 
@@ -1306,6 +1330,7 @@ void Spc700::ProcessOpCode()
             int8_t offset = static_cast<int8_t>(ReadPC8Bit());
             LogSpc700("%02X %02X: BRA %d", opcode, (uint8_t)offset, offset);
             reg.pc += offset;
+            timer->AddCycle(2);
             break;
         }
 
@@ -1330,6 +1355,7 @@ void Spc700::ProcessOpCode()
             if (((reg.p >> flagShift[opcode >> 6]) & 0x01) == ((opcode >> 5) & 0x01))
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
             break;
         }
@@ -1353,7 +1379,10 @@ void Spc700::ProcessOpCode()
             if (value & (1 << bit))
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
+
+            timer->AddCycle();
 
             break;
         }
@@ -1377,7 +1406,10 @@ void Spc700::ProcessOpCode()
             if (!(value & (1 << bit)))
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
+
+            timer->AddCycle();
 
             break;
         }
@@ -1392,7 +1424,10 @@ void Spc700::ProcessOpCode()
             if (reg.a != mode.Read8Bit())
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
+
+            timer->AddCycle();
 
             break;
         }
@@ -1407,7 +1442,10 @@ void Spc700::ProcessOpCode()
             if (reg.a != mode.Read8Bit())
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
+
+            timer->AddCycle();
 
             break;
         }
@@ -1424,6 +1462,7 @@ void Spc700::ProcessOpCode()
             if (value != 0)
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
 
             break;
@@ -1438,7 +1477,10 @@ void Spc700::ProcessOpCode()
             if (reg.y != 0)
             {
                 reg.pc += offset;
+                timer->AddCycle(2);
             }
+
+            timer->AddCycle(2);
 
             break;
         }
@@ -1479,7 +1521,9 @@ void Spc700::ProcessOpCode()
 
             Push(reg.pc >> 8);
             Push(reg.pc);
+            timer->AddCycle();
             reg.pc = mode.GetAddress();
+            timer->AddCycle(2);
 
             break;
         }
@@ -1493,6 +1537,7 @@ void Spc700::ProcessOpCode()
             Push(reg.pc >> 8);
             Push(reg.pc);
             reg.pc = 0xFF00 | mode.Read8Bit();
+            timer->AddCycle(2);
 
             break;
         }
@@ -1519,7 +1564,9 @@ void Spc700::ProcessOpCode()
 
             Push(reg.pc >> 8);
             Push(reg.pc);
+            timer->AddCycle();
             reg.pc = memory->Read16Bit(0xFFDE - (2 * operand));
+            timer->AddCycle(2);
 
             break;
         }
@@ -1534,6 +1581,7 @@ void Spc700::ProcessOpCode()
             reg.flags.b = 1;
             reg.flags.i = 0;
             reg.pc = memory->Read16Bit(0xFFDE);
+            timer->AddCycle(2);
 
             break;
         }
@@ -1545,6 +1593,7 @@ void Spc700::ProcessOpCode()
             uint8_t pcl = Pop();
             uint8_t pch = Pop();
             reg.pc = (pch << 8) | pcl;
+            timer->AddCycle(2);
 
             break;
         }
@@ -1557,6 +1606,7 @@ void Spc700::ProcessOpCode()
             uint8_t pcl = Pop();
             uint8_t pch = Pop();
             reg.pc = (pch << 8) | pcl;
+            timer->AddCycle(2);
 
             break;
         }
@@ -1571,6 +1621,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("CLRC");
             reg.flags.c = 0;
+            timer->AddCycle();
             break;
         }
 
@@ -1578,6 +1629,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("SETC");
             reg.flags.c = 1;
+            timer->AddCycle();
             break;
         }
 
@@ -1585,6 +1637,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("NOTC");
             reg.flags.c ^= 1;
+            timer->AddCycle(2);
             break;
         }
 
@@ -1593,6 +1646,7 @@ void Spc700::ProcessOpCode()
             LogInst("CLRV");
             reg.flags.v = 0;
             reg.flags.h = 0;
+            timer->AddCycle();
             break;
         }
 
@@ -1600,6 +1654,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("CLRP");
             reg.flags.p = 0;
+            timer->AddCycle();
             break;
         }
 
@@ -1607,6 +1662,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("SETP");
             reg.flags.p = 1;
+            timer->AddCycle();
             break;
         }
 
@@ -1614,6 +1670,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("EI");
             reg.flags.i = 1;
+            timer->AddCycle(2);
             break;
         }
 
@@ -1621,6 +1678,7 @@ void Spc700::ProcessOpCode()
         {
             LogInst("DI");
             reg.flags.i = 0;
+            timer->AddCycle(2);
             break;
         }
 
@@ -1644,6 +1702,7 @@ void Spc700::ProcessOpCode()
             }
             SetNFlag(reg.a);
             SetZFlag(reg.a);
+            timer->AddCycle(2);
             break;
         }
 
@@ -1661,18 +1720,21 @@ void Spc700::ProcessOpCode()
             }
             SetNFlag(reg.a);
             SetZFlag(reg.a);
+            timer->AddCycle(2);
             break;
         }
 
         case 0x00: // NOP
         {
             LogInst("NOP");
+            timer->AddCycle();
             break;
         }
 
         case 0xEF: // SLEEP
         {
             LogInst("SLEEP");
+            timer->AddCycle(6);
             waiting = true;
         }
         break;
@@ -1680,6 +1742,7 @@ void Spc700::ProcessOpCode()
         case 0xFF: // STOP
         {
             LogInst("STOP");
+            timer->AddCycle(6);
             waiting = true;
         }
         break;

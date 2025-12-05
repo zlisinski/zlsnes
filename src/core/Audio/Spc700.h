@@ -65,6 +65,8 @@ public:
     void Step(int clocksToRun);
     void ProcessOpCode();
 
+    Timer *GetTimer() const {return timer;}
+
     uint8_t opcode;
 
 private:

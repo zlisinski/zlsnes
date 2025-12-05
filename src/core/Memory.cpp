@@ -289,8 +289,8 @@ void Memory::Write8Bit(uint32_t addr, uint8_t value)
                     debuggerInterface->MemoryChanged(Address(addr & 0xFFFF), 1);
                 return;
             default:
-                LogError("Write to unhandled address %06X", addr);
-                throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
+                LogWarning("Write to unhandled address %06X", addr);
+                //throw NotYetImplementedException(fmt("Write to unhandled address %06X", addr));
                 return;
         }
     }

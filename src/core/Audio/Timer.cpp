@@ -127,7 +127,9 @@ uint8_t Timer::ReadRegister(EIORegisters ioReg)
         }
 
         default:
-            throw std::range_error(fmt("Timer doesnt handle reads to 0x%04X", ioReg));
+            // Lots of intructions perform an unused read before writes.
+            LogWarning("Read from unhandled Timer register %04X", ioReg);
+            return 0;
     }
 }
 

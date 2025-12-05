@@ -49,6 +49,7 @@ Spc700Test::Spc700Test()
     memory = new Memory();
     timer = new Timer(memory);
     cpu = new Spc700(memory, timer);
+    memory->SetTimer(timer);
 }
 
 Spc700Test::~Spc700Test()
@@ -119,6 +120,8 @@ void Spc700Test::RunInstructionTest(const QString &opcodeName, const QString &op
             memory->Write8Bit(addr, val);
         }
 
+        timer->ResetCounter();
+
         // Run the opcode.
         cpu->ProcessOpCode();
 
@@ -142,8 +145,12 @@ void Spc700Test::RunInstructionTest(const QString &opcodeName, const QString &op
             ASSERT_LE(addr, 0xFFFF) << qPrintable(testName);
             ASSERT_GE(val, 0) << qPrintable(testName);
             ASSERT_LE(val, 0xFF) << qPrintable(testName);
-            EXPECT_EQ(memory->Read8Bit(addr), val) << qPrintable(testName);
+            EXPECT_EQ(memory->ReadRaw8Bit(addr), val) << qPrintable(testName);
         }
+
+        // Verify timing
+        QJsonArray cycles = obj["cycles"].toArray();
+        ASSERT_EQ(timer->GetCounter(), cycles.count()) << qPrintable(testName);
 
         // If there were errors, stop processing this opcode. We don't want 10000 errors.
         if (this->HasNonfatalFailure())
@@ -466,7 +473,7 @@ TEST_F(Spc700Test, TEST_MOV_X_SP)
 
 TEST_F(Spc700Test, TEST_MOV_SP_X)
 {
-    this->RunInstructionTest(this->test_info_->name(), "8D");
+    this->RunInstructionTest(this->test_info_->name(), "BD");
 }
 
 TEST_F(Spc700Test, TEST_MOV_DP_DP)
